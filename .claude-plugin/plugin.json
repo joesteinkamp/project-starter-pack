@@ -1,0 +1,16 @@
+{
+  "name": "project-starter-pack",
+  "version": "0.1.0",
+  "description": "Designer-first AI project starter. Walks you through a Product, Design, and Technical brief, then synthesizes AGENT.md and CLAUDE.md so any AI coding agent can design and code with the same rigor as a senior team.",
+  "author": "joesteinkamp",
+  "license": "MIT",
+  "keywords": [
+    "design",
+    "product",
+    "agents",
+    "claude-code",
+    "starter"
+  ],
+  "commands": "./commands",
+  "skills": "./skills"
+}

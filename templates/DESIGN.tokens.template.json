@@ -1,0 +1,33 @@
+{
+  "$schema": "https://design-tokens.github.io/community-group/format/",
+  "color": {
+    "background": { "$value": "{{COLOR_BACKGROUND}}", "$type": "color" },
+    "foreground": { "$value": "{{COLOR_FOREGROUND}}", "$type": "color" },
+    "muted": { "$value": "{{COLOR_MUTED}}", "$type": "color" },
+    "accent": { "$value": "{{COLOR_ACCENT}}", "$type": "color" },
+    "border": { "$value": "{{COLOR_BORDER}}", "$type": "color" }
+  },
+  "typography": {
+    "fontFamily": {
+      "display": { "$value": "{{FONT_DISPLAY}}", "$type": "fontFamily" },
+      "body": { "$value": "{{FONT_BODY}}", "$type": "fontFamily" },
+      "mono": { "$value": "{{FONT_MONO}}", "$type": "fontFamily" }
+    },
+    "scale": {
+      "ratio": { "$value": "{{TYPE_SCALE_RATIO}}", "$type": "number" },
+      "base": { "$value": "{{TYPE_BASE_SIZE}}", "$type": "dimension" }
+    }
+  },
+  "spacing": {
+    "unit": { "$value": "{{SPACING_UNIT}}", "$type": "dimension" },
+    "scale": { "$value": "{{SPACING_SCALE}}", "$type": "string" }
+  },
+  "motion": {
+    "easing": { "$value": "{{MOTION_EASING}}", "$type": "cubicBezier" },
+    "duration": {
+      "fast": { "$value": "{{MOTION_FAST}}", "$type": "duration" },
+      "base": { "$value": "{{MOTION_BASE}}", "$type": "duration" },
+      "slow": { "$value": "{{MOTION_SLOW}}", "$type": "duration" }
+    }
+  }
+}

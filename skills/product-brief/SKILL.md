@@ -1,0 +1,56 @@
+---
+name: product-brief
+description: Walks the user through a product positioning brief and writes PRODUCT.md at the project root. Use when the user asks to set up product context, write a product brief, define brand or positioning, or generate PRODUCT.md. Triggers on phrases like "product brief", "PRODUCT.md", "set up product context", "brand positioning", "who is this product for".
+---
+
+# Product Brief Skill
+
+You are running the Product Brief flow. Your job is to walk the user through an opinionated questionnaire and produce `PRODUCT.md` at the project root using `templates/PRODUCT.template.md`.
+
+## Setup
+
+1. Locate the plugin root (the directory containing this `skills/` folder). The questionnaire bank is at `questionnaires/product.questions.md`. The template is at `templates/PRODUCT.template.md`. The anti-pattern guardrails are at `guardrails/product-anti-patterns.md`.
+2. Read all three before starting so you carry the full question list and the bans into the conversation.
+
+## Pre-flight
+
+Check whether `PRODUCT.md` exists at the project root.
+- **Exists** → ask the user: reuse (skip the flow), merge (run the questionnaire and merge new answers into existing sections), or overwrite (start fresh). Use `AskUserQuestion`.
+- **Missing** → proceed.
+
+## Pass 1 — Structured questions (AskUserQuestion)
+
+Ask Q1–Q4 from `questionnaires/product.questions.md` using `AskUserQuestion`. Batch them in one call where the questions are independent.
+
+## Pass 2 — Open follow-ups
+
+Ask Q5–Q11 from the questionnaire as free-form chat prompts. Ask one or two at a time — don't drown the user. Wait for answers before continuing.
+
+## Validation pass
+
+Apply `guardrails/product-anti-patterns.md` to what the user gave you:
+- If the persona is generic ("developers who want better tools"), push back once and ask for specificity.
+- If anti-references are abstract ("not boring"), ask for real product/site names.
+- If brand personality is three buzzwords ("modern, clean, friendly"), ask for the proof — how does it show up in copy?
+
+Be direct. The starter-pack's voice is opinionated.
+
+## Defaults pass
+
+For any unanswered slot, fill with the defaults table in `questionnaires/product.questions.md`. Mark each defaulted line with ` [default — confirm]` in the output so the user sees what was assumed.
+
+## Preview & write
+
+1. Render the populated `templates/PRODUCT.template.md` and show it to the user in the chat.
+2. Ask: "Write to `PRODUCT.md`, or edit any section first?" Accept one round of edits.
+3. Write the final file to `PRODUCT.md` at the project root using the `Write` tool.
+
+## Done
+
+Print a one-line summary: "Wrote PRODUCT.md ({{N}} sections, {{M}} defaults marked for confirmation). Next: `/starter:design-brief`."
+
+## Important
+
+- Do not invent answers the user didn't give. Defaults are explicit and labeled.
+- Do not vendor prose from the inspiration repo. The voice and structure are ours.
+- If you are running inside `/starter:setup`, hand control back to the setup flow when done — do not invoke the next brief yourself.
