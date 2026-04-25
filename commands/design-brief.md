@@ -11,7 +11,7 @@ Run the full Design Brief flow:
 4. Validate against `guardrails/ux-anti-patterns.md` and `guardrails/design-anti-patterns.md`.
 5. Apply opinionated defaults (marked `[default — confirm]`).
 6. Embed both anti-pattern lists inline in the output.
-7. Optionally write `DESIGN.tokens.json` if concrete tokens were collected.
+7. Optionally write `DESIGN.json` (the tokens companion, named to match Impeccable's convention) if concrete tokens were collected.
 8. Preview, accept one round of edits, write `DESIGN.md` at the project root.
 
 End with the one-line summary the skill prescribes.

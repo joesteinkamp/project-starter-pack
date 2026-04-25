@@ -12,7 +12,7 @@ After running `/starter:setup` (or each command individually), your project root
 |---|---|---|
 | `PRODUCT.md` | Product Brief | Who, what, why, brand personality, anti-references, principles |
 | `DESIGN.md` | Design Brief | UX foundation (user knowledge, IA, flows, success metrics) **and** UI system (color, type, spacing, motion, components) |
-| `DESIGN.tokens.json` | Design Brief (optional) | Machine-readable token companion |
+| `DESIGN.json` | Design Brief (optional) | Machine-readable token companion (filename matches Impeccable's convention for interop) |
 | `CODE.md` | Technical Brief | Stack, architecture, conventions, testing, performance, security |
 | `AGENT.md` | Orchestrator | Universal [agents.md](https://agents.md) spec — single source of truth |
 | `CLAUDE.md` | Orchestrator | Thin file: imports `@AGENT.md` + Claude-Code-specific notes |
