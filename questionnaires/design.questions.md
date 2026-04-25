@@ -163,7 +163,7 @@ The `design-brief` skill walks the user through this question set. **UX question
 > background, foreground, muted, accent, border, plus any system colors
 > (success, warning, danger).
 
-→ `{{COLOR_TOKENS}}` and `DESIGN.tokens.json`
+→ `{{COLOR_TOKENS}}` and `DESIGN.json`
 
 #### Q17. Typography specifics
 

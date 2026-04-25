@@ -1,11 +1,11 @@
 ---
 name: design-brief
-description: Walks the user through a UX-and-UI design brief and writes DESIGN.md (and optional DESIGN.tokens.json) at the project root. UX foundation comes first (user knowledge, IA, flows, success metrics), then the UI system (color, type, spacing, motion, components). Use when the user asks for a design brief, design system, UX foundation, DESIGN.md, or to define visual language. Triggers on "design brief", "DESIGN.md", "design system", "UX foundation", "user flows", "information architecture", "color strategy", "design tokens".
+description: Walks the user through a UX-and-UI design brief and writes DESIGN.md (and optional DESIGN.json tokens companion) at the project root. UX foundation comes first (user knowledge, IA, flows, success metrics), then the UI system (color, type, spacing, motion, components). Use when the user asks for a design brief, design system, UX foundation, DESIGN.md, or to define visual language. Triggers on "design brief", "DESIGN.md", "design system", "UX foundation", "user flows", "information architecture", "color strategy", "design tokens".
 ---
 
 # Design Brief Skill
 
-You are running the Design Brief flow. Your job is to walk the user through UX questions first, then UI questions, and produce `DESIGN.md` (and optionally `DESIGN.tokens.json`) at the project root.
+You are running the Design Brief flow. Your job is to walk the user through UX questions first, then UI questions, and produce `DESIGN.md` (and optionally `DESIGN.json` — the tokens companion) at the project root.
 
 ## Setup
 
@@ -51,14 +51,14 @@ Be direct. Don't soften.
 
 Apply the defaults table from `questionnaires/design.questions.md`. Mark defaulted lines with ` [default — confirm]`. Always pull the anti-pattern lists from `guardrails/design-anti-patterns.md` and `guardrails/ux-anti-patterns.md` into the relevant sections of the output — embedded inline, not just linked.
 
-## DESIGN.tokens.json (optional)
+## DESIGN.json (optional tokens companion)
 
-If the user provided concrete color/typography/spacing values, also populate `templates/DESIGN.tokens.template.json` and offer to write it to `DESIGN.tokens.json`. If they declined to specify tokens, skip the JSON file.
+If the user provided concrete color/typography/spacing values, also populate `templates/DESIGN.tokens.template.json` and offer to write it to `DESIGN.json` at the project root. The filename matches the convention used by Impeccable so the two tools can share the file. If the user declined to specify tokens, skip the JSON file.
 
 ## Preview & write
 
 1. Render populated `DESIGN.md` and show it to the user.
-2. If tokens were collected, also render `DESIGN.tokens.json`.
+2. If tokens were collected, also render `DESIGN.json`.
 3. Ask for one round of edits, then write both files to the project root.
 
 ## Done

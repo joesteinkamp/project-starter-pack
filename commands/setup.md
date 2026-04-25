@@ -10,7 +10,7 @@ This is the mega command. It walks the user from an empty repo to a fully-instru
 
 1. **Intro** — In one short paragraph, tell the user what's about to happen: three briefs (Product, Design, Technical), then synthesis into `AGENT.md` and `CLAUDE.md`. Ask whether to proceed.
 2. **Product Brief** — invoke the `product-brief` skill. Wait for it to complete and write `PRODUCT.md`.
-3. **Design Brief** — invoke the `design-brief` skill. UX first, then UI. Wait for it to complete and write `DESIGN.md` (and optionally `DESIGN.tokens.json`).
+3. **Design Brief** — invoke the `design-brief` skill. UX first, then UI. Wait for it to complete and write `DESIGN.md` (and optionally `DESIGN.json` as the tokens companion).
 4. **Technical Brief** — invoke the `code-brief` skill. Wait for it to complete and write `CODE.md`.
 5. **Orchestrate** — invoke the `orchestrator` skill. Synthesize `AGENT.md` and `CLAUDE.md`.
 
