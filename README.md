@@ -24,8 +24,9 @@ After running `/starter:setup` (or each command individually), your project root
 - `/starter:design-brief` — (re)generate `DESIGN.md` (UX + UI)
 - `/starter:code-brief` — (re)generate `CODE.md`
 - `/starter:orchestrate` — regenerate `AGENT.md` + `CLAUDE.md`
+- `/starter:extract` — reverse direction: scan an existing codebase, audit which briefs are missing or thin, fill the gaps, and end with a fork review of decisions the codebase left ambiguous
 
-Each brief is also exposed as a Skill, so natural-language phrases like "set up the product brief" or "let's define the design system" auto-trigger the matching flow.
+Each brief is also exposed as a Skill, so natural-language phrases like "set up the product brief", "let's define the design system", or "reverse-engineer the briefs from this repo" auto-trigger the matching flow.
 
 ## Questionnaire shape
 
