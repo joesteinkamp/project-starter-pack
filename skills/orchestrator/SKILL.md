@@ -1,11 +1,11 @@
 ---
 name: orchestrator
-description: Synthesizes PRODUCT.md, DESIGN.md, and CODE.md into AGENT.md (universal agents.md) and CLAUDE.md (Claude-Code-specific) at the project root. Use when the user asks to generate or regenerate AGENT.md, AGENTS.md, or CLAUDE.md, or when all three briefs exist and the agent instructions need to be assembled. Triggers on "AGENT.md", "AGENTS.md", "CLAUDE.md", "orchestrate briefs", "generate agent instructions", "assemble project instructions".
+description: Synthesizes PRODUCT.md, DESIGN.md, CODE.md, and PROJECT.md (when present) into AGENT.md (universal agents.md) and CLAUDE.md (Claude-Code-specific) at the project root. Use when the user asks to generate or regenerate AGENT.md, AGENTS.md, or CLAUDE.md, or when the briefs exist and the agent instructions need to be assembled. Triggers on "AGENT.md", "AGENTS.md", "CLAUDE.md", "orchestrate briefs", "generate agent instructions", "assemble project instructions".
 ---
 
 # Orchestrator Skill
 
-You assemble the three briefs into `AGENT.md` (universal agents.md spec) and `CLAUDE.md` (thin file that imports `AGENT.md` and adds Claude-Code-specific addenda).
+You assemble the briefs into `AGENT.md` (universal agents.md spec) and `CLAUDE.md` (thin file that imports `AGENT.md` and adds Claude-Code-specific addenda).
 
 ## Setup
 
@@ -14,12 +14,13 @@ You assemble the three briefs into `AGENT.md` (universal agents.md spec) and `CL
 
 ## Inputs
 
-Read all three briefs from the project root:
-- `PRODUCT.md`
-- `DESIGN.md`
-- `CODE.md`
+Read these briefs from the project root:
+- `PRODUCT.md` — required
+- `DESIGN.md` — required
+- `CODE.md` — required
+- `PROJECT.md` — **optional**. Present only when an initiative is actively scoped. If absent, that's fine — the "Current project" section is omitted from `AGENT.md` (do not leave a TODO placeholder for it).
 
-If any are missing:
+If any of the three required briefs are missing:
 - Print which are missing and the command to run for each (`/starter:product-brief`, `/starter:design-brief`, `/starter:code-brief`).
 - Ask the user: proceed with placeholders for missing briefs, or stop?
 - If they proceed, leave the corresponding sections in `AGENT.md` as `[TODO — run /starter:<brief>]` and continue.
@@ -36,7 +37,8 @@ Check whether `AGENT.md` and/or `CLAUDE.md` exist:
 
 Populate `templates/AGENT.template.md`:
 
-- `{{PROJECT_SUMMARY}}` — a 2-3 sentence synthesis of `PRODUCT.md` (one-liner + register + primary user).
+- `{{PRODUCT_SUMMARY}}` — a 2-3 sentence synthesis of `PRODUCT.md` (one-liner + register + primary user).
+- `{{CURRENT_PROJECT}}` — only if `PROJECT.md` exists. Synthesize: title, one-liner, status, goal, top 3 non-goals, success metrics, scope slice (design surfaces + code subsystems). Keep tight — bullets, not prose. If `PROJECT.md` is missing, **remove the entire "Current project" section** from the rendered template (do not leave a TODO; PROJECT.md is optional by design).
 - `{{PRODUCT_CONTEXT}}` — bullet summary: register, primary user, jobs-to-be-done, brand personality (3 words), top 3 anti-references.
 - `{{UX_LAWS}}` — extract from `DESIGN.md` UX foundation: interaction principles, accessibility commitments, top user flows (one line each).
 - `{{DESIGN_LAWS}}` — extract from `DESIGN.md` UI system: color strategy + accent rules, type pairing + measure cap, motion stance, when cards are allowed.

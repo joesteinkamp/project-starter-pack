@@ -1,17 +1,18 @@
 ---
 name: evaluator
-description: Audits the project's actual code, design tokens, route structure, and product copy against AGENT.md and the four anti-pattern guardrails (product, UX, design, code). Use when the user asks to evaluate, audit, lint, grade, or check whether the project follows the briefs. Triggers on phrases like "evaluate this project", "audit against the briefs", "is this code following AGENT.md", "design audit", "starter audit", "check the project against the guardrails".
+description: Audits the project's actual code, design tokens, route structure, and product copy against AGENT.md and the five anti-pattern guardrails (product, UX, design, code, project). Use when the user asks to evaluate, audit, lint, grade, or check whether the project follows the briefs. Triggers on phrases like "evaluate this project", "audit against the briefs", "is this code following AGENT.md", "design audit", "starter audit", "check the project against the guardrails".
 ---
 
 # Evaluator Skill
 
-You audit the user's actual project against the rules the starter-pack already encoded for it. The contract is `AGENT.md` plus the four anti-pattern registries. Findings must cite real evidence in the repo — never report a violation you can't point to.
+You audit the user's actual project against the rules the starter-pack already encoded for it. The contract is `AGENT.md` plus the five anti-pattern registries. Findings must cite real evidence in the repo — never report a violation you can't point to.
 
 ## Setup
 
-1. Locate the plugin root. The four guardrail files are at `guardrails/{product,ux,design,code}-anti-patterns.md`. Read them — they're the structured rule set.
+1. Locate the plugin root. The five guardrail files are at `guardrails/{product,ux,design,code,project}-anti-patterns.md`. Read them — they're the structured rule set.
 2. Read `AGENT.md` from the project root. This is the synthesized contract. If it doesn't exist, stop and tell the user to run `/starter:orchestrate` first.
-3. If `DESIGN.json` exists at the project root, read it — it's the machine-readable design token companion that tightens the design audit.
+3. If `PROJECT.md` exists at the project root, read it — it scopes the current initiative (goal, non-goals, scope slice, success metrics) and sharpens "is this in scope?" findings.
+4. If `DESIGN.json` exists at the project root, read it — it's the machine-readable design token companion that tightens the design audit.
 
 ## Repo discovery
 
@@ -35,7 +36,7 @@ Use the `Explore` sub-agent to dispatch one investigation per axis in parallel. 
 
 The four sub-agents:
 
-1. **Product axis** — checks landing copy, README, in-product strings against `product-anti-patterns.md` (vague personas, generic positioning, hedging brand voice, feature-list-as-positioning, ornamental metrics, abstract anti-references, three-buzzword personality).
+1. **Product axis** — checks landing copy, README, in-product strings against `product-anti-patterns.md` (vague personas, generic positioning, hedging brand voice, feature-list-as-positioning, ornamental metrics, abstract anti-references, three-buzzword personality). When `PROJECT.md` exists, also evaluates the current initiative against `project-anti-patterns.md` (output-as-goal, missing non-goals, vanity deadlines, "phase 2" placeholders, scope-that-names-everything) — a project finding cites `PROJECT.md` as the evidence file.
 2. **UX axis** — checks IA / routes / interactive components against `ux-anti-patterns.md` (confirm-instead-of-undo, modal-first, hidden state, generic errors, dark patterns, lossy navigation, accessibility-as-cleanup).
 3. **Design axis** — checks color tokens, type, spacing, motion, component primitives against `design-anti-patterns.md` (purple gradients, neon-on-black, nested cards, gradient text, bounce easing, pure black/white, layout animations) and `DESIGN.json` if present.
 4. **Code axis** — checks source files, types, error handling, tests, comments against `code-anti-patterns.md` (premature abstraction, defensive over trust, magic timing, dead code, comment-as-rename, snapshot-as-primary-signal, `--no-verify` / `--force` shortcuts).
@@ -78,7 +79,7 @@ Write to `.starter/evaluations/<YYYY-MM-DD-HHMM>.md`. Create `.starter/evaluatio
 ```markdown
 # Project Evaluation — <ISO timestamp>
 
-Audited against `AGENT.md` and the four anti-pattern registries.
+Audited against `AGENT.md` and the five anti-pattern registries.
 
 ## Summary
 - {{N_BLOCK}} block, {{N_WARN}} warn, {{N_NOTE}} note ({{N_TRUNCATED}} additional findings truncated)
@@ -111,7 +112,7 @@ Print only the **Summary** + the top 5 `block` findings (file:line + one-line fi
 
 - Do not invent evidence. A finding without a `file:line` is not a finding.
 - Do not re-state the entire `AGENT.md` back at the user. They wrote it; the report is about deviation, not summary.
-- The four anti-pattern lists are the spec — don't add new bans on the fly. If you want a new ban, that's a `/starter:report-issue` against the guardrail.
+- The five anti-pattern lists are the spec — don't add new bans on the fly. If you want a new ban, that's a `/starter:report-issue` against the guardrail.
 - Honest scoping: if the repo has a `package.json` and nothing else, say so. A near-empty audit is a real result, not a failure.
 - Respect parallelism: the four sub-agents run in a single dispatch, not sequentially.
 - Performance: the sub-agents read what they need. Don't pre-load whole-repo file contents into the main thread.

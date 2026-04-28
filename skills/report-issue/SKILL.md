@@ -24,10 +24,10 @@ Use `AskUserQuestion` with a single `Yes / No` to record consent. If `No`, stop.
 
 **Q1. Which part of the plugin looks at fault?**
 Choices:
-- `Template — PRODUCT / DESIGN / CODE / AGENT / CLAUDE / DESIGN.tokens`
-- `Questionnaire — product / design / code`
-- `Guardrail — product / ux / design / code anti-patterns`
-- `Skill — product-brief / design-brief / code-brief / orchestrator / feedback / evaluator / report-issue`
+- `Template — PRODUCT / DESIGN / CODE / PROJECT / AGENT / CLAUDE / DESIGN.tokens`
+- `Questionnaire — product / design / code / project`
+- `Guardrail — product / ux / design / code / project anti-patterns`
+- `Skill — product-brief / design-brief / code-brief / project-brief / orchestrator / extract / feedback / evaluator / report-issue`
 - `Command — one of the slash commands`
 - `Not sure — pick from the symptom`
 
