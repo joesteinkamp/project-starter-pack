@@ -26,4 +26,7 @@ If the user pauses or stops mid-flow, summarize what's done and what's left, and
 
 ## Done
 
-End with a final summary listing every file written and a "next steps" line: test the AI's output by asking it to build something small in the project — it should now read `AGENT.md` and `CLAUDE.md` first and respect the briefs.
+End with a final summary listing every file written and a "next steps" block:
+
+1. Test the AI's output by asking it to build something small in the project — it should now read `AGENT.md` and `CLAUDE.md` first and respect the briefs.
+2. When you start a concrete initiative inside this product, run `/starter:project-brief` to scope it. That writes `PROJECT.md` (goal, non-goals, scope slice) and re-running `/starter:orchestrate` will fold the current scope into `AGENT.md`. `PROJECT.md` is short-lived — replace it per initiative.
