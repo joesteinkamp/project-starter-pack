@@ -26,10 +26,10 @@ The first three briefs (`PRODUCT.md`, `DESIGN.md`, `CODE.md`) describe the **per
 - `/starter:product-brief` — (re)generate `PRODUCT.md`
 - `/starter:design-brief` — (re)generate `DESIGN.md` (UX + UI)
 - `/starter:code-brief` — (re)generate `CODE.md`
-- `/starter:project-brief` — scope the current initiative and write `PROJECT.md` (run per initiative)
-- `/starter:orchestrate` — regenerate `AGENT.md` + `CLAUDE.md` (folds in `PROJECT.md` when present)
+- `/starter:orchestrate` — regenerate `AGENT.md` + `CLAUDE.md`
+- `/starter:extract` — reverse direction: scan an existing codebase, audit which briefs are missing or thin, fill the gaps, and end with a fork review of decisions the codebase left ambiguous
 
-Each brief is also exposed as a Skill, so natural-language phrases like "set up the product brief", "let's define the design system", or "scope this sprint" auto-trigger the matching flow.
+Each brief is also exposed as a Skill, so natural-language phrases like "set up the product brief", "let's define the design system", or "reverse-engineer the briefs from this repo" auto-trigger the matching flow.
 
 ## Questionnaire shape
 
