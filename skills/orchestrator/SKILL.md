@@ -38,8 +38,8 @@ Populate `templates/AGENT.template.md`:
 
 - `{{PROJECT_SUMMARY}}` — a 2-3 sentence synthesis of `PRODUCT.md` (one-liner + register + primary user).
 - `{{PRODUCT_CONTEXT}}` — bullet summary: register, primary user, jobs-to-be-done, brand personality (3 words), top 3 anti-references.
-- `{{UX_LAWS}}` — extract from `DESIGN.md` UX foundation: interaction principles, accessibility commitments, top user flows (one line each).
-- `{{DESIGN_LAWS}}` — extract from `DESIGN.md` UI system: color strategy + accent rules, type pairing + measure cap, motion stance, when cards are allowed.
+- `{{UX_LAWS}}` — extract from `DESIGN.md` UX foundation: interaction principles, accessibility commitments, top user flows (one line each). UX is the constraint; everything below executes against these.
+- `{{DESIGN_LAWS}}` — extract from `DESIGN.md` UI system: color strategy + accent rules, type pairing + measure cap, motion stance, when cards are allowed. These express the UX laws above — if a UI choice would undermine a UX law, it loses.
 - `{{CODE_CONVENTIONS}}` — extract from `CODE.md`: stack, languages/tooling, naming, comment policy, error handling, performance budgets, security baselines.
 - `{{PRODUCT_ANTI_PATTERNS}}` — embed `guardrails/product-anti-patterns.md` headlines (1 line per pattern).
 - `{{UX_ANTI_PATTERNS}}` — embed `guardrails/ux-anti-patterns.md` headlines.
@@ -51,7 +51,15 @@ Anti-pattern lists must be **embedded inline** (one-line summaries), not just li
 ### CLAUDE.md
 
 Populate `templates/CLAUDE.template.md`. The file is intentionally thin — it imports `AGENT.md` via `@AGENT.md` and adds:
-- `{{CLAUDE_PROJECT_NOTES}}` — synthesize 3-5 project-specific Claude-Code notes from the briefs (e.g. "Use the Explore sub-agent for codebase searches; this monorepo has 12 packages", or "Use the Plan sub-agent before any change to the auth flow"). If nothing project-specific stands out, leave a single line: "No project-specific Claude notes yet."
+
+- `{{CLAUDE_PROJECT_NOTES}}` — synthesize 3-5 project-specific Claude-Code notes from the briefs. Walk these categories and pick the ones the briefs actually justify:
+  - **Sub-agent steering** — when to dispatch Plan vs. Explore for *this* codebase. Example: "Dispatch Plan before any change to billing flows — they touch Stripe webhooks and migration ordering matters."
+  - **Hot-spot files** — paths that need extra care. Example: "`src/auth/session.ts` is custom and load-bearing; read it fully before editing."
+  - **Repo shape** — monorepo? package count? language split? Example: "Monorepo with 12 packages under `packages/`; use Explore rather than Grep from the main thread."
+  - **Tooling quirks** — non-default test runners, codegen, pre-commit hooks. Example: "Tests run via `pnpm vitest`, not `npm test`. Pre-commit runs `biome` — don't skip it."
+  - **Blast-radius rules** — actions that need confirmation. Example: "Never run `pnpm db:migrate:prod` without an explicit user OK; staging is fine."
+
+  **Guardrail:** every note must cite a specific file, flow, package, or tool from one of the three briefs. Generic Claude advice ("prefer Edit over Write", "read before editing") belongs in `AGENT.md`, not here. If nothing project-specific stands out, leave a single line: "No project-specific Claude notes yet."
 
 Keep `CLAUDE.md` short. The shared rules belong in `AGENT.md`.
 

@@ -24,8 +24,13 @@ After running `/starter:setup` (or each command individually), your project root
 - `/starter:design-brief` — (re)generate `DESIGN.md` (UX + UI)
 - `/starter:code-brief` — (re)generate `CODE.md`
 - `/starter:orchestrate` — regenerate `AGENT.md` + `CLAUDE.md`
+- `/starter:validate` — cross-check the three briefs for contradictions and anti-pattern hits
 
 Each brief is also exposed as a Skill, so natural-language phrases like "set up the product brief" or "let's define the design system" auto-trigger the matching flow.
+
+## Example
+
+See [`examples/good-saas/`](./examples/good-saas/) for a fully-filled set of briefs (a fictional B2B retro tool called Bramble) and the `AGENT.md` / `CLAUDE.md` they produce. Use it as a reference for what "done" looks like.
 
 ## Questionnaire shape
 
