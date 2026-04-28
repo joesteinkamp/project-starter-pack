@@ -19,13 +19,21 @@ After running `/starter:setup` (or each command individually), your project root
 
 ## Commands
 
+Setup:
+
 - `/starter:setup` — guided one-sitting flow through all four steps
 - `/starter:product-brief` — (re)generate `PRODUCT.md`
 - `/starter:design-brief` — (re)generate `DESIGN.md` (UX + UI)
 - `/starter:code-brief` — (re)generate `CODE.md`
 - `/starter:orchestrate` — regenerate `AGENT.md` + `CLAUDE.md`
 
-Each brief is also exposed as a Skill, so natural-language phrases like "set up the product brief" or "let's define the design system" auto-trigger the matching flow.
+Feedback loop (post-setup, when the briefs need to get better):
+
+- `/starter:feedback` — corrective feedback on a generated brief; proposes a focused edit to the affected file. If the symptom is in `AGENT.md` or `CLAUDE.md` but the cause is in a source brief, it routes the fix to the source and offers to re-orchestrate.
+- `/starter:evaluate` — audit the project's actual code, design tokens, IA, and product copy against `AGENT.md` + the four anti-pattern registries. Dispatches four parallel sub-agents (Product, UX, Design, Code) and writes a findings report to `.starter/evaluations/`.
+- `/starter:report-issue` — when the same problem keeps recurring, draft a public GitHub issue against this repo so the templates, questionnaires, or guardrails can improve. Consent and snippet redaction are explicit; posts via `gh` with a web-URL fallback.
+
+Each brief and each feedback-loop tool is also exposed as a Skill, so natural-language phrases like "set up the product brief", "this brief is wrong", "audit the project against the briefs", or "report this upstream" auto-trigger the matching flow.
 
 ## Questionnaire shape
 

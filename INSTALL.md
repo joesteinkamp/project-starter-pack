@@ -17,6 +17,9 @@ Then in Claude Code, the commands and skills will be available:
 - `/starter:design-brief`
 - `/starter:code-brief`
 - `/starter:orchestrate`
+- `/starter:feedback`
+- `/starter:evaluate`
+- `/starter:report-issue`
 
 ## Option 2 — Install globally for all projects
 
