@@ -27,8 +27,12 @@ This project ships the `project-starter-pack` plugin. The following commands are
 - `/starter:product-brief` — (re)generate `PRODUCT.md`.
 - `/starter:design-brief` — (re)generate `DESIGN.md` (UX + UI).
 - `/starter:code-brief` — (re)generate `CODE.md`.
-- `/starter:orchestrate` — regenerate `AGENT.md` and `CLAUDE.md` from the three briefs.
-- `/starter:validate` — cross-check the three briefs for contradictions and anti-pattern hits.
+- `/starter:project-brief` — scope the current initiative and write `PROJECT.md` (run per initiative).
+- `/starter:orchestrate` — regenerate `AGENT.md` and `CLAUDE.md` from the briefs (folds in `PROJECT.md` when present).
+- `/starter:validate` — cross-check the persistent briefs for contradictions and anti-pattern hits.
+- `/starter:feedback` — apply corrective feedback to a generated brief (`PRODUCT.md`, `DESIGN.md`, `CODE.md`, `PROJECT.md`, `AGENT.md`, `CLAUDE.md`).
+- `/starter:evaluate` — audit the project against `AGENT.md` and the four anti-pattern guardrails; report at `.starter/evaluations/`.
+- `/starter:report-issue` — file an upstream issue at `joesteinkamp/project-starter-pack` so the generator improves.
 
 ### Skills available
 
@@ -37,8 +41,12 @@ The plugin also exposes skills that auto-trigger when the user describes the mat
 - `product-brief` — fires on "set up product context", "write PRODUCT.md", etc.
 - `design-brief` — fires on "design system", "UX foundation", "DESIGN.md".
 - `code-brief` — fires on "tech stack", "CODE.md", "architecture decisions".
+- `project-brief` — fires on "scope this project", "PROJECT.md", "what are we building this sprint".
 - `orchestrator` — fires when `AGENT.md` or `CLAUDE.md` needs to be regenerated.
 - `validator` — fires on "validate briefs", "check briefs", "are the briefs consistent".
+- `feedback` — fires on "fix PRODUCT.md", "this brief is wrong", "AGENT.md is missing X".
+- `evaluator` — fires on "audit this project", "evaluate against the briefs", "design audit".
+- `report-issue` — fires on "report this upstream", "file an issue against the starter pack".
 
 ## Project-specific Claude notes
 
