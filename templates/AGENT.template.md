@@ -30,13 +30,17 @@ If a request is ambiguous, ask the user before assuming. Do not invent product c
 
 ## UX laws
 
-<!-- Synthesized from DESIGN.md UX foundation. -->
+<!-- Synthesized from DESIGN.md UX foundation. UX is the constraint — everything in `## Design laws` below must serve these. When UX and UI conflict, UX wins. -->
+
+These come first. UI choices below must serve these UX commitments — when they conflict, UX wins.
 
 {{UX_LAWS}}
 
 ## Design laws
 
-<!-- Synthesized from DESIGN.md UI system. -->
+<!-- Synthesized from DESIGN.md UI system. These execute the UX laws above. -->
+
+These execute the UX laws above. If a design choice would undermine a UX law, it loses.
 
 {{DESIGN_LAWS}}
 

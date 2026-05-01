@@ -29,6 +29,7 @@ Setup (the persistent product briefs):
 - `/starter:design-brief` — (re)generate `DESIGN.md` (UX + UI)
 - `/starter:code-brief` — (re)generate `CODE.md`
 - `/starter:orchestrate` — regenerate `AGENT.md` + `CLAUDE.md`
+- `/starter:validate` — cross-check the persistent briefs for contradictions and anti-pattern hits
 - `/starter:extract` — reverse direction: scan an existing codebase, audit which briefs are missing or thin, fill the gaps, and end with a fork review of decisions the codebase left ambiguous
 
 Feedback loop (post-setup, when the briefs need to get better):
@@ -37,7 +38,11 @@ Feedback loop (post-setup, when the briefs need to get better):
 - `/starter:evaluate` — audit the project's actual code, design tokens, IA, and product copy against `AGENT.md` + the five anti-pattern registries. Dispatches four parallel sub-agents (Product, UX, Design, Code; the Product agent also covers the `project-anti-patterns` ban list when `PROJECT.md` exists) and writes a findings report to `.starter/evaluations/`.
 - `/starter:report-issue` — when the same problem keeps recurring, draft a public GitHub issue against this repo so the templates, questionnaires, or guardrails can improve. Consent and snippet redaction are explicit; posts via `gh` with a web-URL fallback.
 
-Each brief and tool is also exposed as a Skill, so natural-language phrases like "set up the product brief", "let's define the design system", "reverse-engineer the briefs from this repo", "this brief is wrong", "audit the project against the briefs", or "report this upstream" auto-trigger the matching flow.
+Each brief and tool is also exposed as a Skill, so natural-language phrases like "set up the product brief", "let's define the design system", "validate the briefs", "reverse-engineer the briefs from this repo", "this brief is wrong", "audit the project against the briefs", or "report this upstream" auto-trigger the matching flow.
+
+## Example
+
+See [`examples/good-saas/`](./examples/good-saas/) for a fully-filled set of briefs (a fictional B2B retro tool called Bramble) and the `AGENT.md` / `CLAUDE.md` they produce. Use it as a reference for what "done" looks like.
 
 ## Questionnaire shape
 
