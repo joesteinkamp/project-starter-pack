@@ -5,7 +5,7 @@ The visual-layer tells that an AI made it (or that a designer wasn't paying atte
 ## Color
 
 - **No purple gradients on dark backgrounds** as the default for "AI" or "tech" products. It is the single most overused signature of the era.
-- **No pure black (#000) or pure white (#FFF)** on body surfaces. Use OKLCH neutrals with a hint of warmth or coolness.
+- **No pure black (#000)** on body surfaces. Use OKLCH neutrals with a hint of warmth or coolness. Pure white (#FFF) is fine.
 - **No neon-on-black** as an accent system. Saturated hues on near-black is a category reflex, not a choice.
 - **No more than one decisive accent.** A "Restrained" or "Committed" palette uses one accent on ≤10% of surface.
 - **No gray text on colored backgrounds.** Contrast ratios verified, not eyeballed.

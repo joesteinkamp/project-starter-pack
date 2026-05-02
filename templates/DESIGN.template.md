@@ -83,8 +83,9 @@ than to a SaaS dashboard." -->
 ### Color strategy
 
 <!-- One of: Restrained | Committed | Full Palette | Drenched.
-Use OKLCH. Avoid pure black/white. Specify foreground, background, accent,
-and any system colors with their OKLCH triplets. -->
+Use OKLCH. Avoid pure black on body surfaces (pure white is fine). Specify
+foreground, background, accent, and any system colors with their OKLCH
+triplets. -->
 
 **Strategy:** {{COLOR_STRATEGY}}
 
