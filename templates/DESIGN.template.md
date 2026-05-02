@@ -92,8 +92,10 @@ Format:
 ## Colors
 
 <!-- Strategy: Restrained | Committed | Full Palette | Drenched.
-Use OKLCH. Avoid pure black/white. Tokens live in the YAML front matter; this
-section explains the *why*. -->
+Use OKLCH. Avoid pure black on body surfaces (pure white is fine). Specify
+foreground, background, accent, and any system colors with their OKLCH
+triplets. Tokens live in the YAML front matter; this section explains the
+*why*. -->
 
 **Strategy:** {{COLOR_STRATEGY}}
 

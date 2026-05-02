@@ -30,9 +30,9 @@ This project ships the `project-starter-pack` plugin. The following commands are
 - `/starter:project-brief` — scope the current initiative and write `PROJECT.md` (run per initiative).
 - `/starter:orchestrate` — regenerate `AGENTS.md` and `CLAUDE.md` from the briefs (folds in `PROJECT.md` when present).
 - `/starter:validate` — cross-check the persistent briefs for contradictions and anti-pattern hits.
-- `/starter:feedback` — apply corrective feedback to a generated brief (`PRODUCT.md`, `DESIGN.md`, `CODE.md`, `PROJECT.md`, `AGENTS.md`, `CLAUDE.md`).
-- `/starter:evaluate` — audit the project against `AGENTS.md` and the four anti-pattern guardrails; report at `.starter/evaluations/`.
-- `/starter:report-issue` — file an upstream issue at `joesteinkamp/project-starter-pack` so the generator improves.
+- `/starter:feedback` — apply corrective feedback to a generated brief.
+- `/starter:evaluate` — audit the project against `AGENTS.md` and the four anti-pattern guardrails.
+- `/starter:report-issue` — file an upstream issue at `joesteinkamp/project-starter-pack`.
 
 ### Skills available
 
@@ -50,4 +50,8 @@ The plugin also exposes skills that auto-trigger when the user describes the mat
 
 ## Project-specific Claude notes
 
-{{CLAUDE_PROJECT_NOTES}}
+- **Sub-agent steering**: dispatch **Plan** before any change to `app/lib/retro/service.ts` or the meeting-surface route (`app/routes/teams.$team.retros.$retro.tsx`) — these touch real-time state via LiveKit data-channels and timing edge cases land here. Use **Explore** for searches across `app/lib/` instead of grepping from the main thread.
+- **Hot-spot file**: `app/db/schema.ts` is load-bearing for the carryover relationship between `Retro` → `Action` → next `Retro`. Read the whole file before modifying any of those tables; migrations are forward-only.
+- **Tooling quirks**: tests run via `pnpm vitest` (not `npm test`) and E2E via `pnpm playwright test`. Pre-commit runs Biome — don't skip it. Migrations are applied via `pnpm db:migrate`; never edit a migration that has shipped.
+- **Blast-radius rule**: never run `pnpm db:migrate:prod` or `gh workflow run deploy-prod` without an explicit user OK. Staging deploys auto-trigger from `main` and are fine.
+- **Performance gate**: any change that touches `app/routes/teams.$team.retros.$retro.write.tsx` (the writing surface, the most-visited route) must be checked against the LCP ≤1.5s budget before merge. Bundle additions to that route get scrutiny first.
