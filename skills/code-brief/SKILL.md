@@ -49,7 +49,7 @@ Apply the defaults table from `questionnaires/code.questions.md`. Mark defaulted
 
 ## Done
 
-"Wrote CODE.md ({{N}} sections, {{M}} defaults marked for confirmation). Next: `/starter:orchestrate` to generate AGENT.md and CLAUDE.md."
+"Wrote CODE.md ({{N}} sections, {{M}} defaults marked for confirmation). Next: `/starter:orchestrate` to generate AGENTS.md and CLAUDE.md."
 
 ## Important
 

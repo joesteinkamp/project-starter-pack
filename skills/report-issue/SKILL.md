@@ -10,7 +10,7 @@ You turn a user's pain with the starter-pack into a clean, public GitHub issue a
 ## Setup
 
 1. Locate the plugin root. The candidate "at fault" artifacts live under `templates/`, `questionnaires/`, `guardrails/`, `skills/`, and `commands/`. You'll need their names later for the artifact picker.
-2. Read the user's most recent generation context if available: any of `PRODUCT.md`, `DESIGN.md`, `CODE.md`, `AGENT.md`, `CLAUDE.md` at the project root, plus the latest file under `.starter/evaluations/` if it exists. Don't read more than the user invites — these are theirs.
+2. Read the user's most recent generation context if available: any of `PRODUCT.md`, `DESIGN.md`, `CODE.md`, `AGENTS.md`, `CLAUDE.md` at the project root, plus the latest file under `.starter/evaluations/` if it exists. Don't read more than the user invites — these are theirs.
 
 ## Pre-flight — consent
 

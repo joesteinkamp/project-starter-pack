@@ -1,16 +1,16 @@
 ---
 name: evaluator
-description: Audits the project's actual code, design tokens, route structure, and product copy against AGENT.md and the five anti-pattern guardrails (product, UX, design, code, project). Use when the user asks to evaluate, audit, lint, grade, or check whether the project follows the briefs. Triggers on phrases like "evaluate this project", "audit against the briefs", "is this code following AGENT.md", "design audit", "starter audit", "check the project against the guardrails".
+description: Audits the project's actual code, design tokens, route structure, and product copy against AGENTS.md and the five anti-pattern guardrails (product, UX, design, code, project). Use when the user asks to evaluate, audit, lint, grade, or check whether the project follows the briefs. Triggers on phrases like "evaluate this project", "audit against the briefs", "is this code following AGENTS.md", "design audit", "starter audit", "check the project against the guardrails".
 ---
 
 # Evaluator Skill
 
-You audit the user's actual project against the rules the starter-pack already encoded for it. The contract is `AGENT.md` plus the five anti-pattern registries. Findings must cite real evidence in the repo — never report a violation you can't point to.
+You audit the user's actual project against the rules the starter-pack already encoded for it. The contract is `AGENTS.md` plus the five anti-pattern registries. Findings must cite real evidence in the repo — never report a violation you can't point to.
 
 ## Setup
 
 1. Locate the plugin root. The five guardrail files are at `guardrails/{product,ux,design,code,project}-anti-patterns.md`. Read them — they're the structured rule set.
-2. Read `AGENT.md` from the project root. This is the synthesized contract. If it doesn't exist, stop and tell the user to run `/starter:orchestrate` first.
+2. Read `AGENTS.md` from the project root. This is the synthesized contract. If it doesn't exist, stop and tell the user to run `/starter:orchestrate` first.
 3. If `PROJECT.md` exists at the project root, read it — it scopes the current initiative (goal, non-goals, scope slice, success metrics) and sharpens "is this in scope?" findings.
 4. If `DESIGN.json` exists at the project root, read it — it's the machine-readable design token companion that tightens the design audit.
 
@@ -29,7 +29,7 @@ Note any axis that has no evidence in the repo. Don't fabricate findings for axe
 
 Use the `Explore` sub-agent to dispatch one investigation per axis in parallel. Each sub-agent receives:
 
-- The relevant slice of `AGENT.md` (Product context / UX laws / Design laws / Code conventions plus its anti-pattern section).
+- The relevant slice of `AGENTS.md` (Product context / UX laws / Design laws / Code conventions plus its anti-pattern section).
 - The full text of the matching `guardrails/<axis>-anti-patterns.md`.
 - The list of repo paths in its bucket (not the file contents — the sub-agent reads what it needs).
 - A required output schema (see "Finding shape" below).
@@ -59,7 +59,7 @@ Each sub-agent must return a JSON-shaped list. Each finding:
 Severity guide:
 - `block` — clear, named anti-pattern with direct evidence (e.g. `setTimeout(fn, 100)` next to a race comment, or a CSS variable with a purple gradient on a dark background).
 - `warn` — pattern is present but context-dependent (e.g. a single `as any` that might be load-bearing, a card-inside-card that might be a deliberate exception).
-- `note` — the brief covers a topic but the repo has no evidence either way (e.g. `AGENT.md` mandates `prefers-reduced-motion` but no motion code exists yet).
+- `note` — the brief covers a topic but the repo has no evidence either way (e.g. `AGENTS.md` mandates `prefers-reduced-motion` but no motion code exists yet).
 
 Tell each sub-agent: **no finding without evidence**. If the rule is met or not testable from the files in scope, omit it.
 
@@ -79,7 +79,7 @@ Write to `.starter/evaluations/<YYYY-MM-DD-HHMM>.md`. Create `.starter/evaluatio
 ```markdown
 # Project Evaluation — <ISO timestamp>
 
-Audited against `AGENT.md` and the five anti-pattern registries.
+Audited against `AGENTS.md` and the five anti-pattern registries.
 
 ## Summary
 - {{N_BLOCK}} block, {{N_WARN}} warn, {{N_NOTE}} note ({{N_TRUNCATED}} additional findings truncated)
@@ -111,7 +111,7 @@ Print only the **Summary** + the top 5 `block` findings (file:line + one-line fi
 ## Important
 
 - Do not invent evidence. A finding without a `file:line` is not a finding.
-- Do not re-state the entire `AGENT.md` back at the user. They wrote it; the report is about deviation, not summary.
+- Do not re-state the entire `AGENTS.md` back at the user. They wrote it; the report is about deviation, not summary.
 - The five anti-pattern lists are the spec — don't add new bans on the fly. If you want a new ban, that's a `/starter:report-issue` against the guardrail.
 - Honest scoping: if the repo has a `package.json` and nothing else, say so. A near-empty audit is a real result, not a failure.
 - Respect parallelism: the four sub-agents run in a single dispatch, not sequentially.

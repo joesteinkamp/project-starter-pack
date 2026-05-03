@@ -54,7 +54,7 @@ For any unanswered slot, fill with the defaults table in `questionnaires/project
 
 ## Done
 
-Print a one-line summary: "Wrote PROJECT.md ({{TITLE}}, status: {{STATUS}}). Re-run `/starter:orchestrate` so AGENT.md picks up the current scope."
+Print a one-line summary: "Wrote PROJECT.md ({{TITLE}}, status: {{STATUS}}). Re-run `/starter:orchestrate` so AGENTS.md picks up the current scope."
 
 ## Important
 

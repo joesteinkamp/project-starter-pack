@@ -1,6 +1,6 @@
 ---
 name: feedback
-description: Takes corrective feedback on a generated brief (PRODUCT.md, DESIGN.md, CODE.md, PROJECT.md, AGENT.md, CLAUDE.md) and proposes a focused edit to the affected md file(s). Use when the user says a generated file is wrong, missing detail, contradicts reality, has the wrong tone, or contains a stale anti-pattern. Triggers on phrases like "fix PRODUCT.md", "this brief is wrong", "give feedback on DESIGN.md", "PROJECT.md scope is off", "AGENT.md is missing X", "the generated CLAUDE.md got Y wrong".
+description: Takes corrective feedback on a generated brief (PRODUCT.md, DESIGN.md, CODE.md, PROJECT.md, AGENTS.md, CLAUDE.md) and proposes a focused edit to the affected md file(s). Use when the user says a generated file is wrong, missing detail, contradicts reality, has the wrong tone, or contains a stale anti-pattern. Triggers on phrases like "fix PRODUCT.md", "this brief is wrong", "give feedback on DESIGN.md", "PROJECT.md scope is off", "AGENTS.md is missing X", "the generated CLAUDE.md got Y wrong".
 ---
 
 # Feedback Skill
@@ -10,14 +10,14 @@ You take corrective feedback on a brief that the starter-pack already generated 
 ## Setup
 
 1. Locate the plugin root. The templates are at `templates/{PRODUCT,DESIGN,CODE,PROJECT,AGENT,CLAUDE}.template.md` and the guardrails are at `guardrails/{product,ux,design,code,project}-anti-patterns.md`. You may need to read them later to ground a proposed edit in the same voice the generator used.
-2. Identify which generated briefs exist at the project root: `PRODUCT.md`, `DESIGN.md`, `CODE.md`, `PROJECT.md`, `AGENT.md`, `CLAUDE.md`. If none exist, stop and tell the user to run `/starter:setup` first.
+2. Identify which generated briefs exist at the project root: `PRODUCT.md`, `DESIGN.md`, `CODE.md`, `PROJECT.md`, `AGENTS.md`, `CLAUDE.md`. If none exist, stop and tell the user to run `/starter:setup` first.
 
 ## Pass 1 — Locate the problem (AskUserQuestion)
 
 Ask both questions in a single `AskUserQuestion` call.
 
 **Q1. Which file is the feedback about?**
-Choices: `PRODUCT.md`, `DESIGN.md`, `CODE.md`, `PROJECT.md`, `AGENT.md`, `CLAUDE.md`, `Multiple / not sure`.
+Choices: `PRODUCT.md`, `DESIGN.md`, `CODE.md`, `PROJECT.md`, `AGENTS.md`, `CLAUDE.md`, `Multiple / not sure`.
 - Allow multi-select.
 - If the user picks `Multiple / not sure`, you'll narrow it down in Pass 2 from the symptom.
 
@@ -42,15 +42,15 @@ If the user picked `Multiple / not sure` in Q1, use the location + symptom to na
 
 ## Diagnose — derived vs source
 
-`AGENT.md` and `CLAUDE.md` are **derived** from `PRODUCT.md`, `DESIGN.md`, `CODE.md`, and (when present) `PROJECT.md`. If the affected file is one of those:
+`AGENTS.md` and `CLAUDE.md` are **derived** from `PRODUCT.md`, `DESIGN.md`, `CODE.md`, and (when present) `PROJECT.md`. If the affected file is one of those:
 
 - Read the relevant source brief(s).
 - Decide whether the root cause is in the derived file or in the source brief:
   - If the source brief already has the right content and the derived file dropped it or distorted it → edit the derived file directly and note that the source brief was correct.
-  - If the source brief is itself wrong → edit the source brief, then offer to re-run `/starter:orchestrate` to regenerate `AGENT.md` and `CLAUDE.md`.
+  - If the source brief is itself wrong → edit the source brief, then offer to re-run `/starter:orchestrate` to regenerate `AGENTS.md` and `CLAUDE.md`.
   - If both are wrong → edit both, source first.
 
-`PROJECT.md` is itself a source brief (per-initiative). Feedback that's actually about scope, non-goals, success metrics for the current initiative, or the decisions log usually points there — even if the user reported it against `AGENT.md`.
+`PROJECT.md` is itself a source brief (per-initiative). Feedback that's actually about scope, non-goals, success metrics for the current initiative, or the decisions log usually points there — even if the user reported it against `AGENTS.md`.
 
 State the diagnosis to the user in one line before drafting the edit.
 
@@ -67,7 +67,7 @@ State the diagnosis to the user in one line before drafting the edit.
 1. Show the user the diff (old section → new section, per file). Cap each side at ~25 lines per section; truncate with a note if longer.
 2. Ask: "Apply this edit, edit further first, or cancel?"
 3. On apply, use the `Edit` tool against the target file(s). Use `replace_all: false` and pass enough surrounding context that the match is unique.
-4. If a derived file was edited but the source brief was the actual cause, finish with: "Run `/starter:orchestrate` to regenerate `AGENT.md` and `CLAUDE.md` from the updated source brief?" and act on the answer.
+4. If a derived file was edited but the source brief was the actual cause, finish with: "Run `/starter:orchestrate` to regenerate `AGENTS.md` and `CLAUDE.md` from the updated source brief?" and act on the answer.
 
 ## Done
 
@@ -77,7 +77,7 @@ Print a one-screen summary:
 ✓ Edited {{FILE}} ({{SECTION}})
 {{IF_DERIVED_BUT_SOURCE_FIXED}}
 ✓ Edited source brief {{SOURCE_FILE}} ({{SOURCE_SECTION}})
-↻ Re-ran /starter:orchestrate to regenerate AGENT.md and CLAUDE.md
+↻ Re-ran /starter:orchestrate to regenerate AGENTS.md and CLAUDE.md
 {{END_IF}}
 
 Diagnosis: {{ONE_LINE}}

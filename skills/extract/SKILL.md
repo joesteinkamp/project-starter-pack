@@ -1,6 +1,6 @@
 ---
 name: extract
-description: Reverse-engineers PRODUCT.md, DESIGN.md, CODE.md, AGENT.md from an existing codebase. Audits which briefs are missing or thin, extracts what's inferable from code (manifests, tokens, components, configs), confirms gaps via questionnaire, and ends with a fork-and-iterate review of decisions the codebase left ambiguous. Use when the user asks to extract briefs, reverse-engineer briefs, generate briefs from an existing codebase, audit which briefs are missing, or fill in missing project documentation. Triggers on "extract briefs", "reverse-engineer", "reverse engineer briefs", "briefs from codebase", "audit briefs", "missing PRODUCT.md", "fill in the briefs", "fork the briefs".
+description: Reverse-engineers PRODUCT.md, DESIGN.md, CODE.md, AGENTS.md from an existing codebase. Audits which briefs are missing or thin, extracts what's inferable from code (manifests, tokens, components, configs), confirms gaps via questionnaire, and ends with a fork-and-iterate review of decisions the codebase left ambiguous. Use when the user asks to extract briefs, reverse-engineer briefs, generate briefs from an existing codebase, audit which briefs are missing, or fill in missing project documentation. Triggers on "extract briefs", "reverse-engineer", "reverse engineer briefs", "briefs from codebase", "audit briefs", "missing PRODUCT.md", "fill in the briefs", "fork the briefs".
 ---
 
 # Extract Skill
@@ -10,7 +10,7 @@ You run the inverse of the rest of the starter pack. Instead of leading with que
 ## Setup
 
 1. Locate the plugin root. You will need:
-   - Templates: `templates/PRODUCT.template.md`, `templates/DESIGN.template.md`, `templates/DESIGN.tokens.template.json`, `templates/CODE.template.md`, `templates/AGENT.template.md`, `templates/CLAUDE.template.md`.
+   - Templates: `templates/PRODUCT.template.md`, `templates/DESIGN.template.md`, `templates/DESIGN.tokens.template.json`, `templates/CODE.template.md`, `templates/AGENTS.template.md`, `templates/CLAUDE.template.md`.
    - Questionnaires: `questionnaires/product.questions.md`, `questionnaires/design.questions.md`, `questionnaires/code.questions.md`.
    - Guardrails: `guardrails/{product,ux,design,code}-anti-patterns.md`.
 2. Read all templates before scanning — the section list of each template is your **completeness checklist** for that brief.
@@ -25,7 +25,7 @@ Look for and read if present:
 - `PRODUCT.md`
 - `DESIGN.md`, `DESIGN.json`
 - `CODE.md`
-- `AGENT.md`, `AGENTS.md`
+- `AGENTS.md`, `AGENTS.md`
 - `CLAUDE.md`
 - `README.md`, `README.*`
 - `.cursor/rules/*`, `.github/copilot-instructions.md`, `.aider.conf*`, `GEMINI.md` — useful corroborating evidence
@@ -77,7 +77,7 @@ Brief         Status      Notes
 PRODUCT.md    missing     no file; README has a one-liner candidate
 DESIGN.md     thin        UI tokens present, UX foundation empty
 CODE.md       complete    all 9 sections present
-AGENT.md      missing     will regenerate after briefs are filled
+AGENTS.md      missing     will regenerate after briefs are filled
 ```
 
 Ask the user which briefs to (re)generate. Default to all `missing` and `thin`. Never modify `complete` briefs without explicit overwrite confirmation.
@@ -91,7 +91,7 @@ Process the briefs in order of inferability so the user sees the easy wins first
 1. `CODE.md` — most evidence, fewest questions.
 2. `DESIGN.md` — UI from tokens / components, UX from routes + user input.
 3. `PRODUCT.md` — mostly user input, README-seeded.
-4. `AGENT.md` + `CLAUDE.md` — handled by the `orchestrator` skill in Phase 6.
+4. `AGENTS.md` + `CLAUDE.md` — handled by the `orchestrator` skill in Phase 6.
 
 ### For each non-complete brief
 
@@ -109,7 +109,7 @@ If `DESIGN.json` exists in the repo, read its tokens into `DESIGN.md` color/type
 
 ## Phase 4 — Re-orchestrate
 
-Once the three briefs exist (whether freshly written or carried forward), invoke the `orchestrator` skill to regenerate `AGENT.md` and `CLAUDE.md`. Do not hand-write these — they are derived.
+Once the three briefs exist (whether freshly written or carried forward), invoke the `orchestrator` skill to regenerate `AGENTS.md` and `CLAUDE.md`. Do not hand-write these — they are derived.
 
 ## Phase 5 — Fork review
 
@@ -133,7 +133,7 @@ After listing all fork points, ask the user — using `AskUserQuestion` where th
 - **override** — capture the user's correction inline and rewrite the affected brief section.
 - **branch** — exit `extract` and recommend the relevant brief command (`/starter:product-brief`, `/starter:design-brief`, `/starter:code-brief`) to iterate further. Print the command and stop; the user resumes it themselves.
 
-If the user **branches** on any brief, do not re-run `orchestrator` after the fork review — the brief is now in flight, and `AGENT.md` should be regenerated only after the user finishes iterating.
+If the user **branches** on any brief, do not re-run `orchestrator` after the fork review — the brief is now in flight, and `AGENTS.md` should be regenerated only after the user finishes iterating.
 
 ## Done
 
@@ -146,8 +146,8 @@ Print a one-screen summary:
 
 Next:
 - If you branched on any brief, run the matching /starter:<brief> command to iterate.
-- If everything was accepted or overridden, AGENT.md and CLAUDE.md are up to date.
-- Edit any brief by hand and re-run /starter:orchestrate to refresh AGENT.md.
+- If everything was accepted or overridden, AGENTS.md and CLAUDE.md are up to date.
+- Edit any brief by hand and re-run /starter:orchestrate to refresh AGENTS.md.
 ```
 
 ## Important

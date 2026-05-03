@@ -15,19 +15,19 @@ After briefs exist, nothing checks they agree (e.g. "minimal motion" in `DESIGN.
 **Files:** `skills/orchestrator/SKILL.md:51-56`.
 
 ### Ship a fully-filled example
-Repo has templates but zero filled examples. Users can't preview the output before running `/starter:setup`. Add `examples/good-saas/` with realistic `PRODUCT.md` / `DESIGN.md` / `DESIGN.json` / `CODE.md` / `AGENT.md` / `CLAUDE.md` plus a one-paragraph `README.md` framing what to notice. Also doubles as a regression fixture for the validator above.
+Repo has templates but zero filled examples. Users can't preview the output before running `/starter:setup`. Add `examples/good-saas/` with realistic `PRODUCT.md` / `DESIGN.md` / `DESIGN.json` / `CODE.md` / `AGENTS.md` / `CLAUDE.md` plus a one-paragraph `README.md` framing what to notice. Also doubles as a regression fixture for the validator above.
 **Files:** new `examples/good-saas/*`; touch `README.md`.
 
-### Surface UX-first hierarchy in `AGENT.md`
-`templates/AGENT.template.md:23-33` lists `## UX laws` and `## Design laws` as peers, so a downstream agent can lean UI-first. The questionnaire and `commands/setup.md:13` already establish UX-then-UI; the synthesized output drops the relationship. Add a one-line lead-in under each heading making UX the constraint and UI the expression.
-**Files:** `templates/AGENT.template.md:23-33`, `skills/orchestrator/SKILL.md:41-42`.
+### Surface UX-first hierarchy in `AGENTS.md`
+`templates/AGENTS.template.md:23-33` lists `## UX laws` and `## Design laws` as peers, so a downstream agent can lean UI-first. The questionnaire and `commands/setup.md:13` already establish UX-then-UI; the synthesized output drops the relationship. Add a one-line lead-in under each heading making UX the constraint and UI the expression.
+**Files:** `templates/AGENTS.template.md:23-33`, `skills/orchestrator/SKILL.md:41-42`.
 
 ---
 
 ## Medium
 
 ### Document downstream agent integration
-`README.md:61` lists Cursor/Codex/Gemini/Copilot as out of scope (v1), but `AGENT.md` is the universal hook. A short doc — "exporting AGENT.md to Cursor rules / Codex prompts / Copilot context" — would make good on the README's pitch.
+`README.md:61` lists Cursor/Codex/Gemini/Copilot as out of scope (v1), but `AGENTS.md` is the universal hook. A short doc — "exporting AGENTS.md to Cursor rules / Codex prompts / Copilot context" — would make good on the README's pitch.
 **Files:** new `INTEGRATIONS.md` (or section in `README.md`).
 
 ### Extend `DESIGN.tokens.template.json`
@@ -35,8 +35,8 @@ Currently only color, type, and motion. No spacing scale, shadows, or border-rad
 **Files:** `templates/DESIGN.tokens.template.json`; questions Q15-Q19 in `questionnaires/design.questions.md`.
 
 ### Re-orchestration / sync detection
-Edit `PRODUCT.md` by hand, re-run `/starter:orchestrate`, and stale briefs get baked into `AGENT.md` silently. A timestamp/hash header in `AGENT.md` would let the orchestrator warn on drift.
-**Files:** `templates/AGENT.template.md`, `skills/orchestrator/SKILL.md`.
+Edit `PRODUCT.md` by hand, re-run `/starter:orchestrate`, and stale briefs get baked into `AGENTS.md` silently. A timestamp/hash header in `AGENTS.md` would let the orchestrator warn on drift.
+**Files:** `templates/AGENTS.template.md`, `skills/orchestrator/SKILL.md`.
 
 ### Team-shape questions in product brief
 No "team size / iteration velocity / ownership model" prompts. These shape sensible defaults for testing depth and design-token granularity.
@@ -50,7 +50,7 @@ No "team size / iteration velocity / ownership model" prompts. These shape sensi
 Setup runs the four steps back-to-back. A "Continue to design brief?" gate would help users who want to break it up.
 **Files:** `commands/setup.md`.
 
-### Rendering strategy for large `AGENT.md`
+### Rendering strategy for large `AGENTS.md`
 20+ anti-patterns can overwhelm the preview. Document a collapse/summary approach in the orchestrator skill.
 **Files:** `skills/orchestrator/SKILL.md:58-62`.
 
