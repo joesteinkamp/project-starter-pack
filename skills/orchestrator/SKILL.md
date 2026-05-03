@@ -1,6 +1,6 @@
 ---
 name: orchestrator
-description: Synthesizes PRODUCT.md, DESIGN.md, CODE.md, and PROJECT.md (when present) into AGENTS.md (universal agents.md spec, joesteinkamp/agents-md format) and CLAUDE.md (Claude-Code-specific) at the project root. Supports updating an existing AGENTS.md by merging only the regenerated sections while preserving hand-edits inside the custom block. Use when the user asks to generate, regenerate, or update AGENTS.md / AGENT.md / CLAUDE.md, or when the briefs exist and the agent instructions need to be assembled. Triggers on "AGENTS.md", "AGENT.md", "CLAUDE.md", "orchestrate briefs", "generate agent instructions", "assemble project instructions", "update agents file".
+description: Synthesizes PRODUCT.md, DESIGN.md, CODE.md, and PROJECT.md (when present) into AGENTS.md (universal agents.md spec, joesteinkamp/agents-md format) and CLAUDE.md (Claude-Code-specific) at the project root. Supports updating an existing AGENTS.md by merging only the regenerated sections while preserving hand-edits inside the custom block. Use when the user asks to generate, regenerate, or update AGENTS.md or CLAUDE.md, or when the briefs exist and the agent instructions need to be assembled. Triggers on "AGENTS.md", "CLAUDE.md", "orchestrate briefs", "generate agent instructions", "assemble project instructions", "update agents file".
 ---
 
 # Orchestrator Skill
@@ -25,11 +25,10 @@ If any of the three required briefs are missing:
 - Ask: proceed with placeholders, or stop?
 - If they proceed, leave the corresponding sections in `AGENTS.md` as `[TODO — run /starter:<brief>]` and continue.
 
-## Pre-flight (existing AGENTS.md / AGENT.md / CLAUDE.md)
+## Pre-flight (existing AGENTS.md / CLAUDE.md)
 
-Check for `AGENTS.md`, legacy `AGENT.md` (singular), and `CLAUDE.md`.
+Check for `AGENTS.md` and `CLAUDE.md`.
 
-- **Legacy `AGENT.md` only** → offer: rename to `AGENTS.md` (recommended) or write `AGENTS.md` alongside.
 - **Either AGENTS.md or CLAUDE.md exists** → ask via `AskUserQuestion`:
   - **regenerate** — overwrite all derived sections, preserve any content inside the `<!-- custom:start -->` / `<!-- custom:end -->` block.
   - **update sections** (merge) — pick which derived sections to refresh (e.g., only `## Design laws`); leave the rest verbatim.
@@ -82,7 +81,7 @@ Filenames lowercase-with-hyphens. One concept per file. Lead with the rule state
 1. Render both files and show the user (collapse long sections if needed).
 2. In merge mode, show a diff or the changed sections only.
 3. Ask for one round of edits.
-4. Write `AGENTS.md` and `CLAUDE.md` to the project root. If a legacy `AGENT.md` was renamed, also delete the singular file.
+4. Write `AGENTS.md` and `CLAUDE.md` to the project root.
 
 ## Done
 

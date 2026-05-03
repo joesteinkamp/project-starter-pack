@@ -99,7 +99,7 @@ _Filed via `/starter:report-issue`._
 Title: keep it under 70 chars. Format: `<artifact>: <one-line problem>`. Examples:
 - `design-anti-patterns: missing ban on full-bleed hero video`
 - `product-brief skill: validation pass loops on vague persona`
-- `AGENT.template: {{UX_LAWS}} survives when DESIGN.md is missing`
+- `AGENTS.template: {{UX_LAWS}} survives when DESIGN.md is missing`
 
 ## Preview & route
 
