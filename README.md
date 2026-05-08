@@ -64,6 +64,15 @@ Each brief carries its own anti-pattern guardrails embedded inline in the output
 - `guardrails/code-anti-patterns.md` — premature abstraction, defensive on internal boundaries, magic timing
 - `guardrails/project-anti-patterns.md` — output-as-goal, missing non-goals, vanity deadlines, "phase 2" placeholders
 
+## Agent memory
+
+The `memory/` directory is how AI assistants persist project-specific knowledge across sessions:
+
+- `memory/knowledge.md` — non-obvious facts, decisions, and gotchas the code alone won't tell you. The agent asks before adding to it; the trigger is iterative discovery (an answer that was wrong or only became right after back-and-forth), not chat volume.
+- `memory/changelog.md` — dated log of edits to the docs that govern agent behavior, used to diagnose drift.
+
+This is repo-local memory checked into git, distinct from any host-level agent memory. Humans can hand-edit either file freely. See [CLAUDE.md](./CLAUDE.md) for the full protocol.
+
 ## Install
 
 See [INSTALL.md](./INSTALL.md).
