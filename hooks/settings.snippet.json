@@ -1,0 +1,14 @@
+{
+  "//": "Advisory, warn-only design hooks for project-starter-pack. OPT-IN — run hooks/install-hooks.sh to merge this for you, or paste it into .claude/settings.json and replace ABS_PATH with the absolute path to this repo's hooks/ directory. These hooks never block; they only print nudges.",
+  "hooks": {
+    "PostToolUse": [
+      {
+        "matcher": "Edit|Write|MultiEdit",
+        "hooks": [
+          { "type": "command", "command": "ABS_PATH/hooks/guard-design.sh" },
+          { "type": "command", "command": "ABS_PATH/hooks/check-anti-patterns.sh" }
+        ]
+      }
+    ]
+  }
+}

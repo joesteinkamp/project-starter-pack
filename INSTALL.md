@@ -17,6 +17,8 @@ Then in Claude Code, the commands and skills will be available:
 - `/starter:design-brief`
 - `/starter:code-brief`
 - `/starter:orchestrate`
+- `/starter:validate`
+- `/starter:extract`
 
 ## Option 2 — Install globally for all projects
 
@@ -48,7 +50,7 @@ Open Claude Code in a project. Run:
 /starter:setup
 ```
 
-You should see the intro message describing the four-step flow. If you don't, the plugin isn't being picked up — confirm the directory structure (the `.claude-plugin/plugin.json` file must be at the plugin root, alongside `commands/` and `skills/`).
+You should see the intro message describing the flow (the three briefs, then orchestration). If you don't, the plugin isn't being picked up — confirm the directory structure (the `.claude-plugin/plugin.json` file must be at the plugin root, alongside `commands/` and `skills/`).
 
 ## Update
 

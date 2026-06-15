@@ -55,13 +55,15 @@ The `product-brief` skill walks the user through this question set. **Structured
 
 → `{{ONE_LINER}}`
 
-### Q6. Primary user, in their context
+### Q6. Primary (and secondary) user, in their context
 
 > Describe the primary user with enough specificity that you could pick them
 > out of a coffee shop. Role, seniority, environment, what they tried before
-> this, what made them stop trying.
+> this, what made them stop trying. If there's a meaningful secondary
+> audience, name them too (one or two sentences).
 
-→ `{{PRIMARY_USERS}}`
+→ `{{PRIMARY_USERS}}` + `{{SECONDARY_USERS}}` (leave secondary blank with a
+TODO if there isn't a distinct one)
 
 ### Q7. Jobs-to-be-done
 
@@ -112,3 +114,10 @@ The `product-brief` skill walks the user through this question set. **Structured
 - If `PRODUCT.md` exists, ask: **reuse / merge / overwrite**.
 - Validate that personas aren't generic (the `product-anti-patterns.md` rules) — flag and re-prompt if they are.
 - Validate that anti-references name actual things, not abstract qualities.
+
+## Extraction hints (brownfield)
+
+When `/starter:extract` runs against existing code, the README, landing/marketing copy, and the
+package `description` can seed `{{ONE_LINER}}`, `{{PRODUCT_PURPOSE}}`, and (low-confidence)
+`{{REGISTER}}`. Everything else here — users, jobs, personality, anti-references, principles,
+metrics — code cannot prove; extract leaves those as `[TODO — confirm]` for this questionnaire.
