@@ -146,7 +146,8 @@ The `design-brief` skill walks the user through this question set. **UX question
 - `considered` — purposeful transitions, expo-out default
 - `expressive` — motion is part of the brand
 
-→ writes to `{{MOTION}}`
+→ writes to `{{MOTION}}`, and seeds the `DESIGN.json` motion tokens
+`{{MOTION_EASING}}`, `{{MOTION_FAST}}`, `{{MOTION_BASE}}`, `{{MOTION_SLOW}}`
 
 ### Pass 2 — Open follow-ups (UI)
 
@@ -163,21 +164,26 @@ The `design-brief` skill walks the user through this question set. **UX question
 > background, foreground, muted, accent, border, plus any system colors
 > (success, warning, danger).
 
-→ `{{COLOR_TOKENS}}` and `DESIGN.json`
+→ `{{COLOR_TOKENS}}` (the prose table in `DESIGN.md`) and the `DESIGN.json`
+token slots `{{COLOR_BACKGROUND}}`, `{{COLOR_FOREGROUND}}`, `{{COLOR_MUTED}}`,
+`{{COLOR_ACCENT}}`, `{{COLOR_BORDER}}`
 
 #### Q17. Typography specifics
 
 > Display family, body family, mono family. Base size. Scale ratio (≥1.25).
 > Line height for body (≥1.4). Measure cap (default 65-75ch).
 
-→ `{{TYPOGRAPHY}}`
+→ `{{TYPOGRAPHY}}` (the prose section in `DESIGN.md`) and the `DESIGN.json`
+token slots `{{FONT_DISPLAY}}`, `{{FONT_BODY}}`, `{{FONT_MONO}}`,
+`{{TYPE_SCALE_RATIO}}`, `{{TYPE_BASE_SIZE}}`
 
 #### Q18. Spacing & layout
 
 > Spacing unit and scale. Grid system (or none). When are cards allowed,
 > when are they not?
 
-→ `{{SPACING_LAYOUT}}`
+→ `{{SPACING_LAYOUT}}` (the prose section in `DESIGN.md`) and the `DESIGN.json`
+token slots `{{SPACING_UNIT}}`, `{{SPACING_SCALE}}`
 
 #### Q19. Component primitives (8-12)
 
@@ -203,3 +209,13 @@ The `design-brief` skill walks the user through this question set. **UX question
 - Validate color tokens use OKLCH (not hex/HSL) — auto-convert with a note if the user provides hex.
 - Validate typography includes a measure cap.
 - Always pull anti-patterns from `guardrails/design-anti-patterns.md` and `guardrails/ux-anti-patterns.md` so the brief carries the bans inline.
+
+## Extraction hints (brownfield)
+
+When `/starter:extract` runs against existing code: theme/token files and CSS seed
+`{{COLOR_STRATEGY}}`, `{{COLOR_TOKENS}}`, and the `DESIGN.json` color tokens (flagging raw hex
+for OKLCH conversion); font imports and scale variables seed `{{TYPOGRAPHY}}` and the type tokens;
+spacing variables seed `{{SPACING_LAYOUT}}` and the spacing tokens; transition tokens seed
+`{{MOTION}}`; the components directory seeds `{{COMPONENTS}}`; routes/nav seed
+`{{INFORMATION_ARCHITECTURE}}`. UX intent (`{{USER_FLOWS}}`, `{{USER_KNOWLEDGE}}`,
+`{{VISUAL_REGISTER}}`) is left as `[TODO — confirm]` — code shows *what*, not *why*.

@@ -30,6 +30,16 @@ Check whether `AGENT.md` and/or `CLAUDE.md` exist:
 - If neither exists, proceed.
 - If either exists, ask: overwrite (regenerate from briefs) or stop. Do not offer "merge" — these files are derived, not authored.
 
+## Harness targets
+
+Before writing, ask the user which AI harnesses they target, via `AskUserQuestion` (multi-select):
+
+- **Claude Code** — writes `CLAUDE.md` (default on).
+- **Gemini CLI** — writes `GEMINI.md` from `templates/GEMINI.template.md`.
+- **Cursor** — writes either `AGENTS.md` (a copy of `AGENT.md`; Cursor reads it natively — the simple default) **or** `.cursor/rules/project.mdc` from `templates/cursor-rules.template.mdc` (glob-scoped, `alwaysApply` — the idiomatic, scoped option). Ask which when Cursor is selected.
+
+`AGENT.md` is always written — it is the universal source of truth every harness file imports or copies. Only emit the harness files the user selects.
+
 ## Synthesis
 
 ### AGENT.md
@@ -50,27 +60,39 @@ Anti-pattern lists must be **embedded inline** (one-line summaries), not just li
 
 ### CLAUDE.md
 
-Populate `templates/CLAUDE.template.md`. The file is intentionally thin — it imports `AGENT.md` via `@AGENT.md` and adds:
-- `{{CLAUDE_PROJECT_NOTES}}` — synthesize 3-5 project-specific Claude-Code notes from the briefs (e.g. "Use the Explore sub-agent for codebase searches; this monorepo has 12 packages", or "Use the Plan sub-agent before any change to the auth flow"). If nothing project-specific stands out, leave a single line: "No project-specific Claude notes yet."
+Populate `templates/CLAUDE.template.md`. The file is intentionally thin — it imports `AGENT.md` via `@AGENT.md`, carries the static "Layering" note (this is the project layer; user/global concerns like tool preferences, autonomy, memory, and sub-agent strategy live in the operator's own global instructions and are **not** restated here), the available commands/skills, and:
+- `{{CLAUDE_PROJECT_NOTES}}` — synthesize 3-5 notes that are **specific to this repository**, not generic agent advice. Good: "Dispatch the Plan sub-agent before touching the import pipeline — it's the riskiest surface" or "This monorepo has 12 packages; scope searches to the changed one." Bad: restating Edit-over-Write or general sub-agent strategy (that's user-level). If nothing project-specific stands out, leave a single line: "No project-specific Claude notes yet."
 
-Keep `CLAUDE.md` short. The shared rules belong in `AGENT.md`.
+Keep `CLAUDE.md` short. Shared rules belong in `AGENT.md`; user-level rules belong in the operator's global layer, never here.
+
+### GEMINI.md (if Gemini CLI selected)
+
+Populate `templates/GEMINI.template.md`. Like `CLAUDE.md` it imports `@AGENT.md` and carries the layering note. Fill `{{HARNESS_PROJECT_NOTES}}` with the same project-specific notes you wrote for `CLAUDE.md` (re-voiced for Gemini if needed). No tool/sub-agent prefs — those are user-level.
+
+### Cursor (if Cursor selected)
+
+- **Simple (default):** write `AGENTS.md` to the project root — a verbatim copy of `AGENT.md` with a one-line header noting it is derived; Cursor reads `AGENTS.md` natively.
+- **Scoped (opt-in):** populate `templates/cursor-rules.template.mdc` and write it to `.cursor/rules/project.mdc`. Fill `{{AGENT_BODY}}` with the full body of the generated `AGENT.md` (everything below its title), and `{{HARNESS_PROJECT_NOTES}}` with the project-specific notes. Never symlink — write a copy and tell the user to re-run `/starter:orchestrate` to refresh.
 
 ## Preview & write
 
-1. Render both files and show the user (collapse long sections if needed).
+1. Render `AGENT.md` plus each selected harness file and show the user (collapse long sections if needed).
 2. Ask for one round of edits.
-3. Write `AGENT.md` and `CLAUDE.md` to the project root.
+3. Write `AGENT.md` and every selected harness file (`CLAUDE.md`, `GEMINI.md`, `AGENTS.md` and/or `.cursor/rules/project.mdc`) to the project root.
 
 ## Done
 
-Print a one-screen summary:
+Print a one-screen summary listing every file written (only the selected harnesses):
 ```
 ✓ Wrote AGENT.md ({{N}} sections, {{M}} anti-patterns embedded)
-✓ Wrote CLAUDE.md (thin import of AGENT.md + {{K}} Claude-specific notes)
+✓ Wrote CLAUDE.md (thin import of AGENT.md + {{K}} project-specific notes)
+✓ Wrote GEMINI.md / AGENTS.md / .cursor/rules/project.mdc   ← only those selected
 
 Next steps:
 - Test by asking Claude to build something small in this repo. It should
   read AGENT.md before generating UI or code.
+- Run /starter:validate to check the briefs for contradictions and review
+  any existing code against them.
 - If anything in the briefs changes, edit PRODUCT.md / DESIGN.md / CODE.md
   and re-run /starter:orchestrate.
 ```

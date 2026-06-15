@@ -40,4 +40,7 @@ The plugin also exposes skills that auto-trigger when the user describes the mat
 
 ## Project-specific Claude notes
 
-{{CLAUDE_PROJECT_NOTES}}
+- The **import pipeline** (`import/`, EPUB.js + pdf.js) is the riskiest surface — dispatch the **Plan** sub-agent before changing it, and never run parsers with network access.
+- The **highlight anchor-matcher** and **sync merge** logic must keep their tests green; treat a dropped highlight anchor on re-import as a release blocker.
+- Reading-path performance is a hard limit: keep parsers lazy-loaded, never import EPUB.js/pdf.js on the Reader route.
+- The codebase is grouped by feature (`library/`, `reader/`, `marks/`, `import/`, `sync/`) — scope changes to the relevant feature folder.

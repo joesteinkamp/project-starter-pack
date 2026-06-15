@@ -1,0 +1,33 @@
+{
+  "$schema": "https://design-tokens.github.io/community-group/format/",
+  "color": {
+    "background": { "$value": "oklch(0.98 0.008 85)", "$type": "color" },
+    "foreground": { "$value": "oklch(0.27 0.02 50)", "$type": "color" },
+    "muted": { "$value": "oklch(0.55 0.015 60)", "$type": "color" },
+    "accent": { "$value": "oklch(0.52 0.13 35)", "$type": "color" },
+    "border": { "$value": "oklch(0.90 0.010 75)", "$type": "color" }
+  },
+  "typography": {
+    "fontFamily": {
+      "display": { "$value": "Fraunces, Georgia, serif", "$type": "fontFamily" },
+      "body": { "$value": "Spectral, Georgia, serif", "$type": "fontFamily" },
+      "mono": { "$value": "Berkeley Mono, ui-monospace, monospace", "$type": "fontFamily" }
+    },
+    "scale": {
+      "ratio": { "$value": 1.25, "$type": "number" },
+      "base": { "$value": "18px", "$type": "dimension" }
+    }
+  },
+  "spacing": {
+    "unit": { "$value": "4px", "$type": "dimension" },
+    "scale": { "$value": "4, 8, 12, 16, 24, 32, 48, 64", "$type": "string" }
+  },
+  "motion": {
+    "easing": { "$value": "cubic-bezier(0.16, 1, 0.3, 1)", "$type": "cubicBezier" },
+    "duration": {
+      "fast": { "$value": "120ms", "$type": "duration" },
+      "base": { "$value": "200ms", "$type": "duration" },
+      "slow": { "$value": "320ms", "$type": "duration" }
+    }
+  }
+}
