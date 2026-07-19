@@ -136,7 +136,8 @@ The `design-brief` skill walks the user through this question set. **UX question
 - `both` — light default, dark companion
 - `system` — follow OS preference
 
-→ informs color tokens
+→ informs color tokens, and decides whether `DESIGN.json` carries a `dark` block
+(any answer except `light` means Q16 must collect dark values too)
 
 #### Q14. Motion stance
 
@@ -161,12 +162,17 @@ The `design-brief` skill walks the user through this question set. **UX question
 #### Q16. Color tokens
 
 > Provide OKLCH values (or describe and the skill will propose) for:
-> background, foreground, muted, accent, border, plus any system colors
-> (success, warning, danger).
+> background, foreground, muted, accent, border. If Q13 chose `dark`, `both`,
+> or `system`, provide the dark-theme value for each as well. Any system
+> colors (success, warning, danger) go in the `DESIGN.md` prose table only —
+> `DESIGN.json` carries the five core tokens per theme.
 
 → `{{COLOR_TOKENS}}` (the prose table in `DESIGN.md`) and the `DESIGN.json`
 token slots `{{COLOR_BACKGROUND}}`, `{{COLOR_FOREGROUND}}`, `{{COLOR_MUTED}}`,
-`{{COLOR_ACCENT}}`, `{{COLOR_BORDER}}`
+`{{COLOR_ACCENT}}`, `{{COLOR_BORDER}}` — plus, when a dark theme exists,
+`{{COLOR_BACKGROUND_DARK}}`, `{{COLOR_FOREGROUND_DARK}}`, `{{COLOR_MUTED_DARK}}`,
+`{{COLOR_ACCENT_DARK}}`, `{{COLOR_BORDER_DARK}}` (drop the `dark` block from
+`DESIGN.json` when Q13 chose `light`)
 
 #### Q17. Typography specifics
 

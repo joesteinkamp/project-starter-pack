@@ -6,11 +6,11 @@
 
 ## Layering — this is the project layer
 
-This file (and `AGENT.md`) is the **project / codebase** layer: rules true of *this repository*.
-Your **user / global** layer (your personal Gemini context / global instructions) owns everything
-true of *you* across every project — tool preferences, autonomy level, memory, and output
-conventions. This file does **not** restate any of that; the two layers compose. Where a project
-rule conflicts with a personal one, the project rule wins for work in this repo.
+This is the **project / codebase** layer — rules that are true of *this repository*. It
+intentionally omits user/global concerns — tool preferences, autonomy level, memory, sub-agent
+strategy, and output conventions — which live in your user/global layer (your personal Gemini
+context / global instructions). The two layers compose; where they conflict for work in this
+repo, the project layer wins.
 
 ## Project-specific notes
 

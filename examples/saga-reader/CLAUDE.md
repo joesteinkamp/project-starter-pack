@@ -6,12 +6,10 @@
 
 ## Layering — this is the project layer
 
-This file (and `AGENT.md`) is the **project / codebase** layer: rules that are true of *this
-repository*. Your **user / global** layer (`~/.claude/CLAUDE.md`) owns everything that is true
-of *you* across every project — tool preferences (Edit-over-Write, parallel calls), autonomy
-level, memory, sub-agent strategy, MCP/tool gates, and output/serving conventions. This file
-does **not** restate any of that; the two layers compose. If a project rule below ever
-conflicts with a personal one, the project rule wins for work in this repo.
+This is the **project / codebase** layer — rules that are true of *this repository*. It
+intentionally omits user/global concerns — tool preferences, autonomy level, memory, sub-agent
+strategy, and output conventions — which live in your user/global layer (`~/.claude/CLAUDE.md`).
+The two layers compose; where they conflict for work in this repo, the project layer wins.
 
 ## Claude Code preferences
 
@@ -23,7 +21,7 @@ This project ships the `project-starter-pack` plugin. The following commands are
 - `/starter:product-brief` — (re)generate `PRODUCT.md`.
 - `/starter:design-brief` — (re)generate `DESIGN.md` (UX + UI).
 - `/starter:code-brief` — (re)generate `CODE.md`.
-- `/starter:orchestrate` — regenerate `AGENT.md` and `CLAUDE.md` from the three briefs.
+- `/starter:orchestrate` — regenerate `AGENT.md` and the selected harness files from the three briefs.
 - `/starter:validate` — check the briefs for contradictions and review the repo against them.
 - `/starter:extract` — reverse-engineer draft briefs from an existing codebase (brownfield).
 

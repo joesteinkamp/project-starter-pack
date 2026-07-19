@@ -1,11 +1,20 @@
 {
   "$schema": "https://design-tokens.github.io/community-group/format/",
   "color": {
-    "background": { "$value": "{{COLOR_BACKGROUND}}", "$type": "color" },
-    "foreground": { "$value": "{{COLOR_FOREGROUND}}", "$type": "color" },
-    "muted": { "$value": "{{COLOR_MUTED}}", "$type": "color" },
-    "accent": { "$value": "{{COLOR_ACCENT}}", "$type": "color" },
-    "border": { "$value": "{{COLOR_BORDER}}", "$type": "color" }
+    "light": {
+      "background": { "$value": "{{COLOR_BACKGROUND}}", "$type": "color" },
+      "foreground": { "$value": "{{COLOR_FOREGROUND}}", "$type": "color" },
+      "muted": { "$value": "{{COLOR_MUTED}}", "$type": "color" },
+      "accent": { "$value": "{{COLOR_ACCENT}}", "$type": "color" },
+      "border": { "$value": "{{COLOR_BORDER}}", "$type": "color" }
+    },
+    "dark": {
+      "background": { "$value": "{{COLOR_BACKGROUND_DARK}}", "$type": "color" },
+      "foreground": { "$value": "{{COLOR_FOREGROUND_DARK}}", "$type": "color" },
+      "muted": { "$value": "{{COLOR_MUTED_DARK}}", "$type": "color" },
+      "accent": { "$value": "{{COLOR_ACCENT_DARK}}", "$type": "color" },
+      "border": { "$value": "{{COLOR_BORDER_DARK}}", "$type": "color" }
+    }
   },
   "typography": {
     "fontFamily": {

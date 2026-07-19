@@ -55,6 +55,8 @@ Apply the defaults table from `questionnaires/design.questions.md`. Mark default
 
 If the user provided concrete color/typography/spacing values, also populate `templates/DESIGN.tokens.template.json` and offer to write it to `DESIGN.json` at the project root. The filename matches the convention used by Impeccable so the two tools can share the file. If the user declined to specify tokens, skip the JSON file.
 
+The color tokens are per-theme: fill the `light` block always, and the `dark` block whenever Q13 chose `dark`, `both`, or `system` (use the dark column of the DESIGN.md color table). If the theme is `light` only, delete the `dark` block from the JSON rather than leaving placeholders — DESIGN.json must state exactly what the design system commits to.
+
 ## Preview & write
 
 1. Render populated `DESIGN.md` and show it to the user.
