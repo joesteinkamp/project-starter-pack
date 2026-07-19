@@ -68,9 +68,10 @@ The `code-brief` skill walks the user through this question set.
 
 → `{{STACK_AUTH}}`
 
-> Note any other load-bearing services the agent must respect — payments,
-> email, search, queues, analytics, AI providers, CDN. Captured as a free-form
-> follow-up.
+### Q5b. Other load-bearing services
+
+> Any other services the agent must respect — payments, email, search, queues,
+> analytics, AI providers, CDN? Free-form follow-up.
 
 → `{{STACK_OTHER}}` (leave blank with a TODO if there are none worth pinning)
 

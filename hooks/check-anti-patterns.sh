@@ -16,7 +16,7 @@ input="$(cat)"
 if command -v jq >/dev/null 2>&1; then
   file="$(printf '%s' "$input" | jq -r '.tool_input.file_path // .tool_input.path // empty' 2>/dev/null)"
 else
-  file="$(printf '%s' "$input" | grep -oE '"file_path"[[:space:]]*:[[:space:]]*"[^"]+"' | head -1 | sed -E 's/.*"file_path"[[:space:]]*:[[:space:]]*"([^"]+)".*/\1/')"
+  file="$(printf '%s' "$input" | grep -oE '"(file_path|path)"[[:space:]]*:[[:space:]]*"[^"]+"' | head -1 | sed -E 's/.*"(file_path|path)"[[:space:]]*:[[:space:]]*"([^"]+)".*/\2/')"
 fi
 
 [ -n "${file:-}" ] && [ -f "$file" ] || exit 0
@@ -28,15 +28,16 @@ esac
 warn() { echo "anti-pattern: $1 in $file — $2 (design-anti-patterns.md, advisory)" >&2; }
 
 # Animating layout properties (banned: "No animations on layout properties").
-grep -nqE 'transition[^;]*\b(width|height|top|left)\b' "$file" 2>/dev/null \
+# `transition: all` animates them too, so it counts.
+grep -qE 'transition[^;]*\b(all|width|height|top|left)\b' "$file" 2>/dev/null \
   && warn "transition on a layout property" "animate transform/opacity instead"
 
 # Glassmorphism by default (banned: "No glassmorphism by default").
-grep -nqE 'backdrop-filter[[:space:]]*:[[:space:]]*blur' "$file" 2>/dev/null \
+grep -qE 'backdrop-filter[[:space:]]*:[[:space:]]*blur' "$file" 2>/dev/null \
   && warn "backdrop-filter: blur (glassmorphism)" "use deliberately or not at all"
 
 # Gradient text (banned: "No gradient text").
-grep -nqE '(-webkit-)?background-clip[[:space:]]*:[[:space:]]*text' "$file" 2>/dev/null \
+grep -qE '(-webkit-)?background-clip[[:space:]]*:[[:space:]]*text' "$file" 2>/dev/null \
   && warn "gradient/clipped text" "rarely meets contrast and reads as dated"
 
 exit 0

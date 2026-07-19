@@ -27,11 +27,23 @@ or a Cursor file — are emitted only for the harnesses you pick at orchestratio
 - `/starter:product-brief` — (re)generate `PRODUCT.md`
 - `/starter:design-brief` — (re)generate `DESIGN.md` (UX + UI)
 - `/starter:code-brief` — (re)generate `CODE.md`
-- `/starter:orchestrate` — regenerate `AGENT.md` + `CLAUDE.md`
+- `/starter:orchestrate` — regenerate `AGENT.md` + the selected harness files
 - `/starter:validate` — check the briefs for contradictions and review the repo against them
 - `/starter:extract` — reverse-engineer draft briefs from an existing codebase (brownfield)
 
 Each brief is also exposed as a Skill, so natural-language phrases like "set up the product brief" or "let's define the design system" auto-trigger the matching flow.
+
+## Harness support
+
+`/starter:orchestrate` always writes `AGENT.md` (the universal [agents.md](https://agents.md) hook),
+then emits a file for each harness you select:
+
+- **Claude Code** (default on) → `CLAUDE.md`
+- **Gemini CLI** → `GEMINI.md`
+- **Cursor** → either `AGENTS.md` (a simple copy Cursor reads natively — the default) **or**
+  `.cursor/rules/project.mdc` (glob-scoped, `alwaysApply`)
+
+Codex, Copilot, and other agents read `AGENT.md`/`AGENTS.md` directly.
 
 ## Questionnaire shape
 
@@ -95,7 +107,9 @@ orchestrator:
 It verifies the **slot ↔ question ↔ orchestrator ↔ template** contract — every template
 `{{SLOT}}` has a question (or default) that feeds it, every `DESIGN.json` token is traceable
 to the design questionnaire, every guardrail is wired into a skill and the orchestrator, and
-the shipped example is a complete, placeholder-free render. It needs only `bash` and `grep`.
+the shipped example is a complete, placeholder-free render whose structure matches the
+templates (every template heading and token key appears in the example). It needs only
+`bash`, `grep`, and `sed`.
 
 ### Optional design hooks
 
@@ -119,18 +133,6 @@ than in your global layer.
 ├── hooks/                        # Optional, opt-in, warn-only design hooks
 └── test.sh                       # Integrity linter for the slot/question contract
 ```
-
-## Harness support
-
-`/starter:orchestrate` always writes `AGENT.md` (the universal [agents.md](https://agents.md) hook),
-then emits a file for each harness you select:
-
-- **Claude Code** (default on) → `CLAUDE.md`
-- **Gemini CLI** → `GEMINI.md`
-- **Cursor** → either `AGENTS.md` (a simple copy Cursor reads natively — the default) **or**
-  `.cursor/rules/project.mdc` (glob-scoped, `alwaysApply`)
-
-Codex, Copilot, and other agents read `AGENT.md`/`AGENTS.md` directly.
 
 ## Out of scope
 

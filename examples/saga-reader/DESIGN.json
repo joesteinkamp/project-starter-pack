@@ -1,11 +1,20 @@
 {
   "$schema": "https://design-tokens.github.io/community-group/format/",
   "color": {
-    "background": { "$value": "oklch(0.98 0.008 85)", "$type": "color" },
-    "foreground": { "$value": "oklch(0.27 0.02 50)", "$type": "color" },
-    "muted": { "$value": "oklch(0.55 0.015 60)", "$type": "color" },
-    "accent": { "$value": "oklch(0.52 0.13 35)", "$type": "color" },
-    "border": { "$value": "oklch(0.90 0.010 75)", "$type": "color" }
+    "light": {
+      "background": { "$value": "oklch(0.98 0.008 85)", "$type": "color" },
+      "foreground": { "$value": "oklch(0.27 0.02 50)", "$type": "color" },
+      "muted": { "$value": "oklch(0.55 0.015 60)", "$type": "color" },
+      "accent": { "$value": "oklch(0.52 0.13 35)", "$type": "color" },
+      "border": { "$value": "oklch(0.90 0.010 75)", "$type": "color" }
+    },
+    "dark": {
+      "background": { "$value": "oklch(0.22 0.01 70)", "$type": "color" },
+      "foreground": { "$value": "oklch(0.90 0.012 80)", "$type": "color" },
+      "muted": { "$value": "oklch(0.66 0.012 75)", "$type": "color" },
+      "accent": { "$value": "oklch(0.66 0.12 38)", "$type": "color" },
+      "border": { "$value": "oklch(0.30 0.010 70)", "$type": "color" }
+    }
   },
   "typography": {
     "fontFamily": {

@@ -1,6 +1,6 @@
 ---
 name: orchestrator
-description: Synthesizes PRODUCT.md, DESIGN.md, and CODE.md into AGENT.md (universal agents.md) and CLAUDE.md (Claude-Code-specific) at the project root. Use when the user asks to generate or regenerate AGENT.md, AGENTS.md, or CLAUDE.md, or when all three briefs exist and the agent instructions need to be assembled. Triggers on "AGENT.md", "AGENTS.md", "CLAUDE.md", "orchestrate briefs", "generate agent instructions", "assemble project instructions".
+description: Synthesizes PRODUCT.md, DESIGN.md, and CODE.md into AGENT.md (universal agents.md) plus the selected harness files (CLAUDE.md, GEMINI.md, Cursor rules) at the project root. Use when the user asks to generate or regenerate AGENT.md, AGENTS.md, or CLAUDE.md, or when all three briefs exist and the agent instructions need to be assembled. Triggers on "AGENT.md", "AGENTS.md", "CLAUDE.md", "orchestrate briefs", "generate agent instructions", "assemble project instructions".
 ---
 
 # Orchestrator Skill
@@ -42,6 +42,22 @@ Before writing, ask the user which AI harnesses they target, via `AskUserQuestio
 
 ## Synthesis
 
+### The Layering note — one source of truth
+
+`{{LAYERING_NOTE}}` appears in `AGENT.template.md`, `CLAUDE.template.md`, and
+`GEMINI.template.md` so the note is defined once, here, instead of hand-maintained per harness.
+Fill every occurrence with exactly this text, swapping only the `<global layer>` pointer:
+
+> This is the **project / codebase** layer — rules that are true of *this repository*. It
+> intentionally omits user/global concerns — tool preferences, autonomy level, memory,
+> sub-agent strategy, and output conventions — which live in `<global layer>`. The two layers
+> compose; where they conflict for work in this repo, the project layer wins.
+
+`<global layer>` is: "the operator's own global instructions" in `AGENT.md`; "your user/global
+layer (`~/.claude/CLAUDE.md`)" in `CLAUDE.md`; "your user/global layer (your personal Gemini
+context / global instructions)" in `GEMINI.md`. The Cursor rule file carries the note via
+`{{AGENT_BODY}}` and needs no separate copy.
+
 ### AGENT.md
 
 Populate `templates/AGENT.template.md`:
@@ -60,14 +76,14 @@ Anti-pattern lists must be **embedded inline** (one-line summaries), not just li
 
 ### CLAUDE.md
 
-Populate `templates/CLAUDE.template.md`. The file is intentionally thin — it imports `AGENT.md` via `@AGENT.md`, carries the static "Layering" note (this is the project layer; user/global concerns like tool preferences, autonomy, memory, and sub-agent strategy live in the operator's own global instructions and are **not** restated here), the available commands/skills, and:
-- `{{CLAUDE_PROJECT_NOTES}}` — synthesize 3-5 notes that are **specific to this repository**, not generic agent advice. Good: "Dispatch the Plan sub-agent before touching the import pipeline — it's the riskiest surface" or "This monorepo has 12 packages; scope searches to the changed one." Bad: restating Edit-over-Write or general sub-agent strategy (that's user-level). If nothing project-specific stands out, leave a single line: "No project-specific Claude notes yet."
+Populate `templates/CLAUDE.template.md`. The file is intentionally thin — it imports `AGENT.md` via `@AGENT.md`, carries the Layering note (see above), the available commands/skills, and:
+- `{{HARNESS_PROJECT_NOTES}}` — synthesize 3-5 notes that are **specific to this repository**, not generic agent advice. Good: "Dispatch the Plan sub-agent before touching the import pipeline — it's the riskiest surface" or "This monorepo has 12 packages; scope searches to the changed one." Bad: restating Edit-over-Write or general sub-agent strategy (that's user-level). If nothing project-specific stands out, leave a single line: "No project-specific Claude notes yet."
 
 Keep `CLAUDE.md` short. Shared rules belong in `AGENT.md`; user-level rules belong in the operator's global layer, never here.
 
 ### GEMINI.md (if Gemini CLI selected)
 
-Populate `templates/GEMINI.template.md`. Like `CLAUDE.md` it imports `@AGENT.md` and carries the layering note. Fill `{{HARNESS_PROJECT_NOTES}}` with the same project-specific notes you wrote for `CLAUDE.md` (re-voiced for Gemini if needed). No tool/sub-agent prefs — those are user-level.
+Populate `templates/GEMINI.template.md`. Like `CLAUDE.md` it imports `@AGENT.md` and carries the Layering note (see above). Fill `{{HARNESS_PROJECT_NOTES}}` with the same project-specific notes you wrote for `CLAUDE.md` (re-voiced for Gemini if needed). No tool/sub-agent prefs — those are user-level.
 
 ### Cursor (if Cursor selected)
 
