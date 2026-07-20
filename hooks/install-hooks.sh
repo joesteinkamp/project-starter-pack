@@ -34,6 +34,14 @@ jq empty "$settings" 2>/dev/null || {
   echo "install-hooks: $settings is not valid JSON — fix it (or delete it) and re-run." >&2
   exit 1
 }
+# Shape guard: .hooks must be an object and .hooks.PostToolUse an array (or
+# absent) — otherwise the merge below would die with a cryptic jq error.
+jq -e '((.hooks // {}) | type == "object")
+       and (((.hooks // {}).PostToolUse // []) | type == "array")' \
+   "$settings" >/dev/null 2>&1 || {
+  echo "install-hooks: $settings has an unexpected shape — .hooks must be an object and .hooks.PostToolUse an array. Fix it and re-run." >&2
+  exit 1
+}
 cp "$settings" "$settings.bak"   # single rolling backup
 
 # chmod the hooks so the harness can run them.
@@ -47,18 +55,21 @@ cmds_json="$(printf '%s\n' "${HOOK_SCRIPTS[@]}" \
 
 tmp="$(mktemp)"
 trap 'rm -f "$tmp"' EXIT
-# Idempotent, and preserves user hooks: strip only OUR script entries from every
-# PostToolUse block (whatever its matcher), drop blocks that end up empty, then
-# add our commands to the first Edit|Write|MultiEdit block — or a new one.
+# Idempotent, and preserves user hooks: strip OUR script entries from blocks
+# that contain them, drop only blocks OUR strip emptied (user blocks without a
+# hooks array, or with an already-empty one, pass through untouched), then add
+# our commands to the first Edit|Write|MultiEdit block — or a new one.
 jq --argjson cmds "$cmds_json" '
+  def ours: (.command // "") | (endswith("guard-design.sh") or endswith("check-anti-patterns.sh"));
   .hooks //= {} |
   .hooks.PostToolUse //= [] |
   .hooks.PostToolUse |= map(
-    .hooks = ((.hooks // []) | map(select(
-      ((.command // "") | (endswith("guard-design.sh") or endswith("check-anti-patterns.sh"))) | not
-    )))
+    if ((.hooks? | type) == "array") and any(.hooks[]; ours) then
+      (.hooks | map(select(ours | not))) as $kept |
+      if ($kept | length) == 0 then empty else .hooks = $kept end
+    else .
+    end
   ) |
-  .hooks.PostToolUse |= map(select((.hooks | length) > 0)) |
   (.hooks.PostToolUse | map(.matcher == "Edit|Write|MultiEdit") | index(true)) as $i |
   if $i != null then .hooks.PostToolUse[$i].hooks += $cmds
   else .hooks.PostToolUse += [ { matcher: "Edit|Write|MultiEdit", hooks: $cmds } ]

@@ -2,6 +2,13 @@
 
 AI-made changes to this repository: what changed and why.
 
+## 2026-07-20 — Claude Fable 5 (follow-up polish)
+
+Hook installer: preserve user PostToolUse blocks that lack a `hooks` array; reject malformed
+`.hooks` shapes with a clear error instead of a raw jq crash. Documented two intentional
+constraints in `test.sh` (section 7 lowercase-token rule, JSON key check is presence-only).
+2 files, +24/−7; 177/177 checks pass.
+
 ## 2026-07-19 — Claude Fable 5 (multi-role review + fixes)
 
 Hardened the integrity linter (`test.sh`): template↔example structural parity, robust
