@@ -162,6 +162,9 @@ check_render_headings() {
   done < <(strip_fences "$template" | grep -E '^#{1,4} ')
   [ "$missing" -eq 0 ] && ok "$rendered carries every $(basename "$template") heading"
 }
+# Presence check, not structural: a key name found anywhere in the render
+# satisfies it. Catches a wholesale-dropped block (e.g. no "dark" key at all),
+# not a partial one whose key names also appear elsewhere (e.g. in "light").
 check_render_json_keys() {
   local template="$1" rendered="$2"
   [ -f "$rendered" ] || { bad "example render missing: $rendered"; return; }
@@ -211,6 +214,9 @@ done
 # Every command must invoke at least one existing skill, and any backticked
 # token on an invoke/skill line must resolve to a real skill dir — regardless
 # of the exact phrasing around it.
+# CONSTRAINT: every lowercase-only `token` on a line mentioning invoke/skill is
+# treated as a skill name. Keep non-skill references on such lines uppercase or
+# dotted (`PRODUCT.md`, `package.json`) — a bare lowercase one false-fails.
 for c in commands/*.md; do
   found_skill=0
   while IFS= read -r line; do
