@@ -405,6 +405,96 @@ if [ -d hooks ]; then
   check_link "glassmorphism"     hooks/check-anti-patterns.sh "backdrop-filter"
   check_link "gradient text"     hooks/check-anti-patterns.sh "background-clip"
   check_link "OKLCH"             hooks/guard-design.sh        "OKLCH"
+  # Behavioral fixtures — the install lifecycle and the hooks' pattern matching
+  # are exercised for real, not just parsed. The installer's worst historical
+  # defects (false success, deleting user hooks, destroying the backup) live
+  # here so the suite, not session notes, guards against their return.
+  if command -v jq >/dev/null 2>&1; then
+    td="$(mktemp -d "${TMPDIR:-/tmp}/psp-test.XXXXXX")"
+    mkdir -p "$td/proj/.claude"
+    cat > "$td/proj/.claude/settings.json" <<'FIXTURE'
+{"model":"opus","hooks":{"PostToolUse":[{"matcher":"Bash","hooks":[{"type":"command","command":"/home/me/scripts/guard-design.sh"}]}]}}
+FIXTURE
+    orig_settings="$(cat "$td/proj/.claude/settings.json")"
+    if (cd "$td/proj" && "$ROOT/hooks/install-hooks.sh" >/dev/null 2>&1 && "$ROOT/hooks/install-hooks.sh" >/dev/null 2>&1); then
+      ok "installer: runs twice cleanly"
+    else
+      bad "installer: failed on a plain double install"
+    fi
+    if [ "$(jq '[.hooks.PostToolUse[].hooks[]? | select(.command | startswith("'"$ROOT"'"))] | length' "$td/proj/.claude/settings.json")" = 2 ]; then
+      ok "installer: idempotent (exactly our 2 entries after 2 runs)"
+    else
+      bad "installer: duplicated or dropped its own entries on reinstall"
+    fi
+    if [ "$(jq -r '[.hooks.PostToolUse[].hooks[]? | select(.command == "/home/me/scripts/guard-design.sh")] | length' "$td/proj/.claude/settings.json")" = 1 ]; then
+      ok "installer: user's same-named hook preserved"
+    else
+      bad "installer: deleted the user's own guard-design.sh hook"
+    fi
+    if [ "$(jq -r '.model' "$td/proj/.claude/settings.json")" = "opus" ]; then
+      ok "installer: unrelated top-level keys preserved"
+    else
+      bad "installer: clobbered unrelated settings keys"
+    fi
+    if [ "$(cat "$td/proj/.claude/settings.json.bak")" = "$orig_settings" ]; then
+      ok "installer: backup still pristine after 2 runs"
+    else
+      bad "installer: second run overwrote the pre-install backup"
+    fi
+    if (cd "$td/proj" && "$ROOT/hooks/install-hooks.sh" --uninstall >/dev/null 2>&1) \
+       && [ "$(jq '[.hooks.PostToolUse[].hooks[]? | select(.command | startswith("'"$ROOT"'"))] | length' "$td/proj/.claude/settings.json")" = 0 ] \
+       && [ "$(jq '[.hooks.PostToolUse[].hooks[]? | select(.command == "/home/me/scripts/guard-design.sh")] | length' "$td/proj/.claude/settings.json")" = 1 ]; then
+      ok "installer: --uninstall removes exactly ours, keeps the user's"
+    else
+      bad "installer: --uninstall removed the wrong entries"
+    fi
+    mkdir -p "$td/bad/.claude"
+    echo '{"hooks":{"PostToolUse":[{"matcher":"Edit|Write|MultiEdit","hooks":{"oops":1}}]}}' > "$td/bad/.claude/settings.json"
+    bad_before="$(cat "$td/bad/.claude/settings.json")"
+    if (cd "$td/bad" && "$ROOT/hooks/install-hooks.sh" >/dev/null 2>&1); then
+      bad "installer: exited 0 on a malformed per-entry .hooks shape"
+    else
+      if [ "$(cat "$td/bad/.claude/settings.json")" = "$bad_before" ]; then
+        ok "installer: rejects malformed shape and leaves the file untouched"
+      else
+        bad "installer: mutated a settings file it then failed on"
+      fi
+    fi
+    mkdir -p "$td/empty/.claude" && : > "$td/empty/.claude/settings.json"
+    if (cd "$td/empty" && "$ROOT/hooks/install-hooks.sh" >/dev/null 2>&1); then
+      ok "installer: zero-byte settings.json handled"
+    else
+      bad "installer: choked on a zero-byte settings.json"
+    fi
+    # Hook pattern behavior: real file + real tool JSON through the real hook.
+    # The hook runs with cwd=$td (a non-repo dir) so guard-design resolves its
+    # DESIGN.json gate against the fixture dir, not this repo.
+    hook_case() { # HOOK EXT CONTENT EXPECT(warn|quiet) LABEL
+      local hook="$1" f="$td/case_$5.$2" out
+      printf '%s\n' "$3" > "$f"
+      out="$(cd "$td" && printf '{"tool_input":{"file_path":"%s"}}' "$f" | "$ROOT/hooks/$hook" 2>&1)"
+      if [ "$4" = warn ]; then
+        if [ -n "$out" ]; then ok "$hook warns: $5"; else bad "$hook MISSED: $5"; fi
+      else
+        if [ -z "$out" ]; then ok "$hook quiet: $5"; else bad "$hook FALSE-POSITIVE: $5"; fi
+      fi
+    }
+    echo '{}' > "$td/DESIGN.json"   # guard-design only fires when a token file exists
+    hook_case check-anti-patterns.sh css 'a { transition: all 0.3s; }'                     warn  transition-all
+    hook_case check-anti-patterns.sh css 'a { transition: margin-top 0.2s; }'              warn  transition-margin
+    hook_case check-anti-patterns.sh jsx '<div className="p-2 transition-all">x</div>'     warn  tailwind-transition-all
+    hook_case check-anti-patterns.sh jsx '<div className="transition-colors" style={{ width: w }}>x</div>' quiet jsx-transition-colors
+    hook_case check-anti-patterns.sh css 'a { transition: var(--all-fast); }'              quiet var-all-fast
+    hook_case check-anti-patterns.sh css ':root { --page-transition: all; }'               quiet custom-prop-name
+    hook_case check-anti-patterns.sh css 'a { backdrop-filter: blur(4px); }'               warn  glassmorphism
+    hook_case guard-design.sh        css 'a { color: #fff; }'                              warn  hex-3
+    hook_case guard-design.sh        css 'a { color: #aabbccdd; }'                         warn  hex-8
+    hook_case guard-design.sh        css '#dad { color: red; }'                            quiet id-selector
+    hook_case guard-design.sh        jsx '<a href="#add">x</a>'                            quiet href-anchor
+    rm -rf "$td"
+  else
+    ok "behavioral fixtures skipped (jq not installed)"
+  fi
 else
   ok "no hooks/ directory (hooks are optional)"
 fi

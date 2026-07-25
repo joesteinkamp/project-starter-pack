@@ -28,7 +28,7 @@ warn() { echo "anti-pattern: $1 in $file — $2 (design-anti-patterns.md, adviso
 #     a layout property (`transition: all`, `transition: margin-top 0.2s`, ...)
 #  2. a Tailwind layout-transition utility class (`transition-all`, ...)
 layout_props='all|width|height|top|left|right|bottom|margin(-[a-z]+)?|padding(-[a-z]+)?|gap|inset|flex-basis'
-if grep -qE "transition(-property)?[[:space:]]*:[[:space:]]*([^;}]*[[:space:],])?(${layout_props})([[:space:],;}]|\$)" "$file" 2>/dev/null \
+if grep -qE "(^|[^[:alnum:]-])transition(-property)?[[:space:]]*:[[:space:]]*([^;}]*[[:space:],])?(${layout_props})([[:space:],;}]|\$)" "$file" 2>/dev/null \
    || grep -qE "(^|[\"'[:space:]])transition-(all|width|height)([\"'[:space:]]|\$)" "$file" 2>/dev/null; then
   warn "transition on a layout property" "animate transform/opacity instead"
 fi

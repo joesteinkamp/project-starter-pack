@@ -32,7 +32,7 @@ Read the briefs against *each other* and report contradictions. Check at least t
 | Motion (DESIGN) vs performance budget (CODE) | "expressive" motion or heavy transitions against a strict bundle/INP budget; animations on the critical path the perf budget protects. |
 | Brand register & voice (PRODUCT) vs microcopy/UI voice (DESIGN) | a "decisive, no-hedging" voice paired with hedging or gamified copy; register `product` but a marketing-brand visual system (or vice versa). |
 | Stack vs hosting (CODE) | runtime/library choices that the chosen host can't run (e.g. a Node-only dependency on an edge/Workers target); database choice vs hosting region/latency claims. |
-| Accessibility baseline (PRODUCT) vs color tokens (DESIGN / DESIGN.json) | stated WCAG level vs foreground/background and accent contrast that wouldn't pass it. Compute the contrast, don't eyeball it. |
+| Accessibility baseline (PRODUCT) vs color tokens (DESIGN / DESIGN.json) | stated WCAG level vs the token pairs that carry meaning: foreground/background, muted/background, accent/background (as text), accentForeground/accent (text on an accent fill, 4.5:1), and borderStrong/background (control boundaries, 3:1 per 1.4.11) — in every theme block the file ships. Compute the contrast, don't eyeball it. |
 | Color strategy (DESIGN) vs the actual tokens | "Restrained — one accent on ≤10%" vs a palette that ships several saturated accents. |
 | Component primitives (DESIGN) vs the "no nested cards" guardrail | primitives or layouts that imply cards inside cards, or contradict the brief's own stated bans. |
 | Success metrics (PRODUCT) vs UX success metrics (DESIGN) | metrics that pull in opposite directions (e.g. "calm, no engagement nudges" vs an engagement/streak metric). |

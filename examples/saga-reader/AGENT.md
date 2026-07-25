@@ -40,7 +40,7 @@ If a request is ambiguous, ask the user before assuming. Do not invent product c
 - **Keyboard-first power flows** — arrows turn pages, `h` highlights, `/` searches Marks.
 - **Empty states are onboarding** — every empty state carries a heading, one sentence, and the primary action inline.
 - **Speak the reader's language** — "page," "chapter," "highlight," never "session" or "annotation object."
-- **Accessibility is built-in, not cleanup** — WCAG 2.1 AA, reader-controlled type/measure, true low-light dark theme, visible focus, `prefers-reduced-motion` honored.
+- **Accessibility is built-in, not cleanup** — the commitments live in the Accessibility section below, and they gate every flow here.
 - **Top flows must stay cheap** — adding a tap to "continue reading" or "capture a highlight," or dropping a highlight anchor on re-import, is a regression regardless of other gains.
 
 ## Design laws

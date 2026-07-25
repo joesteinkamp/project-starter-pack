@@ -29,7 +29,7 @@ The plugin also exposes skills that auto-trigger when the user describes the mat
 - `product-brief` — fires on "set up product context", "write PRODUCT.md", etc.
 - `design-brief` — fires on "design system", "UX foundation", "DESIGN.md".
 - `code-brief` — fires on "tech stack", "CODE.md", "architecture decisions".
-- `orchestrator` — fires when `AGENT.md` or `CLAUDE.md` needs to be regenerated.
+- `orchestrator` — fires when `AGENT.md` or any harness file (`CLAUDE.md`, `GEMINI.md`, Cursor rules) needs to be regenerated.
 - `validate` — fires on "check the briefs", "review against DESIGN.md", "find anti-patterns in the repo".
 - `extract` — fires on "extract the briefs", "brownfield", "reverse engineer the design system".
 

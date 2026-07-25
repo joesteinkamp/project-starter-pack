@@ -64,7 +64,7 @@ Populate `templates/AGENT.template.md`:
 
 - `{{PROJECT_SUMMARY}}` — a 2-3 sentence synthesis of `PRODUCT.md` (one-liner + register + primary user).
 - `{{PRODUCT_CONTEXT}}` — bullet summary: register, primary user, jobs-to-be-done, brand personality (3 words), top 3 anti-references.
-- `{{UX_LAWS}}` — extract from `DESIGN.md` UX foundation: interaction principles, accessibility commitments, top user flows (one line each).
+- `{{UX_LAWS}}` — extract from `DESIGN.md` UX foundation: interaction principles and top user flows (one line each). Accessibility belongs in `{{ACCESSIBILITY_LAWS}}` below — don't duplicate it here beyond a pointer.
 - `{{DESIGN_LAWS}}` — extract from `DESIGN.md` UI system: color strategy + accent rules, type pairing + measure cap, motion stance, when cards are allowed.
 - `{{ACCESSIBILITY_LAWS}}` — synthesize `PRODUCT.md`'s accessibility commitment (the WCAG level) with `DESIGN.md`'s UX-specific additions (keyboard, focus, reduced-motion, target sizes, reading level) into one bulleted commitment block. This is the one file every agent reads — the commitment must be visible here, not only in the briefs.
 - `{{CODE_CONVENTIONS}}` — extract from `CODE.md`: stack, languages/tooling, naming, comment policy, error handling, performance budgets, security baselines.

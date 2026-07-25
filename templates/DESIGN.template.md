@@ -48,7 +48,8 @@ Defaults you can use as-is or replace:
 
 ### Accessibility & Inclusion
 
-<!-- Baseline: WCAG 2.1 AA. Specifics:
+<!-- Baseline: inherit the WCAG level PRODUCT.md committed to (its default is
+2.2 AA) — never restate a different level here. Specifics:
 - Keyboard reachability for every interactive surface
 - Visible, non-color focus states
 - prefers-reduced-motion respected
