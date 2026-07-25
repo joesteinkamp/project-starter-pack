@@ -11,3 +11,7 @@
 ## Project-specific notes
 
 {{HARNESS_PROJECT_NOTES}}
+
+## Regenerating these instructions
+
+The briefs (`PRODUCT.md`, `DESIGN.md`, `CODE.md`) and this file are maintained with the `project-starter-pack` tooling, whose `/starter:*` commands run in Claude Code — they are not available in this harness. To regenerate: edit the briefs and run `/starter:orchestrate` from Claude Code, or follow the pack's `questionnaires/` and `templates/` by hand.

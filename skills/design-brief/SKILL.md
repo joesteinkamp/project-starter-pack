@@ -55,7 +55,9 @@ Apply the defaults table from `questionnaires/design.questions.md`. Mark default
 
 If the user provided concrete color/typography/spacing values, also populate `templates/DESIGN.tokens.template.json` and offer to write it to `DESIGN.json` at the project root. The filename matches the convention used by Impeccable so the two tools can share the file. If the user declined to specify tokens, skip the JSON file.
 
-The color tokens are per-theme: fill the `light` block always, and the `dark` block whenever Q13 chose `dark`, `both`, or `system` (use the dark column of the DESIGN.md color table). If the theme is `light` only, delete the `dark` block from the JSON rather than leaving placeholders — DESIGN.json must state exactly what the design system commits to.
+Theme blocks are symmetric: the top-level `color` block always holds the **default** theme's values — light values when Q13 chose `light`/`both`/`system`, dark values when it chose `dark`. When Q13 chose `both` or `system`, also fill the `themes.dark` override block (the dark column of the DESIGN.md color table). For a single-theme answer — `light` **or** `dark` — delete the whole `themes` block rather than leaving placeholders or fabricating values for a theme that doesn't exist: DESIGN.json must state exactly what the design system commits to.
+
+Rendering rules: numeric slots (`{{TYPE_SCALE_RATIO}}`, `{{TYPE_LINE_HEIGHT}}`) are unquoted in the template — emit bare numbers (`1.25`, not `"1.25"`). `{{SPACING_SCALE}}` renders inside array brackets — emit the bare comma-separated numbers. Before writing, verify the result parses as JSON, and compute the contrast pairs from the questionnaire's pre-flight checklist — a token file whose pairs fail the committed WCAG level does not ship.
 
 ## Preview & write
 

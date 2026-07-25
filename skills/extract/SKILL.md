@@ -40,8 +40,9 @@ intent — code can prove a stack, it cannot prove a brand.
 | CI workflow, deploy config | `{{DEPLOYMENT}}` |
 | bundle/perf config, image pipeline | `{{PERFORMANCE}}` |
 | auth, CSP/headers, secrets handling | `{{SECURITY}}` |
-| color tokens / theme files | `{{COLOR_STRATEGY}}`, `{{COLOR_TOKENS}}`, and `DESIGN.json` (`{{COLOR_BACKGROUND}}`, `{{COLOR_FOREGROUND}}`, `{{COLOR_MUTED}}`, `{{COLOR_ACCENT}}`, `{{COLOR_BORDER}}` — plus their `_DARK` counterparts when the code ships a dark theme) |
-| font imports / scale variables | `{{TYPOGRAPHY}}`, `{{FONT_DISPLAY}}`, `{{FONT_BODY}}`, `{{FONT_MONO}}`, `{{TYPE_SCALE_RATIO}}`, `{{TYPE_BASE_SIZE}}` |
+| color tokens / theme files | `{{COLOR_STRATEGY}}`, `{{COLOR_TOKENS}}`, and `DESIGN.json` (`{{COLOR_BACKGROUND}}`, `{{COLOR_FOREGROUND}}`, `{{COLOR_MUTED}}`, `{{COLOR_ACCENT}}`, `{{COLOR_ACCENT_FOREGROUND}}`, `{{COLOR_BORDER}}`, `{{COLOR_BORDER_STRONG}}` — plus their `_DARK` counterparts under `themes.dark` when the code ships a dark theme) |
+| font imports / scale variables | `{{TYPOGRAPHY}}`, `{{FONT_DISPLAY}}`, `{{FONT_BODY}}`, `{{FONT_MONO}}`, `{{TYPE_SCALE_RATIO}}`, `{{TYPE_BASE_SIZE}}`, `{{TYPE_LINE_HEIGHT}}`, `{{TYPE_MEASURE}}` |
+| media / container queries | `{{BREAKPOINTS}}` |
 | spacing variables | `{{SPACING_LAYOUT}}`, `{{SPACING_UNIT}}`, `{{SPACING_SCALE}}` |
 | transition/animation tokens | `{{MOTION}}`, `{{MOTION_EASING}}`, `{{MOTION_FAST}}`, `{{MOTION_BASE}}`, `{{MOTION_SLOW}}` |
 | components directory | `{{COMPONENTS}}` |

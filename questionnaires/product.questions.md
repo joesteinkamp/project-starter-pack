@@ -39,8 +39,8 @@ The `product-brief` skill walks the user through this question set. **Structured
 
 > What's the accessibility baseline?
 
-- `WCAG 2.1 AA` (recommended default)
-- `WCAG 2.2 AA` (newer pages, better target sizes)
+- `WCAG 2.1 AA` (the long-standing floor)
+- `WCAG 2.2 AA` (recommended default — adds focus-not-obscured, 24px target size, redundant-entry)
 - `WCAG 2.1 AAA` (regulated industries, public sector)
 - `Custom` — describe in open follow-up
 
@@ -105,7 +105,7 @@ TODO if there isn't a distinct one)
 
 | Slot | Default | Mark |
 |---|---|---|
-| `{{ACCESSIBILITY}}` | WCAG 2.1 AA, keyboard reachability, prefers-reduced-motion respected, semantic HTML first | `[default — confirm]` |
+| `{{ACCESSIBILITY}}` | WCAG 2.2 AA, keyboard reachability, prefers-reduced-motion respected, semantic HTML first | `[default — confirm]` |
 | `{{DESIGN_PRINCIPLES}}` | Practice what you preach; show, don't tell; purposeful restraint; expert confidence | `[default — confirm]` |
 | `{{ANTI_REFERENCES}}` | (skipped — too project-specific to default) | leave blank with TODO |
 

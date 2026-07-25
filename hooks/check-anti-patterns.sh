@@ -11,26 +11,27 @@
 
 set -uo pipefail
 
-input="$(cat)"
+. "$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)/lib/hook-input.sh"
 
-if command -v jq >/dev/null 2>&1; then
-  file="$(printf '%s' "$input" | jq -r '.tool_input.file_path // .tool_input.path // empty' 2>/dev/null)"
-else
-  file="$(printf '%s' "$input" | grep -oE '"(file_path|path)"[[:space:]]*:[[:space:]]*"[^"]+"' | head -1 | sed -E 's/.*"(file_path|path)"[[:space:]]*:[[:space:]]*"([^"]+)".*/\2/')"
-fi
+input="$(cat)"
+file="$(hook_file_path "$input")"
 
 [ -n "${file:-}" ] && [ -f "$file" ] || exit 0
-case "$file" in
-  *.css|*.scss|*.sass|*.less|*.tsx|*.jsx|*.svelte|*.vue|*.astro) ;;
-  *) exit 0 ;;
-esac
+hook_is_style_file "$file" || exit 0
 
 warn() { echo "anti-pattern: $1 in $file — $2 (design-anti-patterns.md, advisory)" >&2; }
 
 # Animating layout properties (banned: "No animations on layout properties").
-# `transition: all` animates them too, so it counts.
-grep -qE 'transition[^;]*\b(all|width|height|top|left)\b' "$file" 2>/dev/null \
-  && warn "transition on a layout property" "animate transform/opacity instead"
+# Two anchored patterns instead of a whole-line sweep, so `transition-colors`,
+# `var(--all-fast)`, and prose mentions of "all" don't false-positive:
+#  1. a CSS transition/transition-property declaration whose *value list* names
+#     a layout property (`transition: all`, `transition: margin-top 0.2s`, ...)
+#  2. a Tailwind layout-transition utility class (`transition-all`, ...)
+layout_props='all|width|height|top|left|right|bottom|margin(-[a-z]+)?|padding(-[a-z]+)?|gap|inset|flex-basis'
+if grep -qE "transition(-property)?[[:space:]]*:[[:space:]]*([^;}]*[[:space:],])?(${layout_props})([[:space:],;}]|\$)" "$file" 2>/dev/null \
+   || grep -qE "(^|[\"'[:space:]])transition-(all|width|height)([\"'[:space:]]|\$)" "$file" 2>/dev/null; then
+  warn "transition on a layout property" "animate transform/opacity instead"
+fi
 
 # Glassmorphism by default (banned: "No glassmorphism by default").
 grep -qE 'backdrop-filter[[:space:]]*:[[:space:]]*blur' "$file" 2>/dev/null \

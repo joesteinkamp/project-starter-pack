@@ -34,6 +34,14 @@ If a request is ambiguous, ask the user before assuming. Do not invent product c
 
 {{DESIGN_LAWS}}
 
+## Accessibility
+
+<!-- Synthesized from PRODUCT.md's accessibility commitment plus DESIGN.md's
+UX-specific additions. This is the file every agent reads — the commitment
+must be visible here, not only in the briefs. -->
+
+{{ACCESSIBILITY_LAWS}}
+
 ## Code conventions
 
 <!-- Synthesized from CODE.md. -->

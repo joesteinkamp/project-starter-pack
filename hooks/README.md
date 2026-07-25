@@ -25,10 +25,14 @@ Both read the tool-call JSON on stdin, inspect the edited file, print to stderr,
 ## Install / uninstall
 
 ```
-hooks/install-hooks.sh            # project-local (./.claude/settings.json)
-hooks/install-hooks.sh --global   # all projects (~/.claude/settings.json)
+hooks/install-hooks.sh                        # project-local (./.claude/settings.json)
+hooks/install-hooks.sh --global               # all projects (~/.claude/settings.json)
+hooks/install-hooks.sh --uninstall [--global] # remove exactly what the installer added
 ```
 
-Requires `jq`. The installer backs up your settings file first and preserves any existing hooks.
-To uninstall, remove the `PostToolUse` entry it added (or restore the `.bak` file). `settings.snippet.json`
-shows the exact config if you prefer to merge it by hand.
+Requires `jq`. The installer preserves any existing hooks (yours are matched by exact path, so a
+same-named script of your own is never touched), and the **first run** writes
+`settings.json.bak` — your pre-install settings; later runs never overwrite it, so it always
+restores the original. `--uninstall` removes only this pack's entries. `settings.snippet.json`
+shows the exact config if you prefer to merge it by hand. If the install is project-local, add
+`.claude/settings.json.bak` to your `.gitignore` (this repo's does).

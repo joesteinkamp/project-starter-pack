@@ -53,6 +53,15 @@ If a request is ambiguous, ask the user before assuming. Do not invent product c
 - **Motion: considered** — expo-out, 120/200/320ms; page turns are a quick cross-fade, never a flip. Animate only `transform`/`opacity`; collapse to instant cut under `prefers-reduced-motion`; no delight on the page-turn or save path.
 - **Components** — sharp 2px corners (not pill radius), no resting shadows anywhere; surfaces separated by hairlines and whitespace, not elevation.
 
+## Accessibility
+
+- **WCAG 2.1 AA** is the floor, and contrast is measured, not eyeballed — the audit table in `DESIGN.md` lists every meaningful pair; text on an accent fill uses `accentForeground`, control boundaries use `borderStrong` (≥3:1).
+- **Keyboard reaches every flow** — arrows turn pages, `h` highlights, `/` searches Marks; every control operable without a pointer.
+- **Visible, non-color focus rings** on every control; touch targets ≥ 44×44.
+- **`prefers-reduced-motion`** collapses every transition to an instant cut — no exceptions.
+- **Reader-controlled type** — size, line-height, and measure are the reader's; the measure cap scales with their setting.
+- **Screen-reader labels carry location** — highlights and navigation announce "p.42, *Chapter 3*", not indexes. Copy targets an 8th-grade reading level.
+
 ## Code conventions
 
 <!-- Synthesized from CODE.md. -->

@@ -12,29 +12,24 @@
 
 set -uo pipefail
 
-input="$(cat)"
+. "$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)/lib/hook-input.sh"
 
-# Extract the edited file path (jq if available, else a tolerant grep).
-if command -v jq >/dev/null 2>&1; then
-  file="$(printf '%s' "$input" | jq -r '.tool_input.file_path // .tool_input.path // empty' 2>/dev/null)"
-else
-  file="$(printf '%s' "$input" | grep -oE '"(file_path|path)"[[:space:]]*:[[:space:]]*"[^"]+"' | head -1 | sed -E 's/.*"(file_path|path)"[[:space:]]*:[[:space:]]*"([^"]+)".*/\2/')"
-fi
+input="$(cat)"
+file="$(hook_file_path "$input")"
 
 [ -n "${file:-}" ] && [ -f "$file" ] || exit 0
-
-# Only style-bearing files.
-case "$file" in
-  *.css|*.scss|*.sass|*.less|*.tsx|*.jsx|*.svelte|*.vue|*.astro) ;;
-  *) exit 0 ;;
-esac
+hook_is_style_file "$file" || exit 0
 
 # Only nudge when this project actually committed to a token system.
 root="$(git rev-parse --show-toplevel 2>/dev/null || echo .)"
 [ -f "$root/DESIGN.json" ] || exit 0
 
-# Raw hex literals like #fff or #aabbcc (skip 8-digit hashes that aren't colors).
-hits="$(grep -nE '#[0-9a-fA-F]{3}([0-9a-fA-F]{3})?\b' "$file" 2>/dev/null | head -5)"
+# Hex color literals in a value position: all four CSS lengths (#rgb, #rgba,
+# #rrggbb, #rrggbbaa), and only after a `:` on the line so id selectors
+# (`#dad {`) and anchors (`href="#add"`) don't false-positive. Conservative by
+# design — a hex outside a declaration (e.g. a Tailwind arbitrary value) is
+# missed rather than guessed at.
+hits="$(grep -nE ':[[:space:]]*[^;{}]*#([0-9a-fA-F]{8}|[0-9a-fA-F]{6}|[0-9a-fA-F]{3,4})\b' "$file" 2>/dev/null | head -5)"
 if [ -n "$hits" ]; then
   {
     echo "design-guard: raw hex color(s) in $file — DESIGN.json uses OKLCH (design-anti-patterns.md)."

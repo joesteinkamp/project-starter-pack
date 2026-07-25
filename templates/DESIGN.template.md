@@ -104,6 +104,12 @@ and when they aren't. -->
 
 {{SPACING_LAYOUT}}
 
+<!-- Named breakpoints (or a container-query-first stance) and what changes at
+each. Without this, every coding agent invents its own breakpoints — the
+one-off-values problem the token file exists to prevent. -->
+
+**Breakpoints:** {{BREAKPOINTS}}
+
 ### Motion
 
 <!-- Default easing (recommend expo-out), default duration buckets,

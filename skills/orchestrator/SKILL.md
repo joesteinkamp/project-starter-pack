@@ -1,16 +1,16 @@
 ---
 name: orchestrator
-description: Synthesizes PRODUCT.md, DESIGN.md, and CODE.md into AGENT.md (universal agents.md) plus the selected harness files (CLAUDE.md, GEMINI.md, Cursor rules) at the project root. Use when the user asks to generate or regenerate AGENT.md, AGENTS.md, or CLAUDE.md, or when all three briefs exist and the agent instructions need to be assembled. Triggers on "AGENT.md", "AGENTS.md", "CLAUDE.md", "orchestrate briefs", "generate agent instructions", "assemble project instructions".
+description: Synthesizes PRODUCT.md, DESIGN.md, and CODE.md into AGENT.md (universal agents.md) plus the selected harness files (CLAUDE.md, GEMINI.md, Cursor rules) at the project root. Use when the user asks to generate or regenerate AGENT.md, AGENTS.md, CLAUDE.md, GEMINI.md, or the Cursor rules, or when all three briefs exist and the agent instructions need to be assembled. Triggers on "AGENT.md", "AGENTS.md", "CLAUDE.md", "GEMINI.md", "Cursor rules", "orchestrate briefs", "generate agent instructions", "assemble project instructions".
 ---
 
 # Orchestrator Skill
 
-You assemble the three briefs into `AGENT.md` (universal agents.md spec) and `CLAUDE.md` (thin file that imports `AGENT.md` and adds Claude-Code-specific addenda).
+You assemble the three briefs into `AGENT.md` (universal agents.md spec) plus the harness files the user selects — `CLAUDE.md`, `GEMINI.md`, and/or a Cursor file — each a thin import of `AGENT.md` with harness-specific addenda.
 
 ## Setup
 
-1. Locate the plugin root. Templates are at `templates/AGENT.template.md` and `templates/CLAUDE.template.md`. Anti-pattern guardrails are at `guardrails/{product,ux,design,code}-anti-patterns.md`.
-2. Read both templates and all four guardrail files before starting.
+1. Locate the plugin root. Templates are at `templates/AGENT.template.md`, `templates/CLAUDE.template.md`, `templates/GEMINI.template.md`, and `templates/cursor-rules.template.mdc`. Anti-pattern guardrails are at `guardrails/{product,ux,design,code}-anti-patterns.md`.
+2. Read `AGENT.template.md`, the templates for the harnesses in play, and all four guardrail files before starting.
 
 ## Inputs
 
@@ -26,9 +26,9 @@ If any are missing:
 
 ## Pre-flight
 
-Check whether `AGENT.md` and/or `CLAUDE.md` exist:
-- If neither exists, proceed.
-- If either exists, ask: overwrite (regenerate from briefs) or stop. Do not offer "merge" — these files are derived, not authored.
+Check every file this run could write: `AGENT.md`, plus — per the harness selection below — `CLAUDE.md`, `GEMINI.md`, `AGENTS.md`, and `.cursor/rules/project.mdc`:
+- If none exist, proceed.
+- If any exists, list which and ask: overwrite (regenerate from briefs) or stop. A hand-written `AGENTS.md` or `GEMINI.md` gets the same gate as `CLAUDE.md` — never overwrite silently. Do not offer "merge" — these files are derived, not authored.
 
 ## Harness targets
 
@@ -66,6 +66,7 @@ Populate `templates/AGENT.template.md`:
 - `{{PRODUCT_CONTEXT}}` — bullet summary: register, primary user, jobs-to-be-done, brand personality (3 words), top 3 anti-references.
 - `{{UX_LAWS}}` — extract from `DESIGN.md` UX foundation: interaction principles, accessibility commitments, top user flows (one line each).
 - `{{DESIGN_LAWS}}` — extract from `DESIGN.md` UI system: color strategy + accent rules, type pairing + measure cap, motion stance, when cards are allowed.
+- `{{ACCESSIBILITY_LAWS}}` — synthesize `PRODUCT.md`'s accessibility commitment (the WCAG level) with `DESIGN.md`'s UX-specific additions (keyboard, focus, reduced-motion, target sizes, reading level) into one bulleted commitment block. This is the one file every agent reads — the commitment must be visible here, not only in the briefs.
 - `{{CODE_CONVENTIONS}}` — extract from `CODE.md`: stack, languages/tooling, naming, comment policy, error handling, performance budgets, security baselines.
 - `{{PRODUCT_ANTI_PATTERNS}}` — embed `guardrails/product-anti-patterns.md` headlines (1 line per pattern).
 - `{{UX_ANTI_PATTERNS}}` — embed `guardrails/ux-anti-patterns.md` headlines.
@@ -116,5 +117,5 @@ Next steps:
 ## Important
 
 - Never invent product or design context. If a brief is missing or thin, say so in the output.
-- `AGENT.md` and `CLAUDE.md` are derived files. Do not offer to "merge" edits — regenerate from briefs.
+- `AGENT.md` and every harness file (`CLAUDE.md`, `GEMINI.md`, `AGENTS.md`, the Cursor rule) are derived files. Do not offer to "merge" edits — regenerate from briefs.
 - The voice of the synthesized files should match the voice the briefs established. Don't add hedging.

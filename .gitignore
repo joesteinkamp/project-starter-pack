@@ -1,0 +1,3 @@
+# install-hooks.sh writes a one-time backup of .claude/settings.json next to it;
+# it is machine-local state, never something to commit.
+.claude/settings.json.bak

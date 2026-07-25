@@ -23,7 +23,8 @@ bad()     { printf '  FAIL %s\n' "$1"; fail=$((fail + 1)); }
 section() { printf '\n== %s ==\n' "$1"; }
 
 # Drop fenced code blocks so a slot quoted in an example snippet doesn't count
-# as a real binding (in either direction).
+# as a real binding (in either direction). Section 0 guarantees fences are
+# balanced — an unclosed fence would make this delete to end-of-file.
 strip_fences() { sed '/^```/,/^```/d' "$1" 2>/dev/null; }
 
 # Extract unique {{SLOT}} tokens (2+ chars of [A-Z_]; this skips the throwaway
@@ -34,6 +35,22 @@ slots() { strip_fences "$1" | grep -oE '\{\{[A-Z_]{2,}\}\}' | sort -u; }
 # (grep without -q so it drains the pipe — `-q` exits early and the resulting
 # SIGPIPE to sed would read as failure under pipefail)
 in_file() { strip_fences "$2" | grep -F "$1" >/dev/null; }
+
+# ---------------------------------------------------------------------------
+section "0. Markdown fence hygiene"
+# Every downstream check pipes files through strip_fences; an unbalanced ```
+# silently swallows the rest of the file and the checks go blind.
+fence_files=0
+fence_bad=0
+while IFS= read -r -d '' f; do
+  fence_files=$((fence_files + 1))
+  n="$(grep -c '^```' "$f" || true)"
+  if [ $((n % 2)) -ne 0 ]; then
+    bad "unbalanced \`\`\` fences in $f"
+    fence_bad=1
+  fi
+done < <(find templates skills commands questionnaires guardrails examples -type f \( -name '*.md' -o -name '*.mdc' \) -print0)
+[ "$fence_bad" -eq 0 ] && ok "all $fence_files markdown files have balanced fences"
 
 # ---------------------------------------------------------------------------
 section "1. Template slot ↔ questionnaire parity (per brief)"
@@ -124,10 +141,11 @@ done
 section "5. Example renders are complete (no leaked placeholders)"
 shopt -s nullglob
 example_dirs=(examples/*/)
+shopt -u nullglob   # leaving it on would make later empty globs vanish silently
 if [ ${#example_dirs[@]} -eq 0 ]; then
   bad "no example renders found under examples/"
 fi
-for dir in "${example_dirs[@]}"; do
+for dir in ${example_dirs[@]+"${example_dirs[@]}"}; do
   found_leak=0
   while IFS= read -r -d '' f; do
     if grep -qE '\{\{|SECTION:' "$f"; then
@@ -142,8 +160,10 @@ done
 section "6. Example renders match template structure"
 # The example is the fixture that proves the templates render completely: every
 # heading a template defines (slot-free ones) must appear in the example's
-# render, and every key in the tokens template must appear in the example JSON.
-# Otherwise a template can grow a section the example silently omits.
+# render, every key path in the tokens template must appear in the example
+# JSON (and vice versa), and every harness render must carry the layering
+# note's canonical clause — the fixture must not be able to contradict the rule
+# it demonstrates.
 check_render_headings() {
   local template="$1" rendered="$2" required="$3"
   if [ ! -f "$rendered" ]; then
@@ -155,16 +175,49 @@ check_render_headings() {
   local missing=0 h
   while IFS= read -r h; do
     case "$h" in *'{{'*) continue ;; esac
-    if ! grep -qxF "$h" "$rendered"; then
+    if ! strip_fences "$rendered" | grep -xF "$h" >/dev/null; then
       bad "$rendered lacks heading from $(basename "$template"): $h"
       missing=1
     fi
   done < <(strip_fences "$template" | grep -E '^#{1,4} ')
   [ "$missing" -eq 0 ] && ok "$rendered carries every $(basename "$template") heading"
 }
-# Presence check, not structural: a key name found anywhere in the render
-# satisfies it. Catches a wholesale-dropped block (e.g. no "dark" key at all),
-# not a partial one whose key names also appear elsewhere (e.g. in "light").
+# Replace template slots with scalars so the template parses as JSON: quoted
+# slots become a string, bare (numeric/array) slots become 0.
+mock_json() { sed -E 's/"\{\{[A-Z_]+\}\}"/"x"/g; s/\{\{[A-Z_]+\}\}/0/g' "$1"; }
+# Object key paths only (array indices excluded, so value-array length differences
+# between template and render don't count as structure).
+json_key_paths() { jq -r '[paths | select(all(.[]; type == "string")) | join(".")] | unique | .[]' 2>/dev/null; }
+# Structural check: the full set of key paths must match in BOTH directions —
+# a dropped dark leaf, a duplicated key name elsewhere, or a fixture that
+# drifted ahead of the schema all fail. `themes` is the one optional subtree
+# (single-theme systems delete it, per the design-brief skill).
+check_render_json_paths() {
+  local template="$1" rendered="$2"
+  [ -f "$rendered" ] || { bad "example render missing: $rendered"; return; }
+  if ! jq empty "$rendered" 2>/dev/null; then
+    bad "$rendered is not valid JSON"
+    return
+  fi
+  if ! mock_json "$template" | jq empty 2>/dev/null; then
+    bad "$(basename "$template") does not parse as JSON after slot mock-interpolation"
+    return
+  fi
+  local tpaths rpaths diff_out
+  tpaths="$(mock_json "$template" | json_key_paths)"
+  rpaths="$(json_key_paths < "$rendered")"
+  if ! jq -e 'has("themes")' "$rendered" >/dev/null 2>&1; then
+    tpaths="$(printf '%s\n' "$tpaths" | grep -v '^themes')"
+  fi
+  diff_out="$(diff <(printf '%s\n' "$tpaths") <(printf '%s\n' "$rpaths") | grep -E '^[<>]' || true)"
+  if [ -z "$diff_out" ]; then
+    ok "$rendered key paths match $(basename "$template")"
+  else
+    bad "$rendered key paths diverge from $(basename "$template"): $(printf '%s' "$diff_out" | head -4 | tr '\n' ' ')"
+  fi
+}
+# jq-less fallback: presence-only on key names — far weaker (documented so
+# nobody mistakes it for a structure check). CI should have jq.
 check_render_json_keys() {
   local template="$1" rendered="$2"
   [ -f "$rendered" ] || { bad "example render missing: $rendered"; return; }
@@ -174,10 +227,10 @@ check_render_json_keys() {
       bad "$rendered lacks token key from $(basename "$template"): $key"
       missing=1
     fi
-  done < <(grep -oE '"[a-zA-Z$][a-zA-Z]*"[[:space:]]*:' "$template" | sed 's/[[:space:]]*$//' | sort -u)
-  [ "$missing" -eq 0 ] && ok "$rendered carries every $(basename "$template") key"
+  done < <(grep -oE '"[a-zA-Z0-9$_][a-zA-Z0-9$_-]*"[[:space:]]*:' "$template" | sed 's/[[:space:]]*$//' | sort -u)
+  [ "$missing" -eq 0 ] && ok "$rendered carries every $(basename "$template") key (presence-only: no jq)"
 }
-for dir in "${example_dirs[@]}"; do
+for dir in ${example_dirs[@]+"${example_dirs[@]}"}; do
   # The three briefs + AGENT.md are always written — required in an example.
   check_render_headings templates/PRODUCT.template.md "${dir}PRODUCT.md" required
   check_render_headings templates/DESIGN.template.md  "${dir}DESIGN.md"  required
@@ -187,7 +240,26 @@ for dir in "${example_dirs[@]}"; do
   check_render_headings templates/CLAUDE.template.md "${dir}CLAUDE.md" optional
   check_render_headings templates/GEMINI.template.md "${dir}GEMINI.md" optional
   check_render_headings templates/cursor-rules.template.mdc "${dir}.cursor/rules/project.mdc" optional
-  [ -f "${dir}DESIGN.json" ] && check_render_json_keys templates/DESIGN.tokens.template.json "${dir}DESIGN.json"
+  if [ -f "${dir}DESIGN.json" ]; then
+    if command -v jq >/dev/null 2>&1; then
+      check_render_json_paths templates/DESIGN.tokens.template.json "${dir}DESIGN.json"
+    else
+      check_render_json_keys templates/DESIGN.tokens.template.json "${dir}DESIGN.json"
+    fi
+  fi
+  # The layering note's canonical clause (skills/orchestrator/SKILL.md) must
+  # survive into every harness render — a fixture stating the opposite rule
+  # passed silently before this check.
+  for hf in AGENT.md CLAUDE.md GEMINI.md .cursor/rules/project.mdc; do
+    [ -f "${dir}${hf}" ] || continue
+    # sed strips blockquote markers, tr collapses line wraps: the clause may
+    # break across lines inside a `> ...` blockquote
+    if sed 's/^>[[:space:]]*//' "${dir}${hf}" | tr -s '[:space:]' ' ' | grep -F "the project layer wins" >/dev/null; then
+      ok "${dir}${hf} carries the canonical layering clause"
+    else
+      bad "${dir}${hf} lost the layering note's canonical clause ('the project layer wins')"
+    fi
+  done
 done
 
 # ---------------------------------------------------------------------------
@@ -211,29 +283,47 @@ for d in skills/*/; do
     bad "skills/$name has no SKILL.md"
   fi
 done
-# Every command must invoke at least one existing skill, and any backticked
-# token on an invoke/skill line must resolve to a real skill dir — regardless
-# of the exact phrasing around it.
-# CONSTRAINT: every lowercase-only `token` on a line mentioning invoke/skill is
-# treated as a skill name. Keep non-skill references on such lines uppercase or
-# dotted (`PRODUCT.md`, `package.json`) — a bare lowercase one false-fails.
+# Every command must invoke at least one existing skill. Commands use the
+# canonical phrase "invoke the `<skill>` skill" — only that phrase is parsed,
+# so ordinary backticked words near the word "skill" can't false-positive.
 for c in commands/*.md; do
   found_skill=0
-  while IFS= read -r line; do
-    case "$line" in
-      *[Ii]nvoke*\`*[a-z]*\`* | *\`*[a-z]*\`*skill* | *skill*\`*[a-z]*\`*) ;;
-      *) continue ;;
-    esac
-    for ref in $(printf '%s\n' "$line" | grep -oE '`[a-z][a-z-]*`' | tr -d '\`'); do
-      if [ -f "skills/${ref}/SKILL.md" ]; then
-        found_skill=1
-        ok "$(basename "$c") → skill '$ref' exists"
-      else
-        bad "$(basename "$c") names '$ref' in a skill context but skills/$ref is missing"
-      fi
-    done
-  done < "$c"
-  [ "$found_skill" -eq 1 ] || bad "$(basename "$c") never invokes an existing skill"
+  for ref in $(grep -oiE 'invokes? the `[a-z][a-z0-9-]*` skill' "$c" | grep -oE '`[a-z][a-z0-9-]*`' | tr -d '\`'); do
+    if [ -f "skills/${ref}/SKILL.md" ]; then
+      found_skill=1
+      ok "$(basename "$c") → skill '$ref' exists"
+    else
+      bad "$(basename "$c") invokes '$ref' but skills/$ref is missing"
+    fi
+  done
+  [ "$found_skill" -eq 1 ] || bad "$(basename "$c") never invokes an existing skill (expected the phrase: invoke the \`<name>\` skill)"
+done
+# The CLAUDE template advertises the command + skill inventory; bind it to the
+# real dirs in both directions so a rename can't strand the advertised list.
+CT=templates/CLAUDE.template.md
+for c in commands/*.md; do
+  name="$(basename "$c" .md)"
+  if grep -qF "/starter:${name}" "$CT"; then
+    ok "CLAUDE template advertises /starter:${name}"
+  else
+    bad "commands/${name}.md exists but CLAUDE.template.md never advertises /starter:${name}"
+  fi
+done
+for adv in $(grep -oE '/starter:[a-z-]+' "$CT" | sort -u); do
+  name="${adv#/starter:}"
+  if [ -f "commands/${name}.md" ]; then
+    ok "advertised ${adv} is a real command"
+  else
+    bad "CLAUDE.template.md advertises ${adv} but commands/${name}.md is missing"
+  fi
+done
+for d in skills/*/; do
+  name="$(basename "$d")"
+  if grep -qF "\`${name}\`" "$CT"; then
+    ok "CLAUDE template lists skill ${name}"
+  else
+    bad "skills/${name} exists but CLAUDE.template.md never lists it"
+  fi
 done
 
 # ---------------------------------------------------------------------------
@@ -265,39 +355,56 @@ fi
 # ---------------------------------------------------------------------------
 section "9. Optional hooks: syntax, wiring parity, guardrail linkage"
 # The advisory hooks are optional; if present they must parse, the snippet and
-# the installer must wire the same scripts, and the design bans the hooks key
-# on must still exist in the guardrail (so a hook can't silently enforce a rule
-# the registry dropped).
+# the installer must wire the same scripts, and the guardrail ↔ hook contract
+# must hold in BOTH directions (a hook can't enforce a rule the registry
+# dropped, and the registry can't ban something no hook checks anymore).
 if [ -d hooks ]; then
-  for h in hooks/*.sh; do
+  for h in hooks/*.sh hooks/lib/*.sh; do
+    [ -f "$h" ] || continue
     if bash -n "$h" 2>/dev/null; then
-      ok "$(basename "$h") parses"
+      ok "$h parses"
     else
-      bad "$(basename "$h") has a syntax error"
+      bad "$h has a syntax error"
     fi
   done
   # settings.snippet.json and install-hooks.sh HOOK_SCRIPTS are two declarations
-  # of the same wiring — they must list the same hook scripts, and each must exist.
-  snippet_scripts="$(grep -oE '[a-z][a-z-]*\.sh' hooks/settings.snippet.json | grep -v '^install-hooks' | sort -u)"
-  installer_scripts="$(grep -m1 '^HOOK_SCRIPTS=' hooks/install-hooks.sh | grep -oE '[a-z][a-z-]*\.sh' | sort -u)"
+  # of the same wiring — they must list the same hook scripts, and each must
+  # exist. (Digit/uppercase-safe pattern: check-a11y.sh must not extract as
+  # y.sh. HOOK_SCRIPTS must stay single-line — this grep reads only that line.)
+  script_pat='[A-Za-z0-9][A-Za-z0-9._-]*\.sh'
+  snippet_scripts="$(grep -oE "$script_pat" hooks/settings.snippet.json | grep -v '^install-hooks' | sort -u)"
+  installer_scripts="$(grep -m1 '^HOOK_SCRIPTS=' hooks/install-hooks.sh | grep -oE "$script_pat" | sort -u)"
   if [ -n "$snippet_scripts" ] && [ "$snippet_scripts" = "$installer_scripts" ]; then
     ok "settings.snippet.json and install-hooks.sh wire the same scripts"
   else
     bad "settings.snippet.json vs install-hooks.sh HOOK_SCRIPTS mismatch (snippet: ${snippet_scripts//$'\n'/ } / installer: ${installer_scripts//$'\n'/ })"
   fi
   for s in $snippet_scripts; do
-    [ -f "hooks/$s" ] && ok "wired hook hooks/$s exists" || bad "wired hook hooks/$s does not exist"
+    if [ -f "hooks/$s" ]; then
+      ok "wired hook hooks/$s exists"
+    else
+      bad "wired hook hooks/$s does not exist"
+    fi
   done
-  # NOTE: these terms are keyed on by guard-design.sh / check-anti-patterns.sh —
-  # the three files move in lockstep; change a hook's pattern, update this list.
+  # Guardrail ↔ hook linkage, both directions.
   DG=guardrails/design-anti-patterns.md
-  for term in OKLCH glassmorphism "layout properties" "gradient text"; do
+  check_link() { # TERM HOOK_FILE PATTERN
+    local term="$1" hook="$2" pattern="$3"
     if grep -qiF "$term" "$DG"; then
       ok "design guardrail still covers: $term"
     else
       bad "a hook keys on '$term' but design-anti-patterns.md no longer mentions it"
     fi
-  done
+    if grep -qF "$pattern" "$hook"; then
+      ok "$(basename "$hook") still checks: $pattern"
+    else
+      bad "design-anti-patterns.md bans '$term' but $(basename "$hook") no longer greps for '$pattern'"
+    fi
+  }
+  check_link "layout properties" hooks/check-anti-patterns.sh "transition"
+  check_link "glassmorphism"     hooks/check-anti-patterns.sh "backdrop-filter"
+  check_link "gradient text"     hooks/check-anti-patterns.sh "background-clip"
+  check_link "OKLCH"             hooks/guard-design.sh        "OKLCH"
 else
   ok "no hooks/ directory (hooks are optional)"
 fi

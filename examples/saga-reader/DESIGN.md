@@ -66,11 +66,23 @@ Quiet editorial — closer to a well-set trade paperback or *Eye* magazine than 
 |---|---|---|---|
 | background | `oklch(0.98 0.008 85)` | `oklch(0.22 0.01 70)` | page / app surface |
 | foreground | `oklch(0.27 0.02 50)` | `oklch(0.90 0.012 80)` | body ink |
-| muted | `oklch(0.55 0.015 60)` | `oklch(0.66 0.012 75)` | secondary text, metadata |
+| muted | `oklch(0.52 0.015 60)` | `oklch(0.66 0.012 75)` | secondary text, metadata |
 | accent | `oklch(0.52 0.13 35)` | `oklch(0.66 0.12 38)` | bookmark ribbon, active highlight |
-| border | `oklch(0.90 0.010 75)` | `oklch(0.30 0.010 70)` | hairlines, dividers |
+| accentForeground | `oklch(0.98 0.008 85)` | `oklch(0.22 0.01 70)` | text/icons on an accent fill |
+| border | `oklch(0.90 0.010 75)` | `oklch(0.38 0.010 70)` | decorative hairlines, dividers |
+| borderStrong | `oklch(0.64 0.010 75)` | `oklch(0.52 0.010 70)` | control boundaries (inputs, outlines) |
 
-Contrast is verified, not eyeballed: foreground-on-background clears AA for body text in both themes; the accent is reserved for marks and active state, never for body copy on a colored field.
+Contrast is measured, not eyeballed — every pair that carries meaning, against WCAG 2.1 AA:
+
+| Pair | Light | Dark | Requirement |
+|---|---|---|---|
+| foreground / background | 14.3:1 | 12.9:1 | ≥ 4.5:1 ✓ |
+| muted / background | 5.2:1 | 5.6:1 | ≥ 4.5:1 ✓ |
+| accent / background (as text) | 5.5:1 | 5.3:1 | ≥ 4.5:1 ✓ |
+| accentForeground / accent | 5.5:1 | 5.3:1 | ≥ 4.5:1 ✓ |
+| borderStrong / background | 3.2:1 | 3.1:1 | ≥ 3:1 (1.4.11) ✓ |
+
+`border` is exempt from 1.4.11 because it is decorative-only — any border that is a control's sole boundary uses `borderStrong`. Text on an accent fill always uses `accentForeground`, never `foreground`; the accent itself never carries body copy on a colored field.
 
 ### Typography
 
@@ -80,6 +92,8 @@ Editorial serif pairing. **Display:** Fraunces (variable serif) for titles and c
 
 4px base unit; scale 4 / 8 / 12 / 16 / 24 / 32 / 48 / 64. Airy density — the reading column is centered with wide margins; chrome lives at the edges and fades while reading. No grid of tiles; the layout is a single column of text with an edge rail for controls. **Cards are not used in the Reader at all.** In Library, each book is a row (cover + title + progress), not a card in a card. Grouping is done with spacing and hairline borders, never nested surfaces.
 
+**Breakpoints:** content-out, two named breakpoints — `720px` (the reading column gains its full margins; below it the column is edge-to-edge with 16px gutters) and `1040px` (Library becomes a two-pane list + preview; the Reader stays single-column at every width). Nothing else responds; the Reader's measure cap does the responsive work.
+
 ### Motion
 
 Considered, not decorative. Default easing expo-out; duration buckets 120ms (state cues), 200ms (transitions), 320ms (page/route changes). Page turns are a quick cross-fade, never a skeuomorphic flip. `prefers-reduced-motion` collapses every transition to an instant cut. We never animate layout properties (`width`/`height`/`top`/`left`) — only `transform` and `opacity` — and never put a delight animation on the critical path of turning a page or saving a highlight.
@@ -88,12 +102,12 @@ Considered, not decorative. Default easing expo-out; duration buckets 120ms (sta
 
 1. **Page** — the reading surface (typographic column, measure-capped).
 2. **Reader rail** — edge-anchored, auto-fading controls (progress, type settings, marks).
-3. **Highlight** — inline marked text, accent underline at rest, accent fill when active.
+3. **Highlight** — inline marked text, accent underline at rest; when active, accent fill with `accentForeground` text.
 4. **Note popover** — inline note attached to a highlight (no modal).
 5. **Book row** — cover thumb + title + author + progress bar (Library list item).
 6. **Progress bar** — thin, accent-filled, shows position in book/chapter.
 7. **Button** — text-first, quiet; sharp 2px corners, no resting shadow.
-8. **Input / search field** — hairline border, no fill, focus ring in accent.
+8. **Input / search field** — `borderStrong` border (its only boundary — no fill), focus ring in accent.
 9. **Tag chip** — small, outline, toggles a Marks filter.
 10. **Toast** — inline, bottom-anchored, carries Undo (e.g. "Deleted · Undo").
 11. **Empty state** — heading + one sentence + the primary action inline.

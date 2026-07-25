@@ -1,6 +1,6 @@
 # project-starter-pack
 
-A Claude Code plugin for product designers. Walks you through three opinionated briefs — Product, Design (UX + UI), Technical — and synthesizes them into `AGENT.md` and `CLAUDE.md` so any AI coding agent in your repo designs and codes with the same rigor a senior team would apply.
+A Claude Code plugin for product designers. Walks you through three opinionated briefs — Product, Design (UX + UI), Technical — and synthesizes them into `AGENT.md` plus the harness files you select (`CLAUDE.md`, `GEMINI.md`, Cursor rules) so any AI coding agent in your repo designs and codes with the same rigor a senior team would apply.
 
 Inspired by [pbakaus/impeccable](https://github.com/pbakaus/impeccable). Patterns reused: the brand-vs-product register, OKLCH color strategies, the anti-pattern registry shape, and the AI slop self-check. No prose vendored.
 
