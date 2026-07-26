@@ -89,6 +89,8 @@ was redistributed to Cursor.
 dark foreground halation trim, light/dark hue-drift alignment, splitting `test.sh` into
 per-section files.
 
+## 2026-07-20 — Claude Fable 5 (follow-up polish)
+
 Hook installer: preserve user PostToolUse blocks that lack a `hooks` array; reject malformed
 `.hooks` shapes with a clear error instead of a raw jq crash. Documented two intentional
 constraints in `test.sh` (section 7 lowercase-token rule, JSON key check is presence-only).
