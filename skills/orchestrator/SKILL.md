@@ -1,16 +1,16 @@
 ---
 name: orchestrator
-description: Synthesizes PRODUCT.md, DESIGN.md, and CODE.md into AGENT.md (universal agents.md) plus the selected harness files (CLAUDE.md, GEMINI.md, Cursor rules) at the project root. Use when the user asks to generate or regenerate AGENT.md, AGENTS.md, CLAUDE.md, GEMINI.md, or the Cursor rules, or when all three briefs exist and the agent instructions need to be assembled. Triggers on "AGENT.md", "AGENTS.md", "CLAUDE.md", "GEMINI.md", "Cursor rules", "orchestrate briefs", "generate agent instructions", "assemble project instructions".
+description: Synthesizes PRODUCT.md, DESIGN.md, and CODE.md into AGENT.md (universal agents.md) plus WRITING.md (the project's writing rules) and the selected harness files (CLAUDE.md, GEMINI.md, Cursor rules) at the project root. Use when the user asks to generate or regenerate AGENT.md, AGENTS.md, WRITING.md, CLAUDE.md, GEMINI.md, or the Cursor rules, or when all three briefs exist and the agent instructions need to be assembled. Triggers on "AGENT.md", "AGENTS.md", "WRITING.md", "CLAUDE.md", "GEMINI.md", "Cursor rules", "orchestrate briefs", "generate agent instructions", "assemble project instructions".
 ---
 
 # Orchestrator Skill
 
-You assemble the three briefs into `AGENT.md` (universal agents.md spec) plus the harness files the user selects — `CLAUDE.md`, `GEMINI.md`, and/or a Cursor file — each a thin import of `AGENT.md` with harness-specific addenda.
+You assemble the three briefs into `AGENT.md` (universal agents.md spec) and `WRITING.md` (the project's writing rules), plus the harness files the user selects — `CLAUDE.md`, `GEMINI.md`, and/or a Cursor file — each a thin import of `AGENT.md` with harness-specific addenda.
 
 ## Setup
 
-1. Locate the plugin root. Templates are at `templates/AGENT.template.md`, `templates/CLAUDE.template.md`, `templates/GEMINI.template.md`, and `templates/cursor-rules.template.mdc`. Anti-pattern guardrails are at `guardrails/{product,ux,design,code}-anti-patterns.md`.
-2. Read `AGENT.template.md`, the templates for the harnesses in play, and all four guardrail files before starting.
+1. Locate the plugin root. Templates are at `templates/AGENT.template.md`, `templates/WRITING.template.md`, `templates/CLAUDE.template.md`, `templates/GEMINI.template.md`, and `templates/cursor-rules.template.mdc`. Anti-pattern guardrails are at `guardrails/{product,ux,design,writing,code}-anti-patterns.md`.
+2. Read `AGENT.template.md`, `WRITING.template.md`, the templates for the harnesses in play, and all five guardrail files before starting.
 
 ## Inputs
 
@@ -26,7 +26,7 @@ If any are missing:
 
 ## Pre-flight
 
-Check every file this run could write: `AGENT.md`, plus — per the harness selection below — `CLAUDE.md`, `GEMINI.md`, `AGENTS.md`, and `.cursor/rules/project.mdc`:
+Check every file this run could write: `AGENT.md` and `WRITING.md`, plus — per the harness selection below — `CLAUDE.md`, `GEMINI.md`, `AGENTS.md`, and `.cursor/rules/project.mdc`:
 - If none exist, proceed.
 - If any exists, list which and ask: overwrite (regenerate from briefs) or stop. A hand-written `AGENTS.md` or `GEMINI.md` gets the same gate as `CLAUDE.md` — never overwrite silently. Do not offer "merge" — these files are derived, not authored.
 
@@ -38,7 +38,7 @@ Before writing, ask the user which AI harnesses they target, via `AskUserQuestio
 - **Gemini CLI** — writes `GEMINI.md` from `templates/GEMINI.template.md`.
 - **Cursor** — writes either `AGENTS.md` (a copy of `AGENT.md`; Cursor reads it natively — the simple default) **or** `.cursor/rules/project.mdc` from `templates/cursor-rules.template.mdc` (glob-scoped, `alwaysApply` — the idiomatic, scoped option). Ask which when Cursor is selected.
 
-`AGENT.md` is always written — it is the universal source of truth every harness file imports or copies. Only emit the harness files the user selects.
+`AGENT.md` and `WRITING.md` are always written — `AGENT.md` is the universal source of truth every harness file imports or copies, and `WRITING.md` is the writing companion it points to for any user-facing copy. Only emit the harness files the user selects.
 
 ## Synthesis
 
@@ -71,9 +71,20 @@ Populate `templates/AGENT.template.md`:
 - `{{PRODUCT_ANTI_PATTERNS}}` — embed `guardrails/product-anti-patterns.md` headlines (1 line per pattern).
 - `{{UX_ANTI_PATTERNS}}` — embed `guardrails/ux-anti-patterns.md` headlines.
 - `{{DESIGN_ANTI_PATTERNS}}` — embed `guardrails/design-anti-patterns.md` headlines.
+- `{{WRITING_ANTI_PATTERNS}}` — embed `guardrails/writing-anti-patterns.md` headlines.
 - `{{CODE_ANTI_PATTERNS}}` — embed `guardrails/code-anti-patterns.md` headlines.
 
 Anti-pattern lists must be **embedded inline** (one-line summaries), not just linked. An agent reading `AGENT.md` should see the bans without hopping files.
+
+### WRITING.md
+
+Populate `templates/WRITING.template.md`. `WRITING.md` owns how words get written in the repo — button labels to long-form prose. It **defers upward** to `PRODUCT.md` for personality and register: restate them as writing directives, never duplicate the prose.
+
+- `{{WRITING_VOICE}}` — from `PRODUCT.md`'s register and brand personality, as directives about how sentences behave (person, tense, where wit is allowed, what the voice never does).
+- `{{WRITING_TERMINOLOGY}}` — the product's nouns and their exact casing (from `PRODUCT.md`'s one-liner and `DESIGN.md`'s components and flows), plus words the product never uses.
+- `{{WRITING_MICROCOPY}}` — rules for labels, buttons, empty/error/loading states, confirmations — grounded in `DESIGN.md`'s component primitives and user flows. Include the casing convention and the button verb rule.
+- `{{WRITING_LONGFORM}}` — structure and evidence rules for docs, onboarding, and marketing copy, consistent with the register.
+- `{{WRITING_ANTI_PATTERNS}}` — embed `guardrails/writing-anti-patterns.md` headlines (1 line per pattern); the same embed fills the matching slot in `AGENT.md`.
 
 ### CLAUDE.md
 
@@ -93,15 +104,16 @@ Populate `templates/GEMINI.template.md`. Like `CLAUDE.md` it imports `@AGENT.md`
 
 ## Preview & write
 
-1. Render `AGENT.md` plus each selected harness file and show the user (collapse long sections if needed).
+1. Render `AGENT.md` and `WRITING.md` plus each selected harness file and show the user (collapse long sections if needed).
 2. Ask for one round of edits.
-3. Write `AGENT.md` and every selected harness file (`CLAUDE.md`, `GEMINI.md`, `AGENTS.md` and/or `.cursor/rules/project.mdc`) to the project root.
+3. Write `AGENT.md`, `WRITING.md`, and every selected harness file (`CLAUDE.md`, `GEMINI.md`, `AGENTS.md` and/or `.cursor/rules/project.mdc`) to the project root.
 
 ## Done
 
 Print a one-screen summary listing every file written (only the selected harnesses):
 ```
 ✓ Wrote AGENT.md ({{N}} sections, {{M}} anti-patterns embedded)
+✓ Wrote WRITING.md (voice, terminology, microcopy, long-form + writing bans)
 ✓ Wrote CLAUDE.md (thin import of AGENT.md + {{K}} project-specific notes)
 ✓ Wrote GEMINI.md / AGENTS.md / .cursor/rules/project.mdc   ← only those selected
 
@@ -117,5 +129,5 @@ Next steps:
 ## Important
 
 - Never invent product or design context. If a brief is missing or thin, say so in the output.
-- `AGENT.md` and every harness file (`CLAUDE.md`, `GEMINI.md`, `AGENTS.md`, the Cursor rule) are derived files. Do not offer to "merge" edits — regenerate from briefs.
+- `AGENT.md`, `WRITING.md`, and every harness file (`CLAUDE.md`, `GEMINI.md`, `AGENTS.md`, the Cursor rule) are derived files. Do not offer to "merge" edits — regenerate from briefs.
 - The voice of the synthesized files should match the voice the briefs established. Don't add hedging.

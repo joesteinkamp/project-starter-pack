@@ -1,5 +1,6 @@
 # hook-input.sh — shared tool-call JSON parsing for the advisory hooks.
-# Sourced by guard-design.sh and check-anti-patterns.sh; not executable on its own.
+# Sourced by guard-design.sh, check-anti-patterns.sh, and check-writing-slop.sh;
+# not executable on its own.
 
 # Print the edited file's path from the tool-call JSON passed as $1 (may be empty).
 hook_file_path() {
@@ -21,6 +22,14 @@ hook_file_path() {
 hook_is_style_file() {
   case "$1" in
     *.css|*.scss|*.sass|*.less|*.tsx|*.jsx|*.svelte|*.vue|*.astro) return 0 ;;
+    *) return 1 ;;
+  esac
+}
+
+# Is $1 a prose-bearing file the writing hook should look at?
+hook_is_prose_file() {
+  case "$1" in
+    *.md|*.mdx|*.markdown|*.txt) return 0 ;;
     *) return 1 ;;
   esac
 }

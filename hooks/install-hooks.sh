@@ -18,7 +18,7 @@
 set -euo pipefail
 
 HERE="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-HOOK_SCRIPTS=(guard-design.sh check-anti-patterns.sh)   # single source of truth (keep single-line: the test suite greps this line)
+HOOK_SCRIPTS=(guard-design.sh check-anti-patterns.sh check-writing-slop.sh)   # single source of truth (keep single-line: the test suite greps this line)
 
 scope="project"
 mode="install"

@@ -2,6 +2,43 @@
 
 AI-made changes to this repository: what changed and why.
 
+## 2026-07-25 — Claude Fable 5 (writing layer: WRITING.md + fifth guardrail + writing hook)
+
+**Ask:** the pack guarded product, UX, design, and code slop but had no rules for prose — UI
+labels through long-form copy. Joe asked for a `WRITING.md` that teaches agents how not to
+write AI slop, grounded in [petergyang/no-ai-slop](https://github.com/petergyang/no-ai-slop)
+(MIT; credited in README Attribution).
+
+**What changed:**
+
+- **`guardrails/writing-anti-patterns.md`** — fifth ban registry in the grouped-bullet
+  dialect: flagship vocabulary, empty adverbs/phrases, sentence patterns (binary contrasts,
+  colon reveals, negative listing…), openers/framing, puffery, endings, formatting slop, and
+  a Microcopy group written for the UI-label side (cutesy errors, blame-the-user copy, vague
+  button verbs), closing with the slop test.
+- **`templates/WRITING.template.md`** — a *synthesized* template, not a brief:
+  Voice / Vocabulary & terminology / Microcopy / Long-form / anti-patterns. The orchestrator
+  now always writes `WRITING.md` alongside `AGENT.md`, filling voice from `PRODUCT.md` and
+  microcopy context from `DESIGN.md` — deferring upward, never duplicating the briefs.
+- **`hooks/check-writing-slop.sh`** — third advisory hook (warn-only, exit 0) on prose files:
+  flagship words, empty framing phrases, em-dash clusters (>5/file). Wired into the installer,
+  snippet, and hooks README; `hook_is_prose_file` added to the shared lib.
+- **Wiring:** orchestrator + validate skills (new Writing/Copy review lens; Mode A voice row
+  now cross-checks WRITING.md), `AGENT.template.md` (`### Writing` ban block + a writing item
+  in the AI Slop self-check), `examples/saga-reader/WRITING.md` render + example AGENT.md,
+  `test.sh` (`SYNTH_TEMPLATES`, required render check, `check_link` generalized to take the
+  guardrail file; the installer-idempotence fixture now derives its expected entry count from
+  `HOOK_SCRIPTS` instead of a hardcoded 2), README/orchestrate docs.
+
+**Why this approach:** guardrail + orchestrator-synthesized template instead of a fourth
+brief — writing rules derive from decisions `PRODUCT.md` and `DESIGN.md` already capture, so
+a dedicated questionnaire would mostly re-ask answered questions. *Rejected:* a full fourth
+brief (questionnaire/skill/command, ~25 files) — Joe chose the lighter shape; hook checks for
+"robust"/"leverage" — too many legitimate uses in tech docs, the hook keeps only
+near-zero-false-positive tells.
+
+4 new files + 12 edited; 256/256 checks pass.
+
 ## 2026-07-25 — Claude Fable 5 (cross-vendor review + fixes)
 
 **Ask:** `/improve` on the two post-merge commits, then "fix all." Six review lenses ran —

@@ -1,21 +1,21 @@
 ---
 name: validate
-description: Reviews a project against its own PRODUCT.md, DESIGN.md, DESIGN.json, and CODE.md briefs and the anti-pattern guardrails. Use when the user asks to validate or check the briefs, find contradictions between them, audit the repo or a diff against the design/product/code rules, or hunt for anti-patterns in the codebase. Triggers on "validate the briefs", "check for contradictions", "review against DESIGN.md", "audit the code against the briefs", "find anti-patterns in the repo", "/starter:validate".
+description: Reviews a project against its own PRODUCT.md, DESIGN.md, DESIGN.json, CODE.md, and WRITING.md files and the anti-pattern guardrails. Use when the user asks to validate or check the briefs, find contradictions between them, audit the repo or a diff against the design/product/code rules, or hunt for anti-patterns in the codebase. Triggers on "validate the briefs", "check for contradictions", "review against DESIGN.md", "audit the code against the briefs", "find anti-patterns in the repo", "/starter:validate".
 ---
 
 # Validate Skill
 
 You run a **brief-aware** review. Unlike a generic code review, every finding is justified
-against *this project's* briefs (`PRODUCT.md`, `DESIGN.md`, `DESIGN.json`, `CODE.md`) and the
-four anti-pattern registries. There are two modes; run both unless the user scopes you to one.
+against *this project's* briefs (`PRODUCT.md`, `DESIGN.md`, `DESIGN.json`, `CODE.md`, plus the
+derived `WRITING.md`) and the five anti-pattern registries. There are two modes; run both unless the user scopes you to one.
 
 This skill is **read-only**. Report findings; never edit unless the user explicitly asks.
 
 ## Setup
 
-1. Locate the plugin root. Guardrails are at `guardrails/{product,ux,design,code}-anti-patterns.md`.
-2. Read the four guardrail files so you can cite specific bans by name.
-3. Read the project briefs from the project root: `PRODUCT.md`, `DESIGN.md`, `DESIGN.json` (if present), `CODE.md`.
+1. Locate the plugin root. Guardrails are at `guardrails/{product,ux,design,writing,code}-anti-patterns.md`.
+2. Read the five guardrail files so you can cite specific bans by name.
+3. Read the project briefs from the project root: `PRODUCT.md`, `DESIGN.md`, `DESIGN.json` (if present), `CODE.md`, and `WRITING.md` (if present — it is derived; `/starter:orchestrate` regenerates it).
 
 ## Inputs
 
@@ -30,7 +30,7 @@ Read the briefs against *each other* and report contradictions. Check at least t
 | Pair | Contradiction to look for |
 |---|---|
 | Motion (DESIGN) vs performance budget (CODE) | "expressive" motion or heavy transitions against a strict bundle/INP budget; animations on the critical path the perf budget protects. |
-| Brand register & voice (PRODUCT) vs microcopy/UI voice (DESIGN) | a "decisive, no-hedging" voice paired with hedging or gamified copy; register `product` but a marketing-brand visual system (or vice versa). |
+| Brand register & voice (PRODUCT) vs microcopy/UI voice (DESIGN / WRITING) | a "decisive, no-hedging" voice paired with hedging or gamified copy; `WRITING.md` rules that contradict the brand personality; register `product` but a marketing-brand visual system (or vice versa). |
 | Stack vs hosting (CODE) | runtime/library choices that the chosen host can't run (e.g. a Node-only dependency on an edge/Workers target); database choice vs hosting region/latency claims. |
 | Accessibility baseline (PRODUCT) vs color tokens (DESIGN / DESIGN.json) | stated WCAG level vs the token pairs that carry meaning: foreground/background, muted/background, accent/background (as text), accentForeground/accent (text on an accent fill, 4.5:1), and borderStrong/background (control boundaries, 3:1 per 1.4.11) — in every theme block the file ships. Compute the contrast, don't eyeball it. |
 | Color strategy (DESIGN) vs the actual tokens | "Restrained — one accent on ≤10%" vs a palette that ships several saturated accents. |
@@ -46,6 +46,7 @@ is present; otherwise review the whole tree. **Dispatch a parallel review team**
 per lens, each handed the relevant brief sections and guardrail file:
 
 - **Product / Brand** — user-facing copy vs `PRODUCT.md` register, voice, and `product-anti-patterns.md`.
+- **Writing / Copy** — user-facing strings, docs, and marketing prose vs `WRITING.md` (voice, terminology, microcopy rules) and `writing-anti-patterns.md` (AI-flagship vocabulary, cutesy errors, hedging labels).
 - **UX** — flows, empty/error/loading states, focus & keyboard reachability vs `DESIGN.md` UX foundation and `ux-anti-patterns.md`.
 - **UI / Design** — raw hex where `DESIGN.json` requires OKLCH, banned patterns (nested cards, default shadows, bounce easing, gradient text…), hard-coded spacing vs the token scale, measure cap — vs `DESIGN.md` UI system and `design-anti-patterns.md`.
 - **Code** — conventions, error handling, performance budgets, security vs `CODE.md` and `code-anti-patterns.md`.

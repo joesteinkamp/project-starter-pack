@@ -1,7 +1,8 @@
 # Hooks (optional, advisory)
 
 These hooks are **opt-in, warn-only, and not installed by default.** They print nudges when an
-edited file drifts from the design system; they never block a tool call and never edit anything.
+edited file drifts from the design system or the writing rules; they never block a tool call and
+never edit anything.
 
 ## Why advisory, not enforcing
 
@@ -19,8 +20,9 @@ in; otherwise the embedded guardrails in `AGENT.md` are the enforcement.
 |---|---|---|
 | `guard-design.sh` | Edit/Write to a style/component file **when `DESIGN.json` exists** | raw hex colors where the OKLCH token system applies |
 | `check-anti-patterns.sh` | Edit/Write to a style/component file | a few high-signal `design-anti-patterns.md` bans: animating layout properties, `backdrop-filter: blur` (glassmorphism), gradient/clipped text |
+| `check-writing-slop.sh` | Edit/Write to a prose file (`.md`, `.mdx`, `.txt`) | a few high-signal `writing-anti-patterns.md` bans: AI-flagship vocabulary ("delve", "tapestry", "paradigm shift"), empty framing phrases ("it's worth noting", "in conclusion"), em-dash clusters |
 
-Both read the tool-call JSON on stdin, inspect the edited file, print to stderr, and **exit 0**.
+All three read the tool-call JSON on stdin, inspect the edited file, print to stderr, and **exit 0**.
 
 ## Install / uninstall
 

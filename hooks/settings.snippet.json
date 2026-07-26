@@ -6,7 +6,8 @@
         "matcher": "Edit|Write|MultiEdit",
         "hooks": [
           { "type": "command", "command": "ABS_PATH/hooks/guard-design.sh" },
-          { "type": "command", "command": "ABS_PATH/hooks/check-anti-patterns.sh" }
+          { "type": "command", "command": "ABS_PATH/hooks/check-anti-patterns.sh" },
+          { "type": "command", "command": "ABS_PATH/hooks/check-writing-slop.sh" }
         ]
       }
     ]

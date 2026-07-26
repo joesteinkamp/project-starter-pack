@@ -16,6 +16,8 @@ Before any non-trivial change, read the three briefs at the project root:
 2. **`DESIGN.md`** — UX foundation (users, IA, flows, success metrics) **and** UI system (color, type, spacing, motion, components).
 3. **`CODE.md`** — stack, architecture, conventions, performance, security.
 
+For any user-facing words — labels, errors, empty states, docs, marketing — also read **`WRITING.md`** (derived from the briefs; regenerate with `/starter:orchestrate`).
+
 If a request is ambiguous, ask the user before assuming. Do not invent product context, design tokens, or stack decisions that contradict these briefs.
 
 ## Product context
@@ -64,6 +66,10 @@ The following are non-negotiable bans. If the user asks for them anyway, push ba
 
 {{DESIGN_ANTI_PATTERNS}}
 
+### Writing
+
+{{WRITING_ANTI_PATTERNS}}
+
 ### Code
 
 {{CODE_ANTI_PATTERNS}}
@@ -77,6 +83,7 @@ Before showing any UI to the user, run this check:
 - [ ] Is every element earning its place, or is there ornament-for-ornament's-sake?
 - [ ] Did I default to a hero-metric layout, identical-card grid, or modal-first thinking? If yes, see `DESIGN.md` for the chosen pattern.
 - [ ] Does the copy hedge ("might", "could", "consider") instead of taking a stance?
+- [ ] Would a reader who has skimmed a thousand AI-written pages flag this copy ("delve", "It's not X. It's Y.", em-dash clusters)? See `WRITING.md`.
 
 ## When to ask the user
 

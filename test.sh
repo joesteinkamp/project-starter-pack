@@ -88,6 +88,7 @@ section "2. Orchestrator coverage of synthesized-template slots"
 ORCH=skills/orchestrator/SKILL.md
 SYNTH_TEMPLATES=(
   templates/AGENT.template.md
+  templates/WRITING.template.md
   templates/CLAUDE.template.md
   templates/GEMINI.template.md
   templates/cursor-rules.template.mdc
@@ -231,11 +232,12 @@ check_render_json_keys() {
   [ "$missing" -eq 0 ] && ok "$rendered carries every $(basename "$template") key (presence-only: no jq)"
 }
 for dir in ${example_dirs[@]+"${example_dirs[@]}"}; do
-  # The three briefs + AGENT.md are always written — required in an example.
+  # The three briefs + AGENT.md + WRITING.md are always written — required in an example.
   check_render_headings templates/PRODUCT.template.md "${dir}PRODUCT.md" required
   check_render_headings templates/DESIGN.template.md  "${dir}DESIGN.md"  required
   check_render_headings templates/CODE.template.md    "${dir}CODE.md"    required
   check_render_headings templates/AGENT.template.md   "${dir}AGENT.md"   required
+  check_render_headings templates/WRITING.template.md "${dir}WRITING.md" required
   # Harness files are optional per project; checked when the example ships them.
   check_render_headings templates/CLAUDE.template.md "${dir}CLAUDE.md" optional
   check_render_headings templates/GEMINI.template.md "${dir}GEMINI.md" optional
@@ -388,23 +390,27 @@ if [ -d hooks ]; then
   done
   # Guardrail ↔ hook linkage, both directions.
   DG=guardrails/design-anti-patterns.md
-  check_link() { # TERM HOOK_FILE PATTERN
-    local term="$1" hook="$2" pattern="$3"
-    if grep -qiF "$term" "$DG"; then
-      ok "design guardrail still covers: $term"
+  WG=guardrails/writing-anti-patterns.md
+  check_link() { # TERM GUARDRAIL HOOK_FILE PATTERN
+    local term="$1" guard="$2" hook="$3" pattern="$4"
+    if grep -qiF "$term" "$guard"; then
+      ok "$(basename "$guard" .md) still covers: $term"
     else
-      bad "a hook keys on '$term' but design-anti-patterns.md no longer mentions it"
+      bad "a hook keys on '$term' but $(basename "$guard") no longer mentions it"
     fi
     if grep -qF "$pattern" "$hook"; then
       ok "$(basename "$hook") still checks: $pattern"
     else
-      bad "design-anti-patterns.md bans '$term' but $(basename "$hook") no longer greps for '$pattern'"
+      bad "$(basename "$guard") bans '$term' but $(basename "$hook") no longer greps for '$pattern'"
     fi
   }
-  check_link "layout properties" hooks/check-anti-patterns.sh "transition"
-  check_link "glassmorphism"     hooks/check-anti-patterns.sh "backdrop-filter"
-  check_link "gradient text"     hooks/check-anti-patterns.sh "background-clip"
-  check_link "OKLCH"             hooks/guard-design.sh        "OKLCH"
+  check_link "layout properties" "$DG" hooks/check-anti-patterns.sh "transition"
+  check_link "glassmorphism"     "$DG" hooks/check-anti-patterns.sh "backdrop-filter"
+  check_link "gradient text"     "$DG" hooks/check-anti-patterns.sh "background-clip"
+  check_link "OKLCH"             "$DG" hooks/guard-design.sh        "OKLCH"
+  check_link "delve"             "$WG" hooks/check-writing-slop.sh  "delve"
+  check_link "worth noting"      "$WG" hooks/check-writing-slop.sh  "worth noting"
+  check_link "em-dash clusters"  "$WG" hooks/check-writing-slop.sh  "—"
   # Behavioral fixtures — the install lifecycle and the hooks' pattern matching
   # are exercised for real, not just parsed. The installer's worst historical
   # defects (false success, deleting user hooks, destroying the backup) live
@@ -421,8 +427,9 @@ FIXTURE
     else
       bad "installer: failed on a plain double install"
     fi
-    if [ "$(jq '[.hooks.PostToolUse[].hooks[]? | select(.command | startswith("'"$ROOT"'"))] | length' "$td/proj/.claude/settings.json")" = 2 ]; then
-      ok "installer: idempotent (exactly our 2 entries after 2 runs)"
+    hook_count="$(printf '%s\n' "$installer_scripts" | grep -c .)"
+    if [ "$(jq '[.hooks.PostToolUse[].hooks[]? | select(.command | startswith("'"$ROOT"'"))] | length' "$td/proj/.claude/settings.json")" = "$hook_count" ]; then
+      ok "installer: idempotent (exactly our $hook_count entries after 2 runs)"
     else
       bad "installer: duplicated or dropped its own entries on reinstall"
     fi
