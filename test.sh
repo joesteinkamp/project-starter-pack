@@ -49,7 +49,7 @@ while IFS= read -r -d '' f; do
     bad "unbalanced \`\`\` fences in $f"
     fence_bad=1
   fi
-done < <(find templates skills commands questionnaires guardrails examples -type f \( -name '*.md' -o -name '*.mdc' \) -print0)
+done < <(find templates skills commands conventions questionnaires guardrails examples -type f \( -name '*.md' -o -name '*.mdc' \) -print0)
 [ "$fence_bad" -eq 0 ] && ok "all $fence_files markdown files have balanced fences"
 
 # ---------------------------------------------------------------------------
@@ -87,10 +87,9 @@ section "2. Orchestrator coverage of synthesized-template slots"
 # one of those templates.
 ORCH=skills/orchestrator/SKILL.md
 SYNTH_TEMPLATES=(
-  templates/AGENT.template.md
+  templates/AGENTS.template.md
   templates/WRITING.template.md
   templates/CLAUDE.template.md
-  templates/GEMINI.template.md
   templates/cursor-rules.template.mdc
 )
 for t in "${SYNTH_TEMPLATES[@]}"; do
@@ -232,15 +231,14 @@ check_render_json_keys() {
   [ "$missing" -eq 0 ] && ok "$rendered carries every $(basename "$template") key (presence-only: no jq)"
 }
 for dir in ${example_dirs[@]+"${example_dirs[@]}"}; do
-  # The three briefs + AGENT.md + WRITING.md are always written — required in an example.
+  # The three briefs + AGENTS.md + WRITING.md are always written — required in an example.
   check_render_headings templates/PRODUCT.template.md "${dir}PRODUCT.md" required
   check_render_headings templates/DESIGN.template.md  "${dir}DESIGN.md"  required
   check_render_headings templates/CODE.template.md    "${dir}CODE.md"    required
-  check_render_headings templates/AGENT.template.md   "${dir}AGENT.md"   required
+  check_render_headings templates/AGENTS.template.md  "${dir}AGENTS.md"  required
   check_render_headings templates/WRITING.template.md "${dir}WRITING.md" required
   # Harness files are optional per project; checked when the example ships them.
   check_render_headings templates/CLAUDE.template.md "${dir}CLAUDE.md" optional
-  check_render_headings templates/GEMINI.template.md "${dir}GEMINI.md" optional
   check_render_headings templates/cursor-rules.template.mdc "${dir}.cursor/rules/project.mdc" optional
   if [ -f "${dir}DESIGN.json" ]; then
     if command -v jq >/dev/null 2>&1; then
@@ -252,7 +250,7 @@ for dir in ${example_dirs[@]+"${example_dirs[@]}"}; do
   # The layering note's canonical clause (skills/orchestrator/SKILL.md) must
   # survive into every harness render — a fixture stating the opposite rule
   # passed silently before this check.
-  for hf in AGENT.md CLAUDE.md GEMINI.md .cursor/rules/project.mdc; do
+  for hf in AGENTS.md CLAUDE.md .cursor/rules/project.mdc; do
     [ -f "${dir}${hf}" ] || continue
     # sed strips blockquote markers, tr collapses line wraps: the clause may
     # break across lines inside a `> ...` blockquote
@@ -428,7 +426,7 @@ FIXTURE
       bad "installer: failed on a plain double install"
     fi
     hook_count="$(printf '%s\n' "$installer_scripts" | grep -c .)"
-    if [ "$(jq '[.hooks.PostToolUse[].hooks[]? | select(.command | startswith("'"$ROOT"'"))] | length' "$td/proj/.claude/settings.json")" = "$hook_count" ]; then
+    if [ "$(jq '[.hooks.PostToolUse[].hooks[]? | select(.command | contains("'"$ROOT"'"))] | length' "$td/proj/.claude/settings.json")" = "$hook_count" ]; then
       ok "installer: idempotent (exactly our $hook_count entries after 2 runs)"
     else
       bad "installer: duplicated or dropped its own entries on reinstall"
@@ -449,7 +447,7 @@ FIXTURE
       bad "installer: second run overwrote the pre-install backup"
     fi
     if (cd "$td/proj" && "$ROOT/hooks/install-hooks.sh" --uninstall >/dev/null 2>&1) \
-       && [ "$(jq '[.hooks.PostToolUse[].hooks[]? | select(.command | startswith("'"$ROOT"'"))] | length' "$td/proj/.claude/settings.json")" = 0 ] \
+       && [ "$(jq '[.hooks.PostToolUse[].hooks[]? | select(.command | contains("'"$ROOT"'"))] | length' "$td/proj/.claude/settings.json")" = 0 ] \
        && [ "$(jq '[.hooks.PostToolUse[].hooks[]? | select(.command == "/home/me/scripts/guard-design.sh")] | length' "$td/proj/.claude/settings.json")" = 1 ]; then
       ok "installer: --uninstall removes exactly ours, keeps the user's"
     else
@@ -498,12 +496,217 @@ FIXTURE
     hook_case guard-design.sh        css 'a { color: #aabbccdd; }'                         warn  hex-8
     hook_case guard-design.sh        css '#dad { color: red; }'                            quiet id-selector
     hook_case guard-design.sh        jsx '<a href="#add">x</a>'                            quiet href-anchor
+
+    # Cross-tool payload shapes. One set of scripts serves four tools, so each
+    # tool's event envelope must reach the same file — a regression here means a
+    # hook silently stops firing in one tool while still passing everywhere else.
+    printf 'a { color: #fff; }\n' > "$td/payload.css"
+    payload_case() { # PLATFORM JSON LABEL
+      local out
+      out="$(cd "$td" && printf '%s' "$2" | env HOOK_PLATFORM="$1" "$ROOT/hooks/guard-design.sh" 2>&1)"
+      if [ -n "$out" ]; then ok "hook-input: $1 payload resolved ($3)"; else bad "hook-input: $1 payload NOT resolved ($3)"; fi
+    }
+    payload_case claude      "$(jq -nc --arg f "$td/payload.css" '{tool_input:{file_path:$f}}')"        tool_input.file_path
+    payload_case cursor      "$(jq -nc --arg f "$td/payload.css" '{file_path:$f}')"                     top-level.file_path
+    payload_case antigravity "$(jq -nc --arg f "\"$td/payload.css\"" '{toolCall:{args:{TargetFile:$f}}}')" json-encoded.TargetFile
+    payload_case codex       "$(jq -nc --arg c "*** Begin Patch
+*** Update File: $td/payload.css
+*** End Patch" '{tool_input:{command:$c}}')"                                                            apply_patch.envelope
+
+    # Multi-tool install lifecycle, inside a sandboxed HOME so a test run can
+    # never touch the developer's real ~/.codex, ~/.cursor, or ~/.gemini.
+    fake="$td/home"; mkdir -p "$fake/.codex" "$fake/.cursor" "$fake/.gemini/antigravity-cli"
+    if HOME="$fake" "$ROOT/hooks/install-hooks.sh" codex cursor antigravity >/dev/null 2>&1 \
+       && HOME="$fake" "$ROOT/hooks/install-hooks.sh" codex cursor antigravity >/dev/null 2>&1; then
+      ok "installer: codex/cursor/antigravity install twice cleanly"
+    else
+      bad "installer: multi-tool install failed"
+    fi
+    if [ "$(jq '[.hooks.PostToolUse[].hooks[]?] | length' "$fake/.codex/hooks.json" 2>/dev/null)" = "$hook_count" ] \
+       && [ "$(jq '.hooks.afterFileEdit | length' "$fake/.cursor/hooks.json" 2>/dev/null)" = "$hook_count" ] \
+       && [ "$(jq -r '.["psp-advisory"].PostToolUse[0].hooks | length' "$fake/.gemini/antigravity-cli/hooks.json" 2>/dev/null)" = "$hook_count" ]; then
+      ok "installer: idempotent across all three (exactly $hook_count entries each)"
+    else
+      bad "installer: multi-tool reinstall duplicated or dropped entries"
+    fi
+    # Every wired command must carry its HOOK_PLATFORM — without it the shared
+    # scripts fall back to guessing the payload shape.
+    if jq -e -r '[.hooks.PostToolUse[].hooks[].command] | all(startswith("env HOOK_PLATFORM=codex "))' "$fake/.codex/hooks.json" >/dev/null 2>&1 \
+       && jq -e -r '[.hooks.afterFileEdit[].command] | all(startswith("env HOOK_PLATFORM=cursor "))' "$fake/.cursor/hooks.json" >/dev/null 2>&1; then
+      ok "installer: wired commands carry HOOK_PLATFORM"
+    else
+      bad "installer: a wired command is missing its HOOK_PLATFORM"
+    fi
+    # Antigravity is invoked by absolute path with no environment of ours, so the
+    # platform has to live in a wrapper script instead.
+    if [ -x "$fake/.gemini/antigravity-cli/hooks/psp-guard-design.ag.sh" ] \
+       && grep -q 'HOOK_PLATFORM=antigravity' "$fake/.gemini/antigravity-cli/hooks/psp-guard-design.ag.sh"; then
+      ok "installer: antigravity wrappers export HOOK_PLATFORM"
+    else
+      bad "installer: antigravity wrapper missing or does not set HOOK_PLATFORM"
+    fi
+    if HOME="$fake" "$ROOT/hooks/install-hooks.sh" --uninstall codex cursor antigravity >/dev/null 2>&1 \
+       && [ "$(jq -c '.hooks // {}' "$fake/.codex/hooks.json")" = '{}' ] \
+       && [ "$(jq -c '.hooks // {}' "$fake/.cursor/hooks.json")" = '{}' ] \
+       && [ "$(jq -c '[keys[] | select(startswith("psp-"))]' "$fake/.gemini/antigravity-cli/hooks.json")" = '[]' ] \
+       && [ ! -e "$fake/.gemini/antigravity-cli/hooks/psp-guard-design.ag.sh" ]; then
+      ok "installer: multi-tool --uninstall leaves no residue"
+    else
+      bad "installer: multi-tool --uninstall left entries or wrappers behind"
+    fi
+    # A tool that isn't installed is a clean skip, not a failure.
+    bare="$td/bare"; mkdir -p "$bare"
+    if HOME="$bare" "$ROOT/hooks/install-hooks.sh" codex cursor antigravity >/dev/null 2>&1 \
+       && [ ! -e "$bare/.codex" ] && [ ! -e "$bare/.cursor" ] && [ ! -e "$bare/.gemini" ]; then
+      ok "installer: absent tools skipped without creating their dirs"
+    else
+      bad "installer: an absent tool errored or was created from nothing"
+    fi
     rm -rf "$td"
   else
     ok "behavioral fixtures skipped (jq not installed)"
   fi
 else
   ok "no hooks/ directory (hooks are optional)"
+fi
+
+# ---------------------------------------------------------------------------
+section "10. Portability contract (skills are the engine, no harness lock-in)"
+# The pack must run in Claude Code, Codex, Cursor, and Antigravity. That holds
+# only while the flow logic lives in the skills and the skills name no single
+# harness's tools. These checks are what stops it quietly regressing into a
+# Claude-only plugin again.
+
+# 10a. Every command has a skill of the same flow, and every skill has a command.
+#      (orchestrate is the one intentional rename: the command is a verb, the
+#      skill is the noun.)
+cmd_to_skill() { case "$1" in orchestrate) echo orchestrator ;; *) echo "$1" ;; esac; }
+for c in commands/*.md; do
+  name="$(basename "$c" .md)"
+  want="$(cmd_to_skill "$name")"
+  if [ -f "skills/$want/SKILL.md" ]; then
+    ok "flow '$name' exists as skill '$want'"
+  else
+    bad "command $name has no skill (expected skills/$want/SKILL.md) — unreachable in Codex"
+  fi
+done
+for d in skills/*/; do
+  sname="$(basename "$d")"
+  found=0
+  for c in commands/*.md; do
+    [ "$(cmd_to_skill "$(basename "$c" .md)")" = "$sname" ] && { found=1; break; }
+  done
+  [ "$found" -eq 1 ] && ok "skill '$sname' has a command wrapper" \
+                     || bad "skill '$sname' has no command in commands/ — unreachable in Claude/Cursor"
+done
+
+# 10b. Commands stay thin. A wrapper that grows its own procedure becomes a
+#      second source of truth that only Claude and Cursor ever read.
+for c in commands/*.md; do
+  lines="$(strip_fences "$c" | grep -cve '^[[:space:]]*$')"
+  if [ "$lines" -le 12 ]; then
+    ok "$(basename "$c") is a thin wrapper ($lines non-blank lines)"
+  else
+    bad "$(basename "$c") has $lines non-blank lines — flow logic belongs in the skill, not the command"
+  fi
+done
+
+# 10c. Ban list: harness-specific tool names and dialect must not appear in the
+#      portable layer (skills, questionnaires, conventions). Each has a neutral
+#      phrasing that works everywhere.
+PORTABLE_DIRS=(skills questionnaires conventions guardrails)
+# conventions/question-mechanics.md is the ONE file allowed to name a specific
+# harness's tools: its whole job is to say "use AskUserQuestion if you're in
+# Claude Code, otherwise number the options", and to tell skills to stop hunting
+# for a plugin root. Naming it there is what keeps it out of everywhere else.
+MECHANICS=conventions/question-mechanics.md
+ban_check() {  # $1 = grep -E pattern, $2 = human name, $3 = the neutral alternative, $4 = optional exempt file
+  local hits exempt="${4:-}"
+  hits="$(grep -rlE "$1" "${PORTABLE_DIRS[@]}" 2>/dev/null || true)"
+  [ -n "$exempt" ] && hits="$(printf '%s\n' "$hits" | grep -vxF "$exempt" || true)"
+  if [ -z "$hits" ]; then
+    ok "no '$2' in the portable layer"
+  else
+    bad "'$2' appears in ${hits//$'\n'/, } — use $3 instead"
+  fi
+}
+ban_check 'AskUserQuestion'          'AskUserQuestion (Claude-only tool)' '"ask as a structured question" (conventions/question-mechanics.md)' "$MECHANICS"
+ban_check '`Write` tool|the `Write`' 'the Write tool by name'            '"write the file"'
+ban_check '!`[^`]+`'                 'Claude shell-injection dialect'    'an instruction to run the command'
+ban_check 'plugin root'              '"plugin root" path discovery'      'paths relative to the skill (../../)' "$MECHANICS"
+ban_check '\$ARGUMENTS'              '$ARGUMENTS placeholder'            '"any focus supplied in the request"'
+# The regression that would undo the sunset is a template coming back, not a
+# skill *mentioning* Gemini — the orchestrator has to name it to clean it up.
+ban_check 'GEMINI\.template'         'a Gemini CLI template reference'   'Antigravity, which reads AGENTS.md natively'
+
+# 10d. Skills address shared resources relative to their own SKILL.md, so a skill
+#      dir symlinked alone into ~/.codex/skills still resolves them.
+for d in skills/*/; do
+  sname="$(basename "$d")"
+  if strip_fences "${d}SKILL.md" | grep -qE '(^|[^./])`(questionnaires|templates|guardrails|conventions)/'; then
+    bad "skills/$sname references a resource without ../../ — breaks when the skill dir is installed alone"
+  else
+    ok "skills/$sname resolves resources relative to itself"
+  fi
+done
+
+# 10e. /starter: is Claude's invocation syntax. It may appear only where a
+#      Claude surface is being described. The orchestrator is allowed because it
+#      authors the cross-tool invocation table in AGENTS.md — it names every
+#      tool's syntax, not just Claude's.
+STARTER_ALLOWED=" README.md INSTALL.md CHANGELOG.md templates/CLAUDE.template.md skills/orchestrator/SKILL.md examples/saga-reader/CLAUDE.md examples/saga-reader/AGENTS.md "
+while IFS= read -r f; do
+  rel="${f#./}"
+  case "$rel" in commands/*) continue ;; esac
+  # Root-level *-PLAN.md files are working design docs, not shipped surface.
+  case "$rel" in *-PLAN.md) [ "$rel" = "$(basename "$rel")" ] && continue ;; esac
+  case "$STARTER_ALLOWED" in *" $rel "*) continue ;; esac
+  bad "$rel uses /starter: syntax but is not a Claude-surface file"
+done < <(grep -rl '/starter:' --include='*.md' --include='*.mdc' --include='*.json' . 2>/dev/null | grep -v '^./commands/cursor/')
+ok "/starter: syntax confined to Claude-surface files"
+
+# 10f. The port renderer produces one port per canonical command and is
+#      idempotent — install.sh re-renders on every run, so a non-deterministic
+#      renderer would churn the user's ~/.cursor/commands forever.
+if [ -x ./render-ports.sh ]; then
+  if ./render-ports.sh >/dev/null 2>&1; then
+    before="$(cat commands/cursor/*.md 2>/dev/null | cksum)"
+    ./render-ports.sh >/dev/null 2>&1
+    after="$(cat commands/cursor/*.md 2>/dev/null | cksum)"
+    [ "$before" = "$after" ] && ok "render-ports.sh is idempotent" \
+                             || bad "render-ports.sh output changed on a second run"
+    n_cmds="$(find commands -maxdepth 1 -name '*.md' ! -name README.md | wc -l | tr -d ' ')"
+    n_ports="$(find commands/cursor -maxdepth 1 -name '*.md' 2>/dev/null | wc -l | tr -d ' ')"
+    [ "$n_cmds" = "$n_ports" ] && ok "render-ports.sh: $n_ports port(s) for $n_cmds command(s)" \
+                               || bad "render-ports.sh: $n_ports port(s) for $n_cmds command(s) — mismatch"
+    if grep -rq '!`' commands/cursor/ 2>/dev/null; then
+      bad "a Cursor port still carries Claude shell-injection syntax"
+    else
+      ok "Cursor ports carry no Claude-only dialect"
+    fi
+  else
+    bad "render-ports.sh failed to run"
+  fi
+else
+  bad "render-ports.sh is missing or not executable"
+fi
+
+# 10g. install.sh must exist, parse, and know every tool.
+if [ -x ./install.sh ]; then
+  ok "install.sh is executable"
+  for t in claude codex cursor antigravity; do
+    grep -qE "^ *$t\)" install.sh && ok "install.sh handles target: $t" \
+                                  || bad "install.sh has no branch for target: $t"
+  done
+else
+  bad "install.sh is missing or not executable"
+fi
+
+# 10h. The Gemini sunset is real: no template, no example render, no live target.
+if [ -e templates/GEMINI.template.md ] || [ -e examples/saga-reader/GEMINI.md ]; then
+  bad "a GEMINI file is still shipped — the Gemini CLI target was retired"
+else
+  ok "no GEMINI template or example render (retired tool)"
 fi
 
 # ---------------------------------------------------------------------------

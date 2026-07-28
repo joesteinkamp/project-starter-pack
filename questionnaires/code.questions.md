@@ -182,7 +182,7 @@ The `code-brief` skill walks the user through this question set.
 
 ## Extraction hints (brownfield)
 
-`/starter:extract` fills most of this brief straight from the code: `package.json` /
+The `extract` flow fills most of this brief straight from the code: `package.json` /
 `pyproject.toml` / `go.mod` seed `{{STACK_FRONTEND}}`, `{{STACK_BACKEND}}`, and `{{STACK_OTHER}}`;
 DB drivers and host config seed `{{STACK_DATABASE}}`, `{{STACK_HOSTING}}`, `{{STACK_AUTH}}`;
 package manager + tsconfig + linter config seed `{{LANGUAGES_TOOLING}}`; folder boundaries seed

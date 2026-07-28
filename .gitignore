@@ -1,3 +1,8 @@
-# install-hooks.sh writes a one-time backup of .claude/settings.json next to it;
-# it is machine-local state, never something to commit.
+# install-hooks.sh writes a one-time backup of each config it merges into, next
+# to that file; it is machine-local state, never something to commit.
 .claude/settings.json.bak
+
+# render-ports.sh generates the Cursor command ports from commands/*.md on every
+# install. They are snapshots of a source that IS committed — committing them too
+# would just create a second copy to drift.
+commands/cursor/

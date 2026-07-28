@@ -1,14 +1,18 @@
 {
   "name": "project-starter-pack",
-  "version": "0.1.0",
-  "description": "Designer-first AI project starter. Walks you through a Product, Design, and Technical brief, then synthesizes AGENT.md plus the harness files you select (CLAUDE.md, GEMINI.md, Cursor rules) so any AI coding agent can design and code with the same rigor as a senior team.",
+  "version": "0.2.0",
+  "description": "Designer-first AI project starter. Walks you through a Product, Design, and Technical brief, then synthesizes AGENTS.md and WRITING.md — read natively by Codex, Cursor, and Antigravity — plus the optional harness files you select (CLAUDE.md, Cursor scoped rules), so any AI coding agent designs and codes with the same rigor as a senior team.",
   "author": "joesteinkamp",
   "license": "MIT",
   "keywords": [
     "design",
     "product",
     "agents",
+    "agents-md",
     "claude-code",
+    "codex",
+    "cursor",
+    "antigravity",
     "starter"
   ],
   "commands": "./commands",

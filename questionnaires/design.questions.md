@@ -194,7 +194,7 @@ single-theme answer, `light` or `dark` alike)
 token slots `{{FONT_DISPLAY}}`, `{{FONT_BODY}}`, `{{FONT_MONO}}`,
 `{{TYPE_SCALE_RATIO}}`, `{{TYPE_BASE_SIZE}}`, `{{TYPE_LINE_HEIGHT}}`,
 `{{TYPE_MEASURE}}` — line height and measure are tokens, not just prose, so
-`/starter:validate` and the guardrails can check them mechanically
+The `validate` flow and the guardrails can check them mechanically
 
 #### Q18. Spacing & layout
 
@@ -246,7 +246,7 @@ token slots `{{SPACING_UNIT}}`, `{{SPACING_SCALE}}`
 
 ## Extraction hints (brownfield)
 
-When `/starter:extract` runs against existing code: theme/token files and CSS seed
+When the `extract` flow runs against existing code: theme/token files and CSS seed
 `{{COLOR_STRATEGY}}`, `{{COLOR_TOKENS}}`, and the `DESIGN.json` color tokens — including the
 `_DARK` counterparts under `themes.dark` when the code ships a dark theme (flagging raw hex
 for OKLCH conversion); font imports and scale variables seed `{{TYPOGRAPHY}}` and the type tokens;

@@ -1,6 +1,6 @@
 # Product Brief Questionnaire
 
-The `product-brief` skill walks the user through this question set. **Structured** questions use `AskUserQuestion` (multi-choice). **Open** questions are asked in chat as free-form prompts.
+The `product-brief` flow walks the user through this question set. **Structured** questions offer multiple choices; **open** questions are asked in chat as free-form prompts. See `conventions/question-mechanics.md` for how each is asked in a given tool.
 
 ## Pass 1 — Structured
 
@@ -117,7 +117,7 @@ TODO if there isn't a distinct one)
 
 ## Extraction hints (brownfield)
 
-When `/starter:extract` runs against existing code, the README, landing/marketing copy, and the
+When the `extract` flow runs against existing code, the README, landing/marketing copy, and the
 package `description` can seed `{{ONE_LINER}}`, `{{PRODUCT_PURPOSE}}`, and (low-confidence)
 `{{REGISTER}}`. Everything else here — users, jobs, personality, anti-references, principles,
 metrics — code cannot prove; extract leaves those as `[TODO — confirm]` for this questionnaire.

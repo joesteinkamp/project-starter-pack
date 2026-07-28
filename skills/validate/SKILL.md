@@ -1,6 +1,6 @@
 ---
 name: validate
-description: Reviews a project against its own PRODUCT.md, DESIGN.md, DESIGN.json, CODE.md, and WRITING.md files and the anti-pattern guardrails. Use when the user asks to validate or check the briefs, find contradictions between them, audit the repo or a diff against the design/product/code rules, or hunt for anti-patterns in the codebase. Triggers on "validate the briefs", "check for contradictions", "review against DESIGN.md", "audit the code against the briefs", "find anti-patterns in the repo", "/starter:validate".
+description: Reviews a project against its own PRODUCT.md, DESIGN.md, DESIGN.json, CODE.md, and WRITING.md files and the anti-pattern guardrails. Use when the user asks to validate or check the briefs, find contradictions between them, audit the repo or a diff against the design/product/code rules, or hunt for anti-patterns in the codebase. Triggers on "validate the briefs", "check for contradictions", "review against DESIGN.md", "audit the code against the briefs", "find anti-patterns in the repo".
 ---
 
 # Validate Skill
@@ -11,17 +11,27 @@ derived `WRITING.md`) and the five anti-pattern registries. There are two modes;
 
 This skill is **read-only**. Report findings; never edit unless the user explicitly asks.
 
+## Conventions
+
+Read `../../conventions/question-mechanics.md` first — it defines how this flow resolves the
+resource paths below.
+
 ## Setup
 
-1. Locate the plugin root. Guardrails are at `guardrails/{product,ux,design,writing,code}-anti-patterns.md`.
+1. Guardrails are at `../../guardrails/{product,ux,design,writing,code}-anti-patterns.md`.
 2. Read the five guardrail files so you can cite specific bans by name.
-3. Read the project briefs from the project root: `PRODUCT.md`, `DESIGN.md`, `DESIGN.json` (if present), `CODE.md`, and `WRITING.md` (if present — it is derived; `/starter:orchestrate` regenerates it).
+3. Read the project briefs from the project root: `PRODUCT.md`, `DESIGN.md`, `DESIGN.json` (if present), `CODE.md`, and `WRITING.md` (if present — it is derived; the `orchestrator` flow regenerates it).
+4. Run `git diff --stat HEAD` first and use its output as the review scope. If the repo has no
+   git history or the command fails, review the whole tree instead.
 
 ## Inputs
 
-If a brief is missing, say so and name the command that writes it (`/starter:product-brief`,
-`/starter:design-brief`, `/starter:code-brief`). Run Mode A on whatever briefs exist; skip a
-cross-check whose brief is absent rather than inventing the missing side.
+Any focus supplied in the request — a path, a subsystem, a single lens — narrows the review;
+with none, run the full matrix below.
+
+If a brief is missing, say so and name the flow that writes it (`product-brief`, `design-brief`,
+`code-brief`). Run Mode A on whatever briefs exist; skip a cross-check whose brief is absent
+rather than inventing the missing side.
 
 ## Mode A — Brief consistency
 
@@ -41,9 +51,10 @@ Output a table: `brief:section — the contradiction — suggested resolution`.
 
 ## Mode B — Code / UI vs briefs
 
-Only if the repo contains application code. Use the `git diff` scope from the command when one
-is present; otherwise review the whole tree. **Dispatch a parallel review team** — one subagent
-per lens, each handed the relevant brief sections and guardrail file:
+Only if the repo contains application code. Use the `git diff --stat HEAD` scope from Setup when
+there is one; otherwise review the whole tree. If the harness can run sub-agents, **dispatch a
+parallel review team** — one per lens, each handed the relevant brief sections and guardrail file.
+If it can't, work the lenses sequentially yourself; the lens list and the output shape are the same:
 
 - **Product / Brand** — user-facing copy vs `PRODUCT.md` register, voice, and `product-anti-patterns.md`.
 - **Writing / Copy** — user-facing strings, docs, and marketing prose vs `WRITING.md` (voice, terminology, microcopy rules) and `writing-anti-patterns.md` (AI-flagship vocabulary, cutesy errors, hedging labels).
@@ -51,7 +62,7 @@ per lens, each handed the relevant brief sections and guardrail file:
 - **UI / Design** — raw hex where `DESIGN.json` requires OKLCH, banned patterns (nested cards, default shadows, bounce easing, gradient text…), hard-coded spacing vs the token scale, measure cap — vs `DESIGN.md` UI system and `design-anti-patterns.md`.
 - **Code** — conventions, error handling, performance budgets, security vs `CODE.md` and `code-anti-patterns.md`.
 
-Each subagent returns concrete findings as `file:line — what's wrong — which brief/guardrail it violates — suggested fix`. Then **dedupe** overlapping findings, **group** by lens, and **sort** by impact (a broken top-flow or a security/accessibility line beats a style nit).
+Each lens returns concrete findings as `file:line — what's wrong — which brief/guardrail it violates — suggested fix`. Then **dedupe** overlapping findings, **group** by lens, and **sort** by impact (a broken top-flow or a security/accessibility line beats a style nit).
 
 ## Done
 

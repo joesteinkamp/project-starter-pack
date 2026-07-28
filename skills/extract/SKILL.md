@@ -1,6 +1,6 @@
 ---
 name: extract
-description: Reverse-engineers draft PRODUCT.md, DESIGN.md, DESIGN.json, and CODE.md briefs from an existing codebase, so the starter pack works on brownfield projects, not just greenfield ones. Use when the user wants to bootstrap briefs from code that already exists, infer the stack or design system, or onboard an existing repo into project-starter-pack. Triggers on "extract the briefs", "brownfield", "reverse engineer the design system", "infer the stack from the code", "generate briefs from existing code", "/starter:extract".
+description: Reverse-engineers draft PRODUCT.md, DESIGN.md, DESIGN.json, and CODE.md briefs from an existing codebase, so the starter pack works on brownfield projects, not just greenfield ones. Use when the user wants to bootstrap briefs from code that already exists, infer the stack or design system, or onboard an existing repo into project-starter-pack. Triggers on "extract the briefs", "brownfield", "reverse engineer the design system", "infer the stack from the code", "generate briefs from existing code".
 ---
 
 # Extract Skill
@@ -11,12 +11,18 @@ you seed the flow, you don't replace the designer's judgment.
 
 This skill is **read-only** during evidence gathering. Only the final write step creates files.
 
+## Conventions
+
+Read `../../conventions/question-mechanics.md` first. It defines how this flow asks structured
+questions in whatever tool you are running in, how it writes files, and how it resolves the
+resource paths below.
+
 ## Setup
 
-1. Locate the plugin root. Templates are in `templates/`; the slot list each draft must fill is
-   defined by `templates/PRODUCT.template.md`, `templates/DESIGN.template.md`,
-   `templates/DESIGN.tokens.template.json`, and `templates/CODE.template.md`.
-2. Determine the scan target (a path argument, else the repo root).
+1. Templates are in `../../templates/`; the slot list each draft must fill is defined by
+   `../../templates/PRODUCT.template.md`, `../../templates/DESIGN.template.md`,
+   `../../templates/DESIGN.tokens.template.json`, and `../../templates/CODE.template.md`.
+2. Determine the scan target: any path supplied in the request, else the repo root.
 
 ## Evidence gathering (read-only)
 
@@ -27,7 +33,7 @@ This skill is **read-only** during evidence gathering. Only the final write step
 ## Mapping evidence to slots
 
 Fill each slot from evidence; anything not provable from the code stays
-`[TODO — confirm via /starter:<brief>]`. **Never invent** product voice, personas, or design
+`[TODO — confirm via the <brief> flow]`. **Never invent** product voice, personas, or design
 intent — code can prove a stack, it cannot prove a brand.
 
 | Evidence | Slots it seeds |
@@ -59,8 +65,8 @@ are still pulled from the guardrails verbatim.
 
 ## Confirm pass
 
-Use `AskUserQuestion` for the few high-leverage values that change everything downstream and that
-the code can only hint at: **register** (brand / product / hybrid), **color strategy**
+Ask a structured question for the few high-leverage values that change everything downstream and
+that the code can only hint at: **register** (brand / product / hybrid), **color strategy**
 (Restrained / Committed / Full Palette / Drenched — pre-filled from the detected token count),
 and **primary framework** (pre-filled from `package.json`, ask to confirm). This converges extract
 with the questionnaire flow rather than bypassing it.
@@ -79,8 +85,8 @@ found) with every inferred-but-unconfirmed value marked, and every gap left as a
 
 Next steps:
 - Review the drafts — extract seeds, it doesn't decide. Fix the TODOs.
-- Run /starter:validate to check the extracted briefs against the code.
-- Run /starter:orchestrate to generate AGENT.md and the harness files.
+- Run the validate flow to check the extracted briefs against the code.
+- Run the orchestrator flow to generate AGENTS.md and the harness files.
 ```
 
 ## Important
