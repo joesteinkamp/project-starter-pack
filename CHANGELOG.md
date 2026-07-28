@@ -2,6 +2,77 @@
 
 AI-made changes to this repository: what changed and why.
 
+## 2026-07-27 — Claude Opus 5 (portability: four tools, one pack; Gemini retired)
+
+**Ask:** execute `PORTABILITY-PLAN.md` — make the pack install and *run* in Claude Code, Codex,
+Cursor, and Antigravity, instead of being a Claude Code plugin whose outputs other tools can
+only read. Mid-execution Joe amended one decision: sunset Gemini outright rather than demote it.
+
+**What changed:**
+
+- **Skills became the canonical engine.** Every flow lives once in its `SKILL.md`; the seven
+  `commands/*.md` are thin wrappers (6–9 non-blank lines) that name a skill and nothing else.
+  Added the missing **`skills/setup/`** — the mega-flow existed only as a command, so it was
+  unreachable in a skills-only tool.
+- **Harness lock-in removed from the portable layer.** `AskUserQuestion`, the `Write` tool by
+  name, Claude's `` !`cmd` `` injection, `$ARGUMENTS`, and "locate the plugin root" are gone
+  from skills and questionnaires. New **`conventions/question-mechanics.md`** is the single file
+  allowed to name a specific harness's tools ("use `AskUserQuestion` in Claude Code; otherwise
+  print numbered options"). Skills address shared resources as `../../…`, which resolves through
+  the install symlink back into the checkout — so a skill dir installed alone still finds them.
+- **`AGENT.md` → `AGENTS.md`** — the actual [agents.md](https://agents.md) filename, which
+  Codex, Cursor, and Antigravity read automatically. Ripples through templates, orchestrator,
+  example, and docs; `CLAUDE.md` now imports `@AGENTS.md`. The orchestrator's pre-flight offers
+  migration off a legacy `AGENT.md` instead of deleting it silently, and `AGENTS.md` gained a
+  `{{REGENERATION_NOTE}}` recording the pack's path on disk plus per-tool invocation — that is
+  how a tool with no command surface finds and re-runs the flows.
+- **Gemini CLI retired.** `templates/GEMINI.template.md` and the example render are deleted;
+  **Antigravity** — its successor, which reads `AGENTS.md` natively — is supported in its place.
+  The harness picker now states up front that `AGENTS.md` already covers Codex, Cursor, and
+  Antigravity, and only asks about tools wanting a file of their own (Claude Code, default on;
+  Cursor scoped rules, opt-in). The orchestrator offers to clean up a stale `GEMINI.md`.
+- **`install.sh` + `render-ports.sh`.** Symlinks (never copies, so `git pull` updates every
+  tool) skill dirs into `~/.claude`, `~/.codex`, `~/.cursor`, and renders + links Cursor's
+  `/starter-*` command ports from the canonical commands. Idempotent, skips a tool whose config
+  dir is absent, refuses to replace a real file it did not create, and `--uninstall` removes
+  only symlinks resolving into the checkout. Ports are gitignored — generated, never hand-edited.
+- **Hooks across all four tools** behind `HOOK_PLATFORM`, which selects the payload dialect:
+  Claude's `tool_input.file_path`, Cursor's top-level `file_path`, Antigravity's JSON-encoded
+  `toolCall.args.TargetFile`, and Codex's `apply_patch` envelope (paths live in the patch text,
+  not a field — so the hooks now loop over every file a call touched). A bare
+  `install-hooks.sh` still targets Claude Code project-scope only, deliberately: it is the one
+  tool with a per-project config, so the default never reaches into `$HOME` for tools you
+  didn't name.
+- **`test.sh` gained a portability contract** (~45 checks): every flow has a skill and every
+  skill a wrapper, wrappers stay thin, a grep ban-list for harness tool names and dialect,
+  `../../` resource paths, `/starter:` confined to Claude-surface files, an idempotent port
+  renderer with one port per command, every `install.sh` target branch present, and the Gemini
+  sunset enforced. Multi-tool install fixtures run under a sandboxed `HOME` so a test run can
+  never touch the developer's real config (verified: `~/.codex` and `~/.cursor` untouched).
+
+**Why this approach:** skills are the one surface three of the four tools run natively, so
+inverting the commands-primary/skills-mirror relationship makes portability structural instead
+of duplicated. The `AGENTS.md` rename is what buys Codex, Cursor, and Antigravity output support
+for free — it is the filename they already look for. Symlinks over copies so one `git pull`
+updates every tool at once.
+
+**Considered and rejected:** *vendoring* questionnaires/templates into each skill dir to make
+skills self-contained — seven skills share them, copies drift, and the slot↔question contract
+would have to police every copy; relative paths through the symlink achieve the same isolation.
+*Writing both* `AGENT.md` and `AGENTS.md` during migration — two sources of truth, which is the
+drift this pack exists to prevent. *Keeping* `AGENT.md` — fails the whole point, since no tool
+auto-reads it. *Codex command ports* — Codex has no command surface; its skills answer to
+`$<flow>`. **Supersedes** the plan's own recommendation to demote Gemini to a legacy opt-in:
+Joe called it mid-session, and he is right that a template nothing regenerates is a drift
+machine — the CLI is retired and Antigravity needs no file at all.
+
+Also committed: `PORTABILITY-PLAN.md` and `AGENTS-ROUTER-PLAN.md` (the latter a *follow-on*
+plan to replace the orchestrator with a routing `AGENTS.md`; its baseline is now satisfied but
+it is deliberately unexecuted).
+
+6 new files, 1 renamed, 2 deleted, 36 edited; +1056/−525. 306/306 checks pass (was 256);
+shellcheck clean. Five of the new portability checks were mutation-verified.
+
 ## 2026-07-25 — Claude Fable 5 (writing layer: WRITING.md + fifth guardrail + writing hook)
 
 **Ask:** the pack guarded product, UX, design, and code slop but had no rules for prose — UI
