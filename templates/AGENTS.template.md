@@ -58,6 +58,8 @@ Before showing any UI to the user, run this check:
 
 <!-- Filled at wire-up with the pack's location on disk and how to start each
 flow in this repo's tools — so an agent in a harness without slash commands
-(Antigravity, Codex) can still run the pack by name. -->
+(Antigravity, Codex) can still run the pack by name. To regenerate one brief,
+re-run `setup` and pick the matching brief at its scope step, or run that flow
+by name in a tool that invokes skills directly. -->
 
 {{REGENERATION_NOTE}}

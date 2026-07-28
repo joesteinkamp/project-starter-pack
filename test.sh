@@ -622,7 +622,13 @@ section "10. Portability contract (skills are the engine, no harness lock-in)"
 # harness's tools. These checks are what stops it quietly regressing into a
 # Claude-only plugin again.
 
-# 10a. Every command has a skill of the same flow, and every skill has a command.
+# 10a. Every command has a skill of the same flow. The reverse holds for every
+#      skill EXCEPT the three brief flows: they are sub-flows of `setup`,
+#      reached by its scope word, by skill name, or by natural language, and
+#      deliberately ship no command — the command surface is three verbs
+#      (generate / seed / check). Their reachability from Claude and Cursor
+#      therefore rests on `setup` naming them, which is what is checked instead.
+SUBFLOW_SKILLS=" product-brief design-brief code-brief "
 cmd_to_skill() { echo "$1"; }
 for c in commands/*.md; do
   name="$(basename "$c" .md)"
@@ -635,6 +641,16 @@ for c in commands/*.md; do
 done
 for d in skills/*/; do
   sname="$(basename "$d")"
+  case "$SUBFLOW_SKILLS" in
+    *" $sname "*)
+      if grep -qF "\`$sname\`" skills/setup/SKILL.md; then
+        ok "sub-flow '$sname' has no command by design, and setup names it"
+      else
+        bad "sub-flow '$sname' has no command AND setup never names it — the scope picker lost an option"
+      fi
+      continue
+      ;;
+  esac
   found=0
   for c in commands/*.md; do
     [ "$(cmd_to_skill "$(basename "$c" .md)")" = "$sname" ] && { found=1; break; }

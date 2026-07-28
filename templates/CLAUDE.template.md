@@ -6,21 +6,18 @@
 
 ## Starter-pack flows in this project
 
-`project-starter-pack` exposes every flow as a skill, so natural language triggers them. Installed as a Claude Code plugin, each flow also has a slash command:
+`project-starter-pack` exposes every flow as a skill, so natural language triggers them. Installed as a Claude Code plugin, three commands are the whole surface — generate, seed, check:
 
-- `/starter:setup` — guided flow through the three briefs, then wires up `AGENTS.md` and this file.
-- `/starter:product-brief` — (re)generate `PRODUCT.md`.
-- `/starter:design-brief` — (re)generate `DESIGN.md` (UX + UI) and the `WRITING.md` companion.
-- `/starter:code-brief` — (re)generate `CODE.md`.
-- `/starter:validate` — check the briefs for contradictions and review the repo against them.
+- `/starter:setup [product|design|code|all]` — guided flow through the briefs, then wires up `AGENTS.md` and this file. With no scope word it asks which briefs to run.
 - `/starter:extract` — reverse-engineer draft briefs from an existing codebase (brownfield).
+- `/starter:validate` — check the briefs for contradictions and review the repo against them.
 
-The same flows auto-trigger as skills when the user describes the matching work:
+Every flow, including the three briefs (which have no command of their own), also auto-triggers as a skill when the user describes the matching work:
 
 - `setup` — fires on "set up this project", "run the starter pack".
-- `product-brief` — fires on "set up product context", "write PRODUCT.md", etc.
-- `design-brief` — fires on "design system", "UX foundation", "DESIGN.md", "writing rules".
-- `code-brief` — fires on "tech stack", "CODE.md", "architecture decisions".
+- `product-brief` — (re)generates `PRODUCT.md`; fires on "set up product context", "write PRODUCT.md", etc.
+- `design-brief` — (re)generates `DESIGN.md` (UX + UI) and the `WRITING.md` companion; fires on "design system", "UX foundation", "DESIGN.md", "writing rules".
+- `code-brief` — (re)generates `CODE.md`; fires on "tech stack", "CODE.md", "architecture decisions".
 - `validate` — fires on "check the briefs", "review against DESIGN.md", "find anti-patterns in the repo".
 - `extract` — fires on "extract the briefs", "brownfield", "reverse engineer the design system".
 

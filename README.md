@@ -39,18 +39,26 @@ project wired.
 | **Advisory hooks** | ✅ | ✅ | ✅ | ✅ |
 
 Skills are the portable engine — three of the four tools run them natively, and the fourth reaches
-the same flows through plain language. Commands are a convenience layer on top.
+the same flows through plain language. Commands are a convenience layer on top, and there are only
+three of them — `setup`, `extract`, `validate`: generate, seed, check. Which brief you want isn't a
+namespace, it's a question `setup` asks.
 
 ### Invoking a flow
 
 | Flow | Claude Code | Codex | Cursor | Antigravity |
 |---|---|---|---|---|
 | `setup` | `/starter:setup` | `$setup` | `/starter-setup` | "run the project starter pack setup" |
-| `product-brief` | `/starter:product-brief` | `$product-brief` | `/starter-product-brief` | "walk me through the product brief" |
-| `design-brief` | `/starter:design-brief` | `$design-brief` | `/starter-design-brief` | "walk me through the design brief" |
-| `code-brief` | `/starter:code-brief` | `$code-brief` | `/starter-code-brief` | "walk me through the technical brief" |
+| `product-brief` | `/starter:setup product` | `$product-brief` | `/starter-setup product` | "walk me through the product brief" |
+| `design-brief` | `/starter:setup design` | `$design-brief` | `/starter-setup design` | "walk me through the design brief" |
+| `code-brief` | `/starter:setup code` | `$code-brief` | `/starter-setup code` | "walk me through the technical brief" |
 | `validate` | `/starter:validate` | `$validate` | `/starter-validate` | "check the briefs for contradictions" |
 | `extract` | `/starter:extract` | `$extract` | `/starter-extract` | "extract briefs from this codebase" |
+
+`setup` takes a scope word — `product`, `design`, `code`, or `all`. Give it one and it runs only
+that brief; give it nothing and it asks which briefs to run, annotated with which already exist in
+the repo. Either way it ends with the `AGENTS.md` wire-up, so a single-brief run still leaves the
+router current. Codex has no command surface at all, so there `$product-brief` runs the skill
+directly — which is why the three brief flows stay first-class skills with no command of their own.
 
 In every tool, describing the work in your own words also triggers the matching flow — "let's define
 the design system", "set up product context". The generated `AGENTS.md` carries a

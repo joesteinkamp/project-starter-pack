@@ -25,10 +25,14 @@ destination is never replaced (the installer says so and moves on).
 
 | Tool | Installed | Invoke |
 |---|---|---|
-| **Claude Code** | `~/.claude/skills/<flow>` (symlink per skill) | by name, or `/starter:<flow>` if you use the plugin path below |
-| **Codex** | `~/.codex/skills/<flow>` | `$<flow>` — e.g. `$setup` |
-| **Cursor** | `~/.cursor/skills/<flow>` and `~/.cursor/commands/starter-<flow>.md` | `/starter-<flow>`, or the skill by name |
+| **Claude Code** | `~/.claude/skills/<flow>` (symlink per skill) | by name, or `/starter:setup` / `/starter:extract` / `/starter:validate` if you use the plugin path below |
+| **Codex** | `~/.codex/skills/<flow>` | `$<flow>` — e.g. `$setup`, `$design-brief` |
+| **Cursor** | `~/.cursor/skills/<flow>` and `~/.cursor/commands/starter-<flow>.md` | `/starter-setup`, `/starter-extract`, `/starter-validate`, or any skill by name |
 | **Antigravity** | nothing — it has no skill or command surface | plain language: *"walk me through the product brief using the project-starter-pack questionnaire at `<path>`"* |
+
+The command surface is three verbs — generate, seed, check. The three brief flows are skills only:
+run one through `setup` with a scope word (`/starter:setup design`) or ask for it by name. Codex and
+Antigravity are unaffected either way — neither ever had a command surface.
 
 Antigravity is still fully supported: it reads the generated `AGENTS.md` in your projects natively,
 and `install.sh` prints the exact phrasing to start a flow. The generated `AGENTS.md` also records
@@ -53,8 +57,8 @@ mkdir -p ~/.claude/plugins
 git clone https://github.com/joesteinkamp/project-starter-pack.git ~/.claude/plugins/project-starter-pack
 ```
 
-Then `/starter:setup`, `/starter:product-brief`, `/starter:design-brief`, `/starter:code-brief`,
-`/starter:validate`, `/starter:extract`.
+Then `/starter:setup` (optionally `/starter:setup product|design|code|all`), `/starter:extract`,
+and `/starter:validate` — plus every flow by name, as a skill.
 
 The two paths coexist, but there is no reason to run both for Claude Code — pick the plugin if
 Claude Code is the only tool you use, and `install.sh` if it isn't.
@@ -76,8 +80,8 @@ Requires `jq`. See [`hooks/README.md`](./hooks/README.md).
 ## Verify
 
 In your AI tool, ask for the setup flow — `/starter:setup` in Claude Code, `$setup` in Codex,
-`/starter-setup` in Cursor, or "run the project starter pack setup" anywhere. You should see the
-intro describing the flow: three briefs, then the `AGENTS.md` wire-up.
+`/starter-setup` in Cursor, or "run the project starter pack setup" anywhere. You should see it ask
+what to run (everything, or one brief) before the intro.
 
 If nothing happens, check that the symlink exists and resolves:
 
@@ -92,6 +96,11 @@ cd ~/code/project-starter-pack
 git pull
 ./install.sh --yes    # re-renders the Cursor ports; symlinks need no touching
 ```
+
+Projects you set up before a given update need no migration. Their `CLAUDE.md` pointer is a
+snapshot, so it can advertise a command that has since been retired (the three `/starter:*-brief`
+commands were folded into `/starter:setup <scope>`) until the next flow's wire-up rewrites it.
+Re-running `setup` refreshes the list.
 
 ## Uninstall
 
