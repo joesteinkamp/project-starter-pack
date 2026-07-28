@@ -2,6 +2,54 @@
 
 AI-made changes to this repository: what changed and why.
 
+## 2026-07-28 — Claude Fable 5 (orchestrator removed; AGENTS.md becomes a router)
+
+**Ask:** the orchestration step felt unnecessary — instead of synthesizing the briefs into
+`AGENTS.md`, bake the "which file for which work" logic into a local `AGENTS.md` that tells
+agents to reference the other markdown files when needed. Executes `AGENTS-ROUTER-PLAN.md`.
+
+**What changed:**
+
+- **`AGENTS.md` is now a near-static router**, not a synthesis: a table pointing agents at the
+  brief that owns each kind of work (UI/UX → `DESIGN.md`, user-facing words → `WRITING.md`,
+  product/brand → `PRODUCT.md`, code → `CODE.md`), with the layering note baked in. Two slots
+  survive (project summary, maintenance note); everything else is furniture that never goes
+  stale when a brief changes.
+- **The orchestrator flow is deleted** — skill, command, Cursor port, and the Cursor
+  scoped-rules template (its only job was inlining a body that no longer exists). Setup's step 5
+  became a lightweight **wire-up**: write `AGENTS.md` + `CLAUDE.md`, no harness picker.
+  `CLAUDE.md` is a thin always-written pointer (`@AGENTS.md` import + project notes) — the
+  pattern any future own-filename tool would follow.
+- **Every brief flow ends by wiring up `AGENTS.md` if it is missing** (shared procedure in
+  `conventions/question-mechanics.md`), so a lone brief run in a fresh repo never strands the
+  project without its router.
+- **`WRITING.md` moved to the design-brief flow** as an always-written companion — both of its
+  sources (`PRODUCT.md` + the design answers) exist by then. **`PRODUCT.md` gained its embedded
+  anti-pattern ban list**, closing the one gap so every brief carries its own bans and the
+  router's "reading the file is also reading the bans" claim holds.
+- **Legacy migration** lives in setup's pre-flight: `AGENT.md`, `GEMINI.md`, and old
+  synthesized `AGENTS.md` renders (detected by their `## UX laws` headings) each get an explicit
+  replace/keep offer — nothing is deleted silently.
+- **`test.sh` rewired** (292 checks green): slot coverage retargeted to the new owners (setup
+  wire-up + design-brief), each guardrail bound to its owning brief template/skill, a check that
+  the router names all four brief files, the layering clause guarded on template + render, and a
+  ban on any surviving `orchestrat…` reference in the shipped surface. Example re-rendered.
+
+**Why this approach:** the synthesis was a drift machine — edit `DESIGN.md` and `AGENTS.md` was
+silently stale until someone re-ran a flow — and unnecessary, because agents can read the briefs
+directly; they just need to be told *when*. A router has nothing to regenerate, which is what
+makes deleting the whole orchestrator flow safe rather than merely convenient.
+
+**Considered and rejected:** *keeping `/orchestrate` as a standalone regenerate path* — with a
+static router there is nothing left to regenerate; *a standalone `writing-brief` flow* — an
+eighth skill + command + port for five slots, ceremony without payoff; *resurrecting `GEMINI.md`
+as a pointer* — Joe called it mid-planning: the tool is deprecated, `CLAUDE.md` is the only
+pointer shipped; *pointing the router at the pack's `guardrails/` files instead of embedding
+bans in the briefs* — those paths don't resolve from a target repo for global installs or
+non-Claude tools. **Supersedes** the portability entry's harness picker (2026-07-27): the
+picker asked which tools want a file of their own; the router makes the answer static — every
+agents.md-reading tool is covered, Claude Code gets its pointer, nobody is asked.
+
 ## 2026-07-27 — Claude Opus 5 (portability: four tools, one pack; Gemini retired)
 
 **Ask:** execute `PORTABILITY-PLAN.md` — make the pack install and *run* in Claude Code, Codex,
