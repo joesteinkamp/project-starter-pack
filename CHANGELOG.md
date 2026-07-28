@@ -2,6 +2,51 @@
 
 AI-made changes to this repository: what changed and why.
 
+## 2026-07-28 — Claude Opus 5 (brief commands folded into `setup`'s scope option)
+
+**Ask:** execute `SETUP-OPTIONS-PLAN.md` — delete the three brief commands and make `setup` the
+single command front door, gaining a scope option so it can run everything or just the brief(s)
+you pick.
+
+**What changed:**
+
+- **`setup` opens with a scope step.** A scope word in the request (`product` / `design` /
+  `code` / `all`) runs that scope directly; otherwise it asks, after checking which briefs
+  already exist on disk and annotating each option with what it found. Multi-select where the
+  harness supports it. Unrecognized words fall through to the question rather than growing a
+  synonym parser.
+- **Only the selected flows run**, in brief order — but the `AGENTS.md` + `CLAUDE.md`
+  **wire-up runs at the end of every scope**. It is idempotent (two slots, two derived files),
+  and it is what stops a single-brief run leaving the router stale. The brownfield `extract`
+  offer now fires only when the repo has code *and* the scope includes a brief that does not
+  exist yet.
+- **The three brief commands are deleted** (`product-brief`, `design-brief`, `code-brief`). The
+  command surface is now three verbs — `setup`, `extract`, `validate`: generate, seed, check.
+  Cursor ports swept themselves via the GENERATED marker.
+- **The three brief skills stay.** Done/interruption summaries now name each brief still missing
+  with its resume path.
+- **Swept:** both wire-up templates and their example renders, the README invocation table
+  (`/starter:setup product` etc.), the INSTALL roster, and a note that existing projects need no
+  migration — their `CLAUDE.md` pointer refreshes on the next wire-up.
+- **`test.sh` rewired** (279 green): §10a's skill-needs-a-command direction exempts the three
+  sub-flows and asserts `setup` names them instead; a grep ban on the retired brief-command
+  invocations across the shipped surface; and `commands/setup.md` must keep `$ARGUMENTS` — both
+  the scope fast path and what makes `render-ports.sh` emit the Cursor args note.
+
+**Why this approach:** the brief commands were three-line wrappers whose only content was
+"invoke the skill". "Which brief do I want" is a choice, not a namespace — it belongs inside the
+one flow as a question. §7 parity is dir-driven in both directions, so deleting the commands and
+the template lines in one commit kept it green without retargeting.
+
+**Considered and rejected:** *folding the brief skill bodies into `skills/setup/SKILL.md`* —
+Codex has no command surface, so `$product-brief` runs the skill and is the *only* invocation
+there; deleting the skills breaks Codex while deleting the commands changes nothing for it.
+Natural-language triggers in Claude Code and Antigravity also resolve to skill descriptions, not
+commands, and inlining three flows would produce one giant file and strand the cross-references
+in `validate` and `extract`. *Folding `validate` and `extract` in too* — different verbs with
+their own entry reasons, not thin wrappers. *A synonym parser for scope words* — the fallback
+question is cheaper than a vocabulary.
+
 ## 2026-07-28 — Claude Fable 5 (orchestrator removed; AGENTS.md becomes a router)
 
 **Ask:** the orchestration step felt unnecessary — instead of synthesizing the briefs into
