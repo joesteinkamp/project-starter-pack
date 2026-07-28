@@ -705,6 +705,28 @@ if grep -rliE 'orchestrat' skills commands templates conventions questionnaires 
 else
   ok "no orchestrator references in the shipped surface"
 fi
+# The three brief commands were folded into `setup`'s scope option. Their
+# invocation strings must not come back anywhere a user reads them — a doc that
+# still advertises /starter:design-brief sends people to a command that no
+# longer exists in any tool. (commands/cursor/ is generated and swept by
+# render-ports.sh; CHANGELOG.md and the root *-PLAN.md docs are history, and
+# name the retired commands on purpose.)
+DEAD_BRIEF_CMDS='/starter:(product|design|code)-brief|starter-(product|design|code)-brief'
+dead_hits="$(grep -rlE "$DEAD_BRIEF_CMDS" skills commands templates conventions questionnaires guardrails examples README.md INSTALL.md --include='*.md' --include='*.mdc' --include='*.json' 2>/dev/null | grep -v '^commands/cursor/' || true)"
+if [ -n "$dead_hits" ]; then
+  bad "a retired brief command survives in the shipped surface (folded into 'setup <scope>'): ${dead_hits//$'\n'/, }"
+else
+  ok "no retired brief-command invocations in the shipped surface"
+fi
+# The scope fast path is what makes `setup product` work at all, and $ARGUMENTS
+# in the body is also what makes render-ports.sh emit the Cursor "type your
+# input after the command" note. Losing it degrades setup to question-only in
+# both tools, silently.
+if grep -qF '$ARGUMENTS' commands/setup.md; then
+  ok "commands/setup.md passes \$ARGUMENTS through (scope fast path + Cursor args note)"
+else
+  bad "commands/setup.md no longer contains \$ARGUMENTS — the 'setup product|design|code|all' fast path is unreachable"
+fi
 
 # 10d. Skills address shared resources relative to their own SKILL.md, so a skill
 #      dir symlinked alone into ~/.codex/skills still resolves them.
