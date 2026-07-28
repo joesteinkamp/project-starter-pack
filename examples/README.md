@@ -16,13 +16,11 @@ to produce (no purple gradients, no hero-metric landing, no gamification).
 | `DESIGN.md` | The design brief — UX foundation (users, IA, flows) **and** UI system (OKLCH color, editorial type, spacing, motion, components). |
 | `DESIGN.json` | The machine-readable token companion (real OKLCH values, matches the Impeccable filename convention). |
 | `CODE.md` | The technical brief — stack, architecture, conventions, testing, performance budgets, security. |
-| `AGENTS.md` | The **generated** universal agents.md spec, synthesized from the three briefs with all five anti-pattern lists embedded inline. Always written — Codex, Cursor, and Antigravity read it natively. |
-| `WRITING.md` | The **generated** writing rules — voice, terminology, microcopy, and long-form, with the writing ban list embedded. Always written. |
-| `CLAUDE.md` | The **generated** thin Claude Code file — imports `@AGENTS.md` and adds project-specific notes. |
-| `.cursor/rules/project.mdc` | The **generated** Cursor rules file (scoped, `alwaysApply`). Written only if Cursor's scoped option is selected. |
+| `WRITING.md` | The **generated** writing rules (a design-brief companion) — voice, terminology, microcopy, and long-form, with the writing ban list embedded. Always written. |
+| `AGENTS.md` | The **generated** router — points agents at the brief that owns each kind of work. Always written; Codex, Cursor, and Antigravity read it natively. |
+| `CLAUDE.md` | The **generated** thin pointer — imports `@AGENTS.md` and adds project-specific notes. Always written; connects Claude Code. |
 
-The first four files are what *you* fill in (via the questionnaires); the rest are what the
-orchestrator generates. `AGENTS.md` and `WRITING.md` are always written; the harness-specific
-files (`CLAUDE.md` and the Cursor rule) are emitted only for the harnesses you select — this
-example shows both so you can see each shape. Read `AGENTS.md` to see how the briefs collapse
-into a single source of truth an agent reads before it writes any code or UI.
+The briefs are what *you* fill in (via the questionnaires); `WRITING.md` is derived from them,
+and the wire-up writes `AGENTS.md` + `CLAUDE.md`. Read `AGENTS.md` to see the routing an agent
+follows before it writes any code or UI — the rules themselves stay in the briefs, each with its
+own ban list embedded.

@@ -43,6 +43,24 @@ the symlink back into the pack checkout.
 ## Naming a flow
 
 Flows are named, not slash-prefixed: `setup`, `product-brief`, `design-brief`,
-`code-brief`, `orchestrator`, `validate`, `extract`. When telling the user to run the
+`code-brief`, `validate`, `extract`. When telling the user to run the
 next one, name the flow — the invocation syntax differs per tool and the pack's README
 carries the table.
+
+## Wiring up AGENTS.md
+
+`AGENTS.md` is the project's routing file — near-static, generated once. Every brief flow
+ends by making sure it exists, so a single-flow run in a fresh repo never strands the
+project without its router. If `AGENTS.md` is **missing** at the project root when a flow
+finishes:
+
+1. Write it from `templates/AGENTS.template.md` (resolved per Resource paths above).
+   Fill the project summary from `PRODUCT.md`'s one-liner if that file exists, else leave
+   `[TODO — run the product-brief flow]`. Fill the maintenance note with the pack's
+   absolute path on disk and the per-tool ways to start a flow.
+2. Write `CLAUDE.md` from `templates/CLAUDE.template.md` the same way — it is a thin
+   pointer importing `AGENTS.md`. Unless something repo-specific stands out, its notes
+   slot reads "No project-specific Claude notes yet."
+
+If either file already **exists**, leave it alone here — the `setup` flow's wire-up step
+owns regeneration, and it always asks before overwriting.

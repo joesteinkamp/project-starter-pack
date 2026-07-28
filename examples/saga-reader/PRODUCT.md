@@ -63,3 +63,14 @@ Saga sounds like a well-edited book, not a productivity coach. Copy is plain and
 ## Accessibility & Inclusion commitments
 
 WCAG 2.1 AA baseline, with reading-specific commitments above it: user-controlled type size, line-height, and measure; a true dark theme tuned for low-light evening reading (not inverted gray); full keyboard reachability and visible focus for every control; `prefers-reduced-motion` respected on every page turn and transition; screen-reader-labelled highlights and navigation. Reading-level of product copy targets 8th grade.
+
+## Anti-patterns (always reject)
+
+- Vague personas that could describe ten million people.
+- Generic positioning that would fit a competitor's site.
+- Education framing for an audience that already knows the problem.
+- Hedging language ("might", "could", "consider") in brand voice.
+- Feature lists standing in for positioning.
+- Ornamental metrics ("engagement") instead of real ones.
+- Anti-references that aren't real, named things.
+- Brand personality of three interchangeable buzzwords.

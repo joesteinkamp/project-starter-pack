@@ -1,9 +1,10 @@
 # project-starter-pack
 
 An AI project starter for product designers, portable across the tools you actually use. It walks
-you through three opinionated briefs — Product, Design (UX + UI), Technical — and synthesizes them
-into `AGENTS.md` plus `WRITING.md`, so every AI coding agent in your repo designs and codes with the
-same rigor a senior team would apply.
+you through three opinionated briefs — Product, Design (UX + UI, plus the `WRITING.md` writing
+rules), Technical — then wires up `AGENTS.md`, a small router that tells every AI coding agent in
+your repo which brief to read before each kind of work, so it designs and codes with the same
+rigor a senior team would apply.
 
 Runs in **Claude Code, Codex, Cursor, and Antigravity** — same flows, same outputs.
 
@@ -18,13 +19,16 @@ After running the `setup` flow (or each flow individually), your project root wi
 | `PRODUCT.md` | Product Brief | Who, what, why, brand personality, anti-references, principles |
 | `DESIGN.md` | Design Brief | UX foundation (user knowledge, IA, flows, success metrics) **and** UI system (color, type, spacing, motion, components) |
 | `DESIGN.json` | Design Brief (optional) | Machine-readable token companion (filename matches Impeccable's convention for interop) |
+| `WRITING.md` | Design Brief | Voice, terminology, microcopy, and long-form rules — the anti-slop writing layer (always written) |
 | `CODE.md` | Technical Brief | Stack, architecture, conventions, testing, performance, security |
-| `AGENTS.md` | Orchestrator | The [agents.md](https://agents.md) spec file — single source of truth (always written) |
-| `WRITING.md` | Orchestrator | Voice, terminology, microcopy, and long-form rules — the anti-slop writing layer (always written) |
-| `CLAUDE.md` | Orchestrator | Thin file: imports `@AGENTS.md` + Claude-Code-specific notes (written if Claude Code is selected) |
+| `AGENTS.md` | Setup wire-up | The [agents.md](https://agents.md) spec file — a **router** that points agents at the brief owning each kind of work (always written) |
+| `CLAUDE.md` | Setup wire-up | Thin pointer: imports `@AGENTS.md` + Claude-Code-specific notes (always written) |
 
-`AGENTS.md` and `WRITING.md` are always written. Harness-specific files are emitted only for the
-harnesses you pick at orchestration time — see [Tool support](#tool-support).
+There is no separate orchestration step and no harness picker. `AGENTS.md` carries no brief
+content — it routes to the briefs (UI/UX → `DESIGN.md`, user-facing words → `WRITING.md`,
+product/brand → `PRODUCT.md`, code → `CODE.md`), so it never goes stale when a brief changes.
+Every brief flow ends by writing it if it is missing, so even a single-brief run leaves the
+project wired.
 
 ## Tool support
 
@@ -45,28 +49,28 @@ the same flows through plain language. Commands are a convenience layer on top.
 | `product-brief` | `/starter:product-brief` | `$product-brief` | `/starter-product-brief` | "walk me through the product brief" |
 | `design-brief` | `/starter:design-brief` | `$design-brief` | `/starter-design-brief` | "walk me through the design brief" |
 | `code-brief` | `/starter:code-brief` | `$code-brief` | `/starter-code-brief` | "walk me through the technical brief" |
-| `orchestrator` | `/starter:orchestrate` | `$orchestrator` | `/starter-orchestrate` | "regenerate AGENTS.md from the briefs" |
 | `validate` | `/starter:validate` | `$validate` | `/starter-validate` | "check the briefs for contradictions" |
 | `extract` | `/starter:extract` | `$extract` | `/starter-extract` | "extract briefs from this codebase" |
 
 In every tool, describing the work in your own words also triggers the matching flow — "let's define
 the design system", "set up product context". The generated `AGENTS.md` carries a
-"Regenerating these instructions" section recording where the pack lives on disk, so an agent in a
+"Maintaining these files" section recording where the pack lives on disk, so an agent in a
 tool with no command surface can still find and run it.
 
-## Harness files at orchestration time
+## The wire-up: AGENTS.md and CLAUDE.md
 
-The `orchestrator` flow always writes `AGENTS.md` and `WRITING.md` — that alone covers Codex,
-Cursor, and Antigravity. Then it asks which tools want a file of their own:
+The `setup` flow ends by writing two near-static files — no picker, no synthesis:
 
-- **Claude Code** (default on) → `CLAUDE.md`, a thin `@AGENTS.md` import plus project-specific notes.
-  Claude Code doesn't auto-read `AGENTS.md`, so this file is the connection.
-- **Cursor scoped rules** (opt-in) → `.cursor/rules/project.mdc` (glob-scoped, `alwaysApply`). An
-  upgrade over the native `AGENTS.md` read, not a requirement.
+- **`AGENTS.md`** — the router every agents.md-reading tool (Codex, Cursor, Antigravity, Copilot)
+  picks up natively. It points at the brief that owns each kind of work and carries no brief
+  content of its own, so editing a brief never leaves it stale.
+- **`CLAUDE.md`** — a thin pointer (`@AGENTS.md` import plus project-specific notes). Claude Code
+  doesn't auto-read `AGENTS.md`, so this file is the connection. The same pattern extends to any
+  future tool with its own filename convention.
 
 **Gemini CLI is no longer a target.** The tool is retired, and its successor Antigravity reads
 `AGENTS.md` natively. The pack no longer generates `GEMINI.md` or ships its template; the
-orchestrator's pre-flight offers to clean up an existing one.
+wire-up's pre-flight offers to clean up an existing one (and a legacy `AGENT.md`).
 
 ## Questionnaire shape
 
@@ -79,7 +83,10 @@ any gaps and are marked `[default — confirm]` in the output.
 
 ## Opinionation
 
-Each brief carries its own anti-pattern guardrails embedded inline in the output, and `AGENTS.md` collects all five ban lists in one place so any agent reading it sees the bans without hopping files:
+Each brief carries its own anti-pattern guardrails embedded inline in the output — `PRODUCT.md`
+the product bans, `DESIGN.md` the UX + design bans, `WRITING.md` the writing bans, `CODE.md` the
+code bans — and `AGENTS.md` routes agents to the owning brief, so reading the file for the work at
+hand is also reading its bans:
 
 - `guardrails/product-anti-patterns.md` — vague personas, generic positioning, hedging brand voice
 - `guardrails/ux-anti-patterns.md` — confirm-instead-of-undo, modal-first, hidden state, dark patterns
@@ -94,12 +101,12 @@ your CSS / token / theme files, the components directory, CI config, and the REA
 *draft* `PRODUCT.md`, `DESIGN.md`, `DESIGN.json`, and `CODE.md` — filling what the code proves and
 marking everything it can't (`[TODO — confirm]`). It never invents brand or product intent: code
 shows *what*, not *why*. Review the drafts, run `validate` to check them against the code, then
-`orchestrator`.
+confirm the TODOs via the brief flows — each ends by wiring up `AGENTS.md` if it is missing.
 
 ## Relationship to your global instructions
 
-`project-starter-pack` produces the **project / codebase layer** — `AGENTS.md`, the selected
-harness files, and the briefs — which describes *this repository*: its product, its design system, its stack and
+`project-starter-pack` produces the **project / codebase layer** — `AGENTS.md`, `CLAUDE.md`,
+and the briefs — which describes *this repository*: its product, its design system, its stack and
 conventions. It is the companion to a **user / global layer** (your own `~/.claude/CLAUDE.md`,
 e.g. generated by something like [`agent-global-instructions`](https://github.com/joesteinkamp/agent-global-instructions))
 that describes *you* across every project: your autonomy level, memory, tool/MCP preferences,
@@ -108,18 +115,18 @@ sub-agent strategy, and output/serving conventions.
 The two layers compose and **must not duplicate each other**. So the files this pack generates
 deliberately *defer upward*: they don't restate Edit-over-Write, parallel tool calls, when to
 dispatch a sub-agent, or how you like artifacts served — that's all user-level. They keep only
-what's true of the repo. The generated `AGENTS.md` and every harness file carry a short "Layering"
-note saying exactly this, so any agent reading them knows where each kind of rule lives.
+what's true of the repo. The generated `AGENTS.md` carries a short "Layering" note saying exactly
+this, so any agent reading it knows where each kind of rule lives — and `CLAUDE.md` inherits it by
+importing `AGENTS.md`.
 
 ## Examples
 
 [`examples/saga-reader/`](./examples/saga-reader/) is a complete, no-personal-data render of
 every file the pack produces — the three briefs (`PRODUCT.md`, `DESIGN.md`, `CODE.md`), the
-`DESIGN.json` token companion, and the generated `AGENTS.md` + `WRITING.md` plus both harness
-renders (`CLAUDE.md`, `.cursor/rules/project.mdc`) — for a fictional
-reading app. It's deliberately *not* an AI product, so it shows the cliché-free output the
-guardrails are meant to produce. Read it before running the flow to see the depth and voice
-each brief expects.
+`DESIGN.json` token companion, the `WRITING.md` writing rules, and the wired-up `AGENTS.md`
+router + `CLAUDE.md` pointer — for a fictional reading app. It's deliberately *not* an AI
+product, so it shows the cliché-free output the guardrails are meant to produce. Read it before
+running the flow to see the depth and voice each brief expects.
 
 ## Install
 
@@ -133,18 +140,17 @@ See [INSTALL.md](./INSTALL.md) for per-tool detail and the Claude-plugin alterna
 
 ## Development
 
-Run the integrity linter before committing changes to the templates, questionnaires, skills, or
-orchestrator:
+Run the integrity linter before committing changes to the templates, questionnaires, or skills:
 
 ```
 ./test.sh
 ```
 
-It verifies the **slot ↔ question ↔ orchestrator ↔ template** contract — every template
-`{{SLOT}}` has a question (or default) that feeds it, every `DESIGN.json` token is traceable
-to the design questionnaire, every guardrail is wired into a skill and the orchestrator, and
-the shipped example is a complete, placeholder-free render whose structure matches the
-templates. It also enforces the **portability contract**: every flow exists as a skill, every
+It verifies the **slot ↔ question ↔ skill ↔ template** contract — every template
+`{{SLOT}}` has a question (or default) that feeds it and a skill that fills it, every
+`DESIGN.json` token is traceable to the design questionnaire, every guardrail is embedded by the
+brief that owns it, the router names every brief file, and the shipped example is a complete,
+placeholder-free render whose structure matches the templates. It also enforces the **portability contract**: every flow exists as a skill, every
 command is a thin wrapper naming a real skill, no harness-specific tool names leak into skills or
 questionnaires, and the port renderer is idempotent. It needs only `bash`, `grep`, `sed`, and
 (for the behavioral fixtures) `jq`.

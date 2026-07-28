@@ -81,32 +81,53 @@ check_brief "DESIGN"  templates/DESIGN.template.md  questionnaires/design.questi
 check_brief "CODE"    templates/CODE.template.md    questionnaires/code.questions.md
 
 # ---------------------------------------------------------------------------
-section "2. Orchestrator coverage of synthesized-template slots"
-# Every slot in a synthesized template (AGENT + every harness file) must be named
-# by the orchestrator skill, and every slot the orchestrator names must exist in
-# one of those templates.
-ORCH=skills/orchestrator/SKILL.md
-SYNTH_TEMPLATES=(
+section "2. Wire-up and companion template slot coverage"
+# AGENTS.md + CLAUDE.md are written by the setup flow's wire-up step; WRITING.md
+# by the design-brief flow. Every slot in those templates must be named by its
+# owning skill, and every wire-up slot the setup skill names must exist in a
+# wire-up template.
+SETUP=skills/setup/SKILL.md
+DESIGN_SKILL=skills/design-brief/SKILL.md
+WIREUP_TEMPLATES=(
   templates/AGENTS.template.md
-  templates/WRITING.template.md
   templates/CLAUDE.template.md
-  templates/cursor-rules.template.mdc
 )
-for t in "${SYNTH_TEMPLATES[@]}"; do
+for t in "${WIREUP_TEMPLATES[@]}"; do
   for slot in $(slots "$t"); do
-    if in_file "$slot" "$ORCH"; then
-      ok "orchestrator populates $slot ($(basename "$t"))"
+    if in_file "$slot" "$SETUP"; then
+      ok "setup wire-up populates $slot ($(basename "$t"))"
     else
-      bad "orchestrator never mentions $slot from $(basename "$t")"
+      bad "setup never mentions $slot from $(basename "$t")"
     fi
   done
 done
-for slot in $(slots "$ORCH"); do
+for slot in $(slots "$SETUP"); do
   found=0
-  for t in "${SYNTH_TEMPLATES[@]}"; do
+  for t in "${WIREUP_TEMPLATES[@]}"; do
     in_file "$slot" "$t" && { found=1; break; }
   done
-  [ "$found" -eq 1 ] || bad "orchestrator references $slot but no synthesized template defines it"
+  [ "$found" -eq 1 ] || bad "setup references $slot but no wire-up template defines it"
+done
+for slot in $(slots templates/WRITING.template.md); do
+  if in_file "$slot" "$DESIGN_SKILL"; then
+    ok "design-brief populates $slot (WRITING.template.md)"
+  else
+    bad "design-brief never mentions $slot from WRITING.template.md"
+  fi
+done
+for slot in $(slots "$DESIGN_SKILL" | grep '^{{WRITING_' || true); do
+  in_file "$slot" templates/WRITING.template.md \
+    && ok "design-brief's $slot exists in WRITING.template.md" \
+    || bad "design-brief references $slot but WRITING.template.md does not define it"
+done
+# The router must name every brief file it routes to — a lost route would fail
+# silently otherwise (AGENTS.md carries no content to miss).
+for brief in PRODUCT.md DESIGN.md CODE.md WRITING.md; do
+  if in_file "$brief" templates/AGENTS.template.md; then
+    ok "router template routes to $brief"
+  else
+    bad "AGENTS.template.md lost its route to $brief"
+  fi
 done
 
 # ---------------------------------------------------------------------------
@@ -120,20 +141,39 @@ for slot in $(slots templates/DESIGN.tokens.template.json); do
 done
 
 # ---------------------------------------------------------------------------
-section "4. Guardrail wiring"
-# Each anti-pattern registry must be referenced by at least one skill and by
-# the orchestrator's embed list.
+section "4. Guardrail wiring (each ban list embedded by its owning brief)"
+# The router sends agents to the brief that owns each kind of work, so every
+# anti-pattern registry must be embedded by that owning brief's skill — and,
+# where the brief template carries a dedicated slot, the slot must exist.
+# (ux-anti-patterns is the exception: the design-brief weaves it into DESIGN.md
+# sections rather than a single slot.)
 for g in guardrails/*-anti-patterns.md; do
   base="$(basename "$g" .md)"
-  if grep -rqF "$base" skills/; then
-    ok "$base referenced by a skill"
-  else
-    bad "$base is referenced by NO skill"
+  prefix="${base%-anti-patterns}"
+  case "$prefix" in
+    product) own_skill=skills/product-brief/SKILL.md; own_tpl=templates/PRODUCT.template.md ;;
+    ux)      own_skill=skills/design-brief/SKILL.md;  own_tpl="" ;;
+    design)  own_skill=skills/design-brief/SKILL.md;  own_tpl=templates/DESIGN.template.md ;;
+    writing) own_skill=skills/design-brief/SKILL.md;  own_tpl=templates/WRITING.template.md ;;
+    code)    own_skill=skills/code-brief/SKILL.md;    own_tpl=templates/CODE.template.md ;;
+    *)       own_skill=""; own_tpl="" ;;
+  esac
+  if [ -z "$own_skill" ]; then
+    bad "$base has no owning brief mapped in test.sh section 4 — add one"
+    continue
   fi
-  if in_file "$base" "$ORCH"; then
-    ok "$base embedded by orchestrator"
+  if in_file "$base" "$own_skill"; then
+    ok "$base embedded by its owning skill ($(basename "$(dirname "$own_skill")"))"
   else
-    bad "$base is NOT embedded by orchestrator"
+    bad "$base is NOT referenced by its owning skill $own_skill"
+  fi
+  if [ -n "$own_tpl" ]; then
+    slot="{{$(printf '%s' "$prefix" | tr '[:lower:]' '[:upper:]')_ANTI_PATTERNS}}"
+    if in_file "$slot" "$own_tpl"; then
+      ok "$(basename "$own_tpl") carries $slot"
+    else
+      bad "$(basename "$own_tpl") lost its $slot slot"
+    fi
   fi
 done
 
@@ -237,9 +277,8 @@ for dir in ${example_dirs[@]+"${example_dirs[@]}"}; do
   check_render_headings templates/CODE.template.md    "${dir}CODE.md"    required
   check_render_headings templates/AGENTS.template.md  "${dir}AGENTS.md"  required
   check_render_headings templates/WRITING.template.md "${dir}WRITING.md" required
-  # Harness files are optional per project; checked when the example ships them.
-  check_render_headings templates/CLAUDE.template.md "${dir}CLAUDE.md" optional
-  check_render_headings templates/cursor-rules.template.mdc "${dir}.cursor/rules/project.mdc" optional
+  # CLAUDE.md is the wire-up's pointer file — always written alongside AGENTS.md.
+  check_render_headings templates/CLAUDE.template.md "${dir}CLAUDE.md" required
   if [ -f "${dir}DESIGN.json" ]; then
     if command -v jq >/dev/null 2>&1; then
       check_render_json_paths templates/DESIGN.tokens.template.json "${dir}DESIGN.json"
@@ -247,20 +286,26 @@ for dir in ${example_dirs[@]+"${example_dirs[@]}"}; do
       check_render_json_keys templates/DESIGN.tokens.template.json "${dir}DESIGN.json"
     fi
   fi
-  # The layering note's canonical clause (skills/orchestrator/SKILL.md) must
-  # survive into every harness render — a fixture stating the opposite rule
-  # passed silently before this check.
-  for hf in AGENTS.md CLAUDE.md .cursor/rules/project.mdc; do
-    [ -f "${dir}${hf}" ] || continue
+  # The layering note is baked into AGENTS.template.md and must survive into
+  # the example render — pointer files inherit it by importing AGENTS.md, so
+  # only the router itself is checked.
+  if [ -f "${dir}AGENTS.md" ]; then
     # sed strips blockquote markers, tr collapses line wraps: the clause may
     # break across lines inside a `> ...` blockquote
-    if sed 's/^>[[:space:]]*//' "${dir}${hf}" | tr -s '[:space:]' ' ' | grep -F "the project layer wins" >/dev/null; then
-      ok "${dir}${hf} carries the canonical layering clause"
+    if sed 's/^>[[:space:]]*//' "${dir}AGENTS.md" | tr -s '[:space:]' ' ' | grep -F "the project layer wins" >/dev/null; then
+      ok "${dir}AGENTS.md carries the canonical layering clause"
     else
-      bad "${dir}${hf} lost the layering note's canonical clause ('the project layer wins')"
+      bad "${dir}AGENTS.md lost the layering note's canonical clause ('the project layer wins')"
     fi
-  done
+  fi
 done
+# The clause must also stay in the template itself — the render check above
+# only proves the fixture, not the source.
+if sed 's/^>[[:space:]]*//' templates/AGENTS.template.md | tr -s '[:space:]' ' ' | grep -F "the project layer wins" >/dev/null; then
+  ok "AGENTS.template.md carries the canonical layering clause"
+else
+  bad "AGENTS.template.md lost the layering note's canonical clause"
+fi
 
 # ---------------------------------------------------------------------------
 section "7. Command ↔ skill ↔ plugin parity"
@@ -578,9 +623,7 @@ section "10. Portability contract (skills are the engine, no harness lock-in)"
 # Claude-only plugin again.
 
 # 10a. Every command has a skill of the same flow, and every skill has a command.
-#      (orchestrate is the one intentional rename: the command is a verb, the
-#      skill is the noun.)
-cmd_to_skill() { case "$1" in orchestrate) echo orchestrator ;; *) echo "$1" ;; esac; }
+cmd_to_skill() { echo "$1"; }
 for c in commands/*.md; do
   name="$(basename "$c" .md)"
   want="$(cmd_to_skill "$name")"
@@ -636,8 +679,16 @@ ban_check '!`[^`]+`'                 'Claude shell-injection dialect'    'an ins
 ban_check 'plugin root'              '"plugin root" path discovery'      'paths relative to the skill (../../)' "$MECHANICS"
 ban_check '\$ARGUMENTS'              '$ARGUMENTS placeholder'            '"any focus supplied in the request"'
 # The regression that would undo the sunset is a template coming back, not a
-# skill *mentioning* Gemini — the orchestrator has to name it to clean it up.
+# skill *mentioning* Gemini — the setup wire-up has to name it to clean it up.
 ban_check 'GEMINI\.template'         'a Gemini CLI template reference'   'Antigravity, which reads AGENTS.md natively'
+# The orchestrator flow was removed — AGENTS.md is a router the setup flow
+# wires up, not a synthesis. A reference creeping back into the shipped surface
+# points at a flow that no longer exists.
+if grep -rliE 'orchestrat' skills commands templates conventions questionnaires guardrails --include='*.md' --include='*.mdc' 2>/dev/null | grep -qv '^commands/cursor/'; then
+  bad "an 'orchestrat…' reference survives in the shipped surface (the flow was removed): $(grep -rliE 'orchestrat' skills commands templates conventions questionnaires guardrails --include='*.md' --include='*.mdc' 2>/dev/null | grep -v '^commands/cursor/' | tr '\n' ' ')"
+else
+  ok "no orchestrator references in the shipped surface"
+fi
 
 # 10d. Skills address shared resources relative to their own SKILL.md, so a skill
 #      dir symlinked alone into ~/.codex/skills still resolves them.
@@ -651,10 +702,10 @@ for d in skills/*/; do
 done
 
 # 10e. /starter: is Claude's invocation syntax. It may appear only where a
-#      Claude surface is being described. The orchestrator is allowed because it
-#      authors the cross-tool invocation table in AGENTS.md — it names every
-#      tool's syntax, not just Claude's.
-STARTER_ALLOWED=" README.md INSTALL.md CHANGELOG.md templates/CLAUDE.template.md skills/orchestrator/SKILL.md examples/saga-reader/CLAUDE.md examples/saga-reader/AGENTS.md "
+#      Claude surface is being described. The setup skill is allowed because it
+#      authors the cross-tool "Maintaining these files" note in AGENTS.md — it
+#      names every tool's syntax, not just Claude's.
+STARTER_ALLOWED=" README.md INSTALL.md CHANGELOG.md templates/CLAUDE.template.md skills/setup/SKILL.md examples/saga-reader/CLAUDE.md examples/saga-reader/AGENTS.md "
 while IFS= read -r f; do
   rel="${f#./}"
   case "$rel" in commands/*) continue ;; esac

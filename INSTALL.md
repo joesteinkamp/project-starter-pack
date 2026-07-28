@@ -32,7 +32,7 @@ destination is never replaced (the installer says so and moves on).
 
 Antigravity is still fully supported: it reads the generated `AGENTS.md` in your projects natively,
 and `install.sh` prints the exact phrasing to start a flow. The generated `AGENTS.md` also records
-the pack's path in its "Regenerating these instructions" section, so an agent can find it later
+the pack's path in its "Maintaining these files" section, so an agent can find it later
 without you.
 
 The Cursor command files are **generated** from `commands/*.md` by `render-ports.sh`, which
@@ -54,7 +54,7 @@ git clone https://github.com/joesteinkamp/project-starter-pack.git ~/.claude/plu
 ```
 
 Then `/starter:setup`, `/starter:product-brief`, `/starter:design-brief`, `/starter:code-brief`,
-`/starter:orchestrate`, `/starter:validate`, `/starter:extract`.
+`/starter:validate`, `/starter:extract`.
 
 The two paths coexist, but there is no reason to run both for Claude Code — pick the plugin if
 Claude Code is the only tool you use, and `install.sh` if it isn't.
@@ -77,7 +77,7 @@ Requires `jq`. See [`hooks/README.md`](./hooks/README.md).
 
 In your AI tool, ask for the setup flow — `/starter:setup` in Claude Code, `$setup` in Codex,
 `/starter-setup` in Cursor, or "run the project starter pack setup" anywhere. You should see the
-intro describing the flow: three briefs, then orchestration.
+intro describing the flow: three briefs, then the `AGENTS.md` wire-up.
 
 If nothing happens, check that the symlink exists and resolves:
 

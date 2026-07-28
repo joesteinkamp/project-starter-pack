@@ -60,8 +60,8 @@ Slots that code can rarely prove — `{{PRIMARY_USERS}}`, `{{SECONDARY_USERS}}`,
 `{{ANTI_REFERENCES}}`, `{{DESIGN_PRINCIPLES}}`, `{{SUCCESS_METRICS}}`, `{{USER_KNOWLEDGE}}`,
 `{{USER_FLOWS}}`, `{{UX_SUCCESS_METRICS}}`, `{{VISUAL_REGISTER}}`, `{{INTERACTION_PRINCIPLES}}`,
 `{{ACCESSIBILITY}}`, `{{ACCESSIBILITY_UX}}` — default to a `[TODO — confirm]` unless the docs
-state them outright. The anti-pattern slots (`{{DESIGN_ANTI_PATTERNS}}`, `{{CODE_ANTI_PATTERNS}}`)
-are still pulled from the guardrails verbatim.
+state them outright. The anti-pattern slots (`{{PRODUCT_ANTI_PATTERNS}}`,
+`{{DESIGN_ANTI_PATTERNS}}`, `{{CODE_ANTI_PATTERNS}}`) are still pulled from the guardrails verbatim.
 
 ## Confirm pass
 
@@ -86,7 +86,8 @@ found) with every inferred-but-unconfirmed value marked, and every gap left as a
 Next steps:
 - Review the drafts — extract seeds, it doesn't decide. Fix the TODOs.
 - Run the validate flow to check the extracted briefs against the code.
-- Run the orchestrator flow to generate AGENTS.md and the harness files.
+- Run the brief flows to confirm the TODOs; each ends by wiring up AGENTS.md
+  if it is missing.
 ```
 
 ## Important

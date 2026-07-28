@@ -108,6 +108,7 @@ TODO if there isn't a distinct one)
 | `{{ACCESSIBILITY}}` | WCAG 2.2 AA, keyboard reachability, prefers-reduced-motion respected, semantic HTML first | `[default — confirm]` |
 | `{{DESIGN_PRINCIPLES}}` | Practice what you preach; show, don't tell; purposeful restraint; expert confidence | `[default — confirm]` |
 | `{{ANTI_REFERENCES}}` | (skipped — too project-specific to default) | leave blank with TODO |
+| `{{PRODUCT_ANTI_PATTERNS}}` | Pull from `guardrails/product-anti-patterns.md` verbatim | always included |
 
 ## Pre-flight checks before writing
 

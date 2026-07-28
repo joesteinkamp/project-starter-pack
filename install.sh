@@ -123,8 +123,7 @@ install_antigravity() {
     flow from plain language. Point it at this checkout:
       "walk me through the product brief using the project-starter-pack
        questionnaire at $DIR"
-    Flows: setup · product-brief · design-brief · code-brief · orchestrator ·
-           validate · extract
+    Flows: setup · product-brief · design-brief · code-brief · validate · extract
 EOF
 }
 

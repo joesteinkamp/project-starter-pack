@@ -6,13 +6,13 @@ never edit anything.
 
 ## Why advisory, not enforcing
 
-`project-starter-pack` is AI-driven: `AGENTS.md` already embeds the anti-pattern bans inline so the
-agent self-checks before it writes. Hard blocking on something like "raw hex" produces false
+`project-starter-pack` is AI-driven: each brief embeds its anti-pattern bans inline and
+`AGENTS.md` routes the agent to the owning brief, so the agent self-checks before it writes. Hard blocking on something like "raw hex" produces false
 positives (third-party CSS, generated files) and fights the designer. And genuine hard enforcement
 — protected paths, dangerous-bash guards, a tool-call audit log — is a **user / global-layer**
 concern (it belongs with your global instructions), not something a per-project starter pack should
 duplicate. So these hooks stay advisory and optional. If you want project-specific reminders, opt
-in; otherwise the embedded guardrails in `AGENTS.md` are the enforcement.
+in; otherwise the guardrails embedded in the briefs are the enforcement.
 
 ## What they check
 

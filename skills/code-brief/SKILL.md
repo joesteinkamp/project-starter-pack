@@ -53,7 +53,11 @@ Apply the defaults table from `../../questionnaires/code.questions.md`. Mark def
 
 ## Done
 
-"Wrote CODE.md ({{N}} sections, {{M}} defaults marked for confirmation). Next: the `orchestrator` flow, to generate AGENTS.md and the harness files you select."
+"Wrote CODE.md ({{N}} sections, {{M}} defaults marked for confirmation)."
+
+Then, if `AGENTS.md` is missing at the project root, follow "Wiring up AGENTS.md" in
+`../../conventions/question-mechanics.md` so the routing file exists even outside the `setup` flow.
+With all three briefs written, suggest the `validate` flow to cross-check them.
 
 ## Important
 

@@ -75,3 +75,10 @@ something a teammate could quote in a review. -->
 and why. -->
 
 {{ACCESSIBILITY}}
+
+## Anti-patterns (always reject)
+
+<!-- Embedded from guardrails/product-anti-patterns.md — one line per ban.
+Always included. -->
+
+{{PRODUCT_ANTI_PATTERNS}}

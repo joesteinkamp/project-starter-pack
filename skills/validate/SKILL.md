@@ -20,7 +20,7 @@ resource paths below.
 
 1. Guardrails are at `../../guardrails/{product,ux,design,writing,code}-anti-patterns.md`.
 2. Read the five guardrail files so you can cite specific bans by name.
-3. Read the project briefs from the project root: `PRODUCT.md`, `DESIGN.md`, `DESIGN.json` (if present), `CODE.md`, and `WRITING.md` (if present — it is derived; the `orchestrator` flow regenerates it).
+3. Read the project briefs from the project root: `PRODUCT.md`, `DESIGN.md`, `DESIGN.json` (if present), `CODE.md`, and `WRITING.md` (if present — the `design-brief` flow regenerates it).
 4. Run `git diff --stat HEAD` first and use its output as the review scope. If the repo has no
    git history or the command fails, review the whole tree instead.
 

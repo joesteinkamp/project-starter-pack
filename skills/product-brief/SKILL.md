@@ -41,7 +41,7 @@ Be direct. The starter-pack's voice is opinionated.
 
 ## Defaults pass
 
-For any unanswered slot, fill with the defaults table in `../../questionnaires/product.questions.md`. Mark each defaulted line with ` [default — confirm]` in the output so the user sees what was assumed.
+For any unanswered slot, fill with the defaults table in `../../questionnaires/product.questions.md`. Mark each defaulted line with ` [default — confirm]` in the output so the user sees what was assumed. Always pull the anti-pattern list from `../../guardrails/product-anti-patterns.md` into `{{PRODUCT_ANTI_PATTERNS}}` — embedded inline, not just linked.
 
 ## Preview & write
 
@@ -52,6 +52,9 @@ For any unanswered slot, fill with the defaults table in `../../questionnaires/p
 ## Done
 
 Print a one-line summary: "Wrote PRODUCT.md ({{N}} sections, {{M}} defaults marked for confirmation). Next: the `design-brief` flow."
+
+Then, if `AGENTS.md` is missing at the project root, follow "Wiring up AGENTS.md" in
+`../../conventions/question-mechanics.md` so the routing file exists even outside the `setup` flow.
 
 ## Important
 

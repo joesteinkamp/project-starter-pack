@@ -13,7 +13,7 @@ Read `../../conventions/question-mechanics.md` first. It defines how this flow a
 
 ## Setup
 
-1. The questionnaire bank is at `../../questionnaires/design.questions.md`. Templates are at `../../templates/DESIGN.template.md` and `../../templates/DESIGN.tokens.template.json`. The anti-pattern guardrails are at `../../guardrails/design-anti-patterns.md` and `../../guardrails/ux-anti-patterns.md`.
+1. The questionnaire bank is at `../../questionnaires/design.questions.md`. Templates are at `../../templates/DESIGN.template.md`, `../../templates/DESIGN.tokens.template.json`, and `../../templates/WRITING.template.md` (the writing companion this flow also produces). The anti-pattern guardrails are at `../../guardrails/design-anti-patterns.md`, `../../guardrails/ux-anti-patterns.md`, and `../../guardrails/writing-anti-patterns.md`.
 2. Read all of them before starting.
 3. If `PRODUCT.md` exists, read it — design choices answer to product context. If it doesn't, recommend the user run the `product-brief` flow first; offer to continue anyway if they decline.
 
@@ -63,15 +63,38 @@ Theme blocks are symmetric: the top-level `color` block always holds the **defau
 
 Rendering rules: numeric slots (`{{TYPE_SCALE_RATIO}}`, `{{TYPE_LINE_HEIGHT}}`) are unquoted in the template — emit bare numbers (`1.25`, not `"1.25"`). `{{SPACING_SCALE}}` renders inside array brackets — emit the bare comma-separated numbers. Before writing, verify the result parses as JSON, and compute the contrast pairs from the questionnaire's pre-flight checklist — a token file whose pairs fail the committed WCAG level does not ship.
 
+## WRITING.md (the writing companion — always written)
+
+This flow also produces `WRITING.md`: the rules for how words get written in the repo, from a
+button label to long-form prose. Both of its sources exist by now — `PRODUCT.md` decides
+personality and register; the design answers you just collected supply the components and flows.
+`WRITING.md` **defers upward** to `PRODUCT.md`: restate personality and register as writing
+directives, never duplicate the prose.
+
+Populate `../../templates/WRITING.template.md`:
+
+- `{{WRITING_VOICE}}` — from `PRODUCT.md`'s register and brand personality, as directives about how sentences behave (person, tense, where wit is allowed, what the voice never does).
+- `{{WRITING_TERMINOLOGY}}` — the product's nouns and their exact casing (from `PRODUCT.md`'s one-liner and this brief's components and flows), plus words the product never uses.
+- `{{WRITING_MICROCOPY}}` — rules for labels, buttons, empty/error/loading states, confirmations — grounded in this brief's component primitives and user flows. Include the casing convention and the button verb rule.
+- `{{WRITING_LONGFORM}}` — structure and evidence rules for docs, onboarding, and marketing copy, consistent with the register.
+- `{{WRITING_ANTI_PATTERNS}}` — embed `../../guardrails/writing-anti-patterns.md` headlines (1 line per pattern) — embedded inline, not just linked.
+
+If `PRODUCT.md` is missing, fill the voice section from the register the user gave this flow and
+mark it `[TODO — confirm after the product-brief flow]`.
+
 ## Preview & write
 
 1. Render populated `DESIGN.md` and show it to the user.
 2. If tokens were collected, also render `DESIGN.json`.
-3. Ask for one round of edits, then write both files to the project root.
+3. Render `WRITING.md`.
+4. Ask for one round of edits, then write the files to the project root.
 
 ## Done
 
-"Wrote DESIGN.md ({{N}} sections, {{M}} defaults marked for confirmation){{tokens_clause}}. Next: the `code-brief` flow."
+"Wrote DESIGN.md ({{N}} sections, {{M}} defaults marked for confirmation){{tokens_clause}} and WRITING.md (voice, terminology, microcopy, long-form + writing bans). Next: the `code-brief` flow."
+
+Then, if `AGENTS.md` is missing at the project root, follow "Wiring up AGENTS.md" in
+`../../conventions/question-mechanics.md` so the routing file exists even outside the `setup` flow.
 
 ## Important
 
