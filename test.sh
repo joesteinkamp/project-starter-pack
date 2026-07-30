@@ -743,7 +743,10 @@ done
 #      Claude surface is being described. The setup skill is allowed because it
 #      authors the cross-tool "Maintaining these files" note in AGENTS.md — it
 #      names every tool's syntax, not just Claude's.
-STARTER_ALLOWED=" README.md INSTALL.md CHANGELOG.md templates/CLAUDE.template.md skills/setup/SKILL.md examples/saga-reader/CLAUDE.md examples/saga-reader/AGENTS.md "
+#      The repo's own AGENTS.md + CLAUDE.md are allowed too: they are this
+#      project's instructions, not pack output, and they document the very rule
+#      that confines the syntax.
+STARTER_ALLOWED=" README.md INSTALL.md CHANGELOG.md AGENTS.md CLAUDE.md templates/CLAUDE.template.md skills/setup/SKILL.md examples/saga-reader/CLAUDE.md examples/saga-reader/AGENTS.md "
 while IFS= read -r f; do
   rel="${f#./}"
   case "$rel" in commands/*) continue ;; esac
