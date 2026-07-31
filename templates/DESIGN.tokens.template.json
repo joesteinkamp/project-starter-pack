@@ -1,11 +1,26 @@
 {
-  "$schema": "https://design-tokens.github.io/community-group/format/",
+  "$description": "Design tokens (PSP format: DTCG-inspired, CSS-ready string values, colors in OKLCH). `color` holds the DEFAULT theme's values — whatever Q13 chose as the default. A second theme lives under `themes.<mode>.color` as an override layer, so tooling emits ONE stable name per token (e.g. --color-background, bg-background) and swaps values per theme. Single-theme systems delete the `themes` block entirely. Numeric slots (scale ratio, line height) are emitted bare, not quoted.",
   "color": {
     "background": { "$value": "{{COLOR_BACKGROUND}}", "$type": "color" },
     "foreground": { "$value": "{{COLOR_FOREGROUND}}", "$type": "color" },
     "muted": { "$value": "{{COLOR_MUTED}}", "$type": "color" },
     "accent": { "$value": "{{COLOR_ACCENT}}", "$type": "color" },
-    "border": { "$value": "{{COLOR_BORDER}}", "$type": "color" }
+    "accentForeground": { "$value": "{{COLOR_ACCENT_FOREGROUND}}", "$type": "color", "$description": "text/icons on an accent fill — must clear 4.5:1 on accent" },
+    "border": { "$value": "{{COLOR_BORDER}}", "$type": "color", "$description": "decorative hairlines and dividers only" },
+    "borderStrong": { "$value": "{{COLOR_BORDER_STRONG}}", "$type": "color", "$description": "control boundaries (inputs, outlines) — must clear 3:1 on background (WCAG 1.4.11)" }
+  },
+  "themes": {
+    "dark": {
+      "color": {
+        "background": { "$value": "{{COLOR_BACKGROUND_DARK}}", "$type": "color" },
+        "foreground": { "$value": "{{COLOR_FOREGROUND_DARK}}", "$type": "color" },
+        "muted": { "$value": "{{COLOR_MUTED_DARK}}", "$type": "color" },
+        "accent": { "$value": "{{COLOR_ACCENT_DARK}}", "$type": "color" },
+        "accentForeground": { "$value": "{{COLOR_ACCENT_FOREGROUND_DARK}}", "$type": "color", "$description": "text/icons on an accent fill — must clear 4.5:1 on accent" },
+        "border": { "$value": "{{COLOR_BORDER_DARK}}", "$type": "color", "$description": "decorative hairlines and dividers only" },
+        "borderStrong": { "$value": "{{COLOR_BORDER_STRONG_DARK}}", "$type": "color", "$description": "control boundaries (inputs, outlines) — must clear 3:1 on background (WCAG 1.4.11)" }
+      }
+    }
   },
   "typography": {
     "fontFamily": {
@@ -14,16 +29,18 @@
       "mono": { "$value": "{{FONT_MONO}}", "$type": "fontFamily" }
     },
     "scale": {
-      "ratio": { "$value": "{{TYPE_SCALE_RATIO}}", "$type": "number" },
+      "ratio": { "$value": {{TYPE_SCALE_RATIO}}, "$type": "number" },
       "base": { "$value": "{{TYPE_BASE_SIZE}}", "$type": "dimension" }
-    }
+    },
+    "lineHeight": { "$value": {{TYPE_LINE_HEIGHT}}, "$type": "number", "$description": "body line height — never below 1.4" },
+    "measure": { "$value": "{{TYPE_MEASURE}}", "$type": "dimension", "$description": "paragraph measure cap — never wider than 75ch" }
   },
   "spacing": {
     "unit": { "$value": "{{SPACING_UNIT}}", "$type": "dimension" },
-    "scale": { "$value": "{{SPACING_SCALE}}", "$type": "string" }
+    "scale": { "$value": [{{SPACING_SCALE}}], "$type": "scale", "$description": "steps in px, multiples of unit" }
   },
   "motion": {
-    "easing": { "$value": "{{MOTION_EASING}}", "$type": "cubicBezier" },
+    "easing": { "$value": "{{MOTION_EASING}}", "$type": "easing", "$description": "CSS timing function" },
     "duration": {
       "fast": { "$value": "{{MOTION_FAST}}", "$type": "duration" },
       "base": { "$value": "{{MOTION_BASE}}", "$type": "duration" },

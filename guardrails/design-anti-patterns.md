@@ -32,7 +32,7 @@ The visual-layer tells that an AI made it (or that a designer wasn't paying atte
 ## Motion
 
 - **No bounce easing.** Reads as toy-like in serious products.
-- **No animations on layout properties** (`width`, `height`, `top`, `left`). Animate transforms.
+- **No animations on layout properties** (`width`, `height`, `top`/`left`/`right`/`bottom`, margins, padding, `gap`, `inset`, `flex-basis` — and `transition: all`, which animates them implicitly). Animate transforms.
 - **No motion that ignores `prefers-reduced-motion`.**
 - **No "delight" animations on critical paths.** Don't make the user wait for a transition to dismiss before they can act.
 

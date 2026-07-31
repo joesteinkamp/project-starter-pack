@@ -1,29 +1,23 @@
-# CLAUDE.md
+# Claude Code Instructions
 
-Agent instructions for this repository.
+@AGENTS.md
 
-## Compatibility
+> Thin pointer. It imports `AGENTS.md` — this repository's entry point — and adds
+> Claude-Code-specific notes below. Shared rules belong in `AGENTS.md` so Codex, Cursor, and
+> Antigravity see the same source of truth. This is the same pattern the pack generates for the
+> projects it sets up, dogfooded here.
 
-This file is plain Markdown so it works in both Codex (`AGENTS.md`) and Claude Code (`CLAUDE.md`). `AGENTS.md` points here — maintain this file only.
+## Project-specific Claude notes
 
-## Canonical Docs
-
-The following files govern agent behavior in this repo. Treat them as authoritative.
-
-- `CLAUDE.md` — this file; agent instructions and the memory protocol
-- `memory/knowledge.md` — non-obvious project knowledge captured during AI conversations
-- `memory/changelog.md` — dated log of edits to governing docs, used to diagnose behavior drift
-
-## Knowledge Capture
-
-Read `memory/knowledge.md` before doing substantive work in this repo.
-
-When a conversation requires iterative discovery — e.g., the initial answer was wrong, missed context, or only became correct after back-and-forth — ask the user: **"Should I add this to `memory/knowledge.md`?"** before moving on. If the user agrees, update `memory/knowledge.md` and append a dated entry to `memory/changelog.md`.
-
-The trigger is *discovery*, not chat volume. Only ask when something surprised you or required exploration to get right — not after every routine Q&A. Never auto-save; the user is the editor.
-
-## Guardrails
-
-- When you modify any file listed under Canonical Docs (including this file), append a dated entry to `memory/changelog.md` describing what changed and why.
-- Changelog entries are dated and explain the *why*, not just the *what*. One-line entries are fine; the audit value is the date plus the reason.
-- Keep `memory/knowledge.md` lightly structured. Group related entries under H2 headings as the file grows. No categories, tags, or schemas.
+- **`./test.sh` before every commit.** It is the only build step this repo has; a red run means
+  the slot, portability, or guardrail contract is broken, not that a check is being fussy.
+- **`test.sh` and `render-ports.sh` are the blast-radius files.** A wrong edit there fails open —
+  the checks pass while enforcing nothing, or every user's `~/.cursor/commands` churns on each
+  install. Read the section comments before touching either; they explain what each check is
+  defending against.
+- **The plugin path and the `install.sh` path must stay in sync.** `.claude-plugin/plugin.json`
+  points Claude Code at `commands/` and `skills/`; `install.sh` symlinks the same dirs into three
+  other tools. A change that only works under one path is a portability regression.
+- **Verify a flow change by reading it as the other tools would.** Claude Code is the only target
+  with both commands and a structured-question tool — Codex has neither. If a step only makes
+  sense with `AskUserQuestion`, it is broken in three tools out of four.

@@ -1,0 +1,15 @@
+{
+  "//": "Advisory, warn-only design + writing hooks for project-starter-pack, in Claude Code's schema. OPT-IN — run hooks/install-hooks.sh to merge this for you (it also handles Codex, Cursor, and Antigravity, whose schemas differ), or paste this into .claude/settings.json and replace ABS_PATH with the absolute path to this repo. HOOK_PLATFORM tells the shared scripts which event payload to expect. These hooks never block; they only print nudges.",
+  "hooks": {
+    "PostToolUse": [
+      {
+        "matcher": "Edit|Write|MultiEdit",
+        "hooks": [
+          { "type": "command", "command": "env HOOK_PLATFORM=claude \"ABS_PATH/hooks/guard-design.sh\"" },
+          { "type": "command", "command": "env HOOK_PLATFORM=claude \"ABS_PATH/hooks/check-anti-patterns.sh\"" },
+          { "type": "command", "command": "env HOOK_PLATFORM=claude \"ABS_PATH/hooks/check-writing-slop.sh\"" }
+        ]
+      }
+    ]
+  }
+}

@@ -6,7 +6,7 @@
 
 ## Project Summary
 
-{{PROJECT_SUMMARY}}
+Saga is a local-first reading app for long-form nonfiction, built for committed readers who want to *finish* what they start and get value back out of what they highlight. It is a product surface (earned familiarity over novelty): the interface recedes so the text can do the work. The core loop is read → capture in one gesture → return to your marks.
 
 ## What to read before you build
 
@@ -56,10 +56,15 @@ Before showing any UI to the user, run this check:
 
 ## Maintaining these files
 
-<!-- Filled at wire-up with the pack's location on disk and how to start each
-flow in this repo's tools — so an agent in a harness without slash commands
-(Antigravity, Codex) can still run the pack by name. To regenerate one brief,
-re-run `setup` and pick the matching brief at its scope step, or run that flow
-by name in a tool that invokes skills directly. -->
+`project-starter-pack` lives at `~/code/project-starter-pack`. The briefs are the source of
+truth — edit them directly, or re-run the flow that owns one: `setup`, `product-brief`,
+`design-brief` (also regenerates `WRITING.md`), `code-brief`, `validate`, `extract`.
 
-{{REGENERATION_NOTE}}
+The three brief flows have no command of their own — reach one by name, or through `setup`
+with its scope word (`product`, `design`, `code`, `all`).
+
+- **Claude Code** — `/starter:setup design`, plus `/starter:extract` and `/starter:validate`.
+- **Codex** — `$<flow>`, e.g. `$design-brief`; it runs any skill directly.
+- **Cursor** — `/starter-setup design`, or ask for the skill by name.
+- **Antigravity and anything else** — plain language works: "walk me through the design brief
+  using the project-starter-pack questionnaire at `~/code/project-starter-pack`".

@@ -1,6 +1,6 @@
 # Product Brief Questionnaire
 
-The `product-brief` skill walks the user through this question set. **Structured** questions use `AskUserQuestion` (multi-choice). **Open** questions are asked in chat as free-form prompts.
+The `product-brief` flow walks the user through this question set. **Structured** questions offer multiple choices; **open** questions are asked in chat as free-form prompts. See `conventions/question-mechanics.md` for how each is asked in a given tool.
 
 ## Pass 1 — Structured
 
@@ -39,8 +39,8 @@ The `product-brief` skill walks the user through this question set. **Structured
 
 > What's the accessibility baseline?
 
-- `WCAG 2.1 AA` (recommended default)
-- `WCAG 2.2 AA` (newer pages, better target sizes)
+- `WCAG 2.1 AA` (the long-standing floor)
+- `WCAG 2.2 AA` (recommended default — adds focus-not-obscured, 24px target size, redundant-entry)
 - `WCAG 2.1 AAA` (regulated industries, public sector)
 - `Custom` — describe in open follow-up
 
@@ -55,13 +55,15 @@ The `product-brief` skill walks the user through this question set. **Structured
 
 → `{{ONE_LINER}}`
 
-### Q6. Primary user, in their context
+### Q6. Primary (and secondary) user, in their context
 
 > Describe the primary user with enough specificity that you could pick them
 > out of a coffee shop. Role, seniority, environment, what they tried before
-> this, what made them stop trying.
+> this, what made them stop trying. If there's a meaningful secondary
+> audience, name them too (one or two sentences).
 
-→ `{{PRIMARY_USERS}}`
+→ `{{PRIMARY_USERS}}` + `{{SECONDARY_USERS}}` (leave secondary blank with a
+TODO if there isn't a distinct one)
 
 ### Q7. Jobs-to-be-done
 
@@ -103,12 +105,20 @@ The `product-brief` skill walks the user through this question set. **Structured
 
 | Slot | Default | Mark |
 |---|---|---|
-| `{{ACCESSIBILITY}}` | WCAG 2.1 AA, keyboard reachability, prefers-reduced-motion respected, semantic HTML first | `[default — confirm]` |
+| `{{ACCESSIBILITY}}` | WCAG 2.2 AA, keyboard reachability, prefers-reduced-motion respected, semantic HTML first | `[default — confirm]` |
 | `{{DESIGN_PRINCIPLES}}` | Practice what you preach; show, don't tell; purposeful restraint; expert confidence | `[default — confirm]` |
 | `{{ANTI_REFERENCES}}` | (skipped — too project-specific to default) | leave blank with TODO |
+| `{{PRODUCT_ANTI_PATTERNS}}` | Pull from `guardrails/product-anti-patterns.md` verbatim | always included |
 
 ## Pre-flight checks before writing
 
 - If `PRODUCT.md` exists, ask: **reuse / merge / overwrite**.
 - Validate that personas aren't generic (the `product-anti-patterns.md` rules) — flag and re-prompt if they are.
 - Validate that anti-references name actual things, not abstract qualities.
+
+## Extraction hints (brownfield)
+
+When the `extract` flow runs against existing code, the README, landing/marketing copy, and the
+package `description` can seed `{{ONE_LINER}}`, `{{PRODUCT_PURPOSE}}`, and (low-confidence)
+`{{REGISTER}}`. Everything else here — users, jobs, personality, anti-references, principles,
+metrics — code cannot prove; extract leaves those as `[TODO — confirm]` for this questionnaire.

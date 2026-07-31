@@ -1,159 +1,97 @@
 ---
 name: extract
-description: Reverse-engineers PRODUCT.md, DESIGN.md, CODE.md, AGENTS.md from an existing codebase. Audits which briefs are missing or thin, extracts what's inferable from code (manifests, tokens, components, configs), confirms gaps via questionnaire, and ends with a fork-and-iterate review of decisions the codebase left ambiguous. Use when the user asks to extract briefs, reverse-engineer briefs, generate briefs from an existing codebase, audit which briefs are missing, or fill in missing project documentation. Triggers on "extract briefs", "reverse-engineer", "reverse engineer briefs", "briefs from codebase", "audit briefs", "missing PRODUCT.md", "fill in the briefs", "fork the briefs".
+description: Reverse-engineers draft PRODUCT.md, DESIGN.md, DESIGN.json, and CODE.md briefs from an existing codebase, so the starter pack works on brownfield projects, not just greenfield ones. Use when the user wants to bootstrap briefs from code that already exists, infer the stack or design system, or onboard an existing repo into project-starter-pack. Triggers on "extract the briefs", "brownfield", "reverse engineer the design system", "infer the stack from the code", "generate briefs from existing code".
 ---
 
 # Extract Skill
 
-You run the inverse of the rest of the starter pack. Instead of leading with questions and writing briefs, you lead with a codebase scan, derive what's inferable, and only ask the user about what the code can't answer. The flow ends with a **fork review** that exposes the decisions the codebase left ambiguous so the user can accept, override, or branch into iteration.
+You fill the same brief slots the questionnaires fill — but from **evidence in the codebase**
+instead of from questions. The output is *drafts with confidence markers*, not finished briefs;
+you seed the flow, you don't replace the designer's judgment.
+
+This skill is **read-only** during evidence gathering. Only the final write step creates files.
+
+## Conventions
+
+Read `../../conventions/question-mechanics.md` first. It defines how this flow asks structured
+questions in whatever tool you are running in, how it writes files, and how it resolves the
+resource paths below.
 
 ## Setup
 
-1. Locate the plugin root. You will need:
-   - Templates: `templates/PRODUCT.template.md`, `templates/DESIGN.template.md`, `templates/DESIGN.tokens.template.json`, `templates/CODE.template.md`, `templates/AGENTS.template.md`, `templates/CLAUDE.template.md`.
-   - Questionnaires: `questionnaires/product.questions.md`, `questionnaires/design.questions.md`, `questionnaires/code.questions.md`.
-   - Guardrails: `guardrails/{product,ux,design,code}-anti-patterns.md`.
-2. Read all templates before scanning — the section list of each template is your **completeness checklist** for that brief.
+1. Templates are in `../../templates/`; the slot list each draft must fill is defined by
+   `../../templates/PRODUCT.template.md`, `../../templates/DESIGN.template.md`,
+   `../../templates/DESIGN.tokens.template.json`, and `../../templates/CODE.template.md`.
+2. Determine the scan target: any path supplied in the request, else the repo root.
 
-## Phase 1 — Scan
+## Evidence gathering (read-only)
 
-Walk the project root and collect evidence per brief. Don't ask the user anything yet.
+- **CODE evidence** — `package.json` / `pyproject.toml` / `go.mod` / `Cargo.toml` (framework, runtime, deps, scripts, package manager), `tsconfig.json` (strictness), lockfiles, CI config (`.github/workflows`), Dockerfile / host config.
+- **DESIGN evidence** — global CSS, Tailwind/UnoCSS config, any `tokens.*` / theme files (colors — **flag raw hex vs OKLCH**), `@font-face` / font imports, spacing/scale variables, and the components directory (the primitive inventory).
+- **PRODUCT evidence** — `README`, landing/marketing copy, the package `description`, and any docs that state who it's for.
 
-### Existing brief files
+## Mapping evidence to slots
 
-Look for and read if present:
-- `PRODUCT.md`
-- `DESIGN.md`, `DESIGN.json`
-- `CODE.md`
-- `AGENTS.md`, `AGENTS.md`
-- `CLAUDE.md`
-- `README.md`, `README.*`
-- `.cursor/rules/*`, `.github/copilot-instructions.md`, `.aider.conf*`, `GEMINI.md` — useful corroborating evidence
+Fill each slot from evidence; anything not provable from the code stays
+`[TODO — confirm via the <brief> flow]`. **Never invent** product voice, personas, or design
+intent — code can prove a stack, it cannot prove a brand.
 
-### Code evidence (for `CODE.md`)
+| Evidence | Slots it seeds |
+|---|---|
+| `package.json` deps / framework | `{{STACK_FRONTEND}}`, `{{STACK_BACKEND}}`, `{{STACK_OTHER}}` |
+| DB driver / ORM / host config | `{{STACK_DATABASE}}`, `{{STACK_HOSTING}}`, `{{STACK_AUTH}}` |
+| package manager, tsconfig, linter config | `{{LANGUAGES_TOOLING}}` |
+| repo shape, folder boundaries | `{{ARCHITECTURE}}`, `{{CODE_CONVENTIONS}}` |
+| test runner + test dirs | `{{TESTING}}` |
+| CI workflow, deploy config | `{{DEPLOYMENT}}` |
+| bundle/perf config, image pipeline | `{{PERFORMANCE}}` |
+| auth, CSP/headers, secrets handling | `{{SECURITY}}` |
+| color tokens / theme files | `{{COLOR_STRATEGY}}`, `{{COLOR_TOKENS}}`, and `DESIGN.json` (`{{COLOR_BACKGROUND}}`, `{{COLOR_FOREGROUND}}`, `{{COLOR_MUTED}}`, `{{COLOR_ACCENT}}`, `{{COLOR_ACCENT_FOREGROUND}}`, `{{COLOR_BORDER}}`, `{{COLOR_BORDER_STRONG}}` — plus their `_DARK` counterparts under `themes.dark` when the code ships a dark theme) |
+| font imports / scale variables | `{{TYPOGRAPHY}}`, `{{FONT_DISPLAY}}`, `{{FONT_BODY}}`, `{{FONT_MONO}}`, `{{TYPE_SCALE_RATIO}}`, `{{TYPE_BASE_SIZE}}`, `{{TYPE_LINE_HEIGHT}}`, `{{TYPE_MEASURE}}` |
+| media / container queries | `{{BREAKPOINTS}}` |
+| spacing variables | `{{SPACING_LAYOUT}}`, `{{SPACING_UNIT}}`, `{{SPACING_SCALE}}` |
+| transition/animation tokens | `{{MOTION}}`, `{{MOTION_EASING}}`, `{{MOTION_FAST}}`, `{{MOTION_BASE}}`, `{{MOTION_SLOW}}` |
+| components directory | `{{COMPONENTS}}` |
+| routes / nav structure | `{{INFORMATION_ARCHITECTURE}}` |
+| README / landing copy | `{{ONE_LINER}}`, `{{PRODUCT_PURPOSE}}`, `{{REGISTER}}` (low confidence — confirm) |
 
-- Manifests: `package.json`, `pnpm-lock.yaml` / `yarn.lock` / `package-lock.json`, `pyproject.toml`, `requirements.txt`, `Cargo.toml`, `go.mod`, `Gemfile`, `composer.json`.
-- Framework / config: `next.config.*`, `vite.config.*`, `nuxt.config.*`, `astro.config.*`, `remix.config.*`, `svelte.config.*`, `angular.json`, `tsconfig.json`, `eslint.config.*` / `.eslintrc*`, `prettier*`, `biome.json`, `.editorconfig`.
-- CI / deploy: `.github/workflows/*`, `.gitlab-ci.yml`, `vercel.json`, `netlify.toml`, `wrangler.toml`, `Dockerfile`, `docker-compose.*`, `fly.toml`.
-- Tests: presence of `vitest`, `jest`, `playwright`, `cypress`, `pytest`, `cargo test`.
-- Repo strategy: top-level `apps/` / `packages/` / workspaces field → monorepo.
+Slots that code can rarely prove — `{{PRIMARY_USERS}}`, `{{SECONDARY_USERS}}`,
+`{{JOBS_TO_BE_DONE}}`, `{{PERSONALITY_THREE_WORDS}}`, `{{PERSONALITY_DETAIL}}`,
+`{{ANTI_REFERENCES}}`, `{{DESIGN_PRINCIPLES}}`, `{{SUCCESS_METRICS}}`, `{{USER_KNOWLEDGE}}`,
+`{{USER_FLOWS}}`, `{{UX_SUCCESS_METRICS}}`, `{{VISUAL_REGISTER}}`, `{{INTERACTION_PRINCIPLES}}`,
+`{{ACCESSIBILITY}}`, `{{ACCESSIBILITY_UX}}` — default to a `[TODO — confirm]` unless the docs
+state them outright. The anti-pattern slots (`{{PRODUCT_ANTI_PATTERNS}}`,
+`{{DESIGN_ANTI_PATTERNS}}`, `{{CODE_ANTI_PATTERNS}}`) are still pulled from the guardrails verbatim.
 
-### Design evidence (for `DESIGN.md` UI system)
+## Confirm pass
 
-- Token sources: `tailwind.config.*`, `theme.*`, `tokens.*`, CSS files with `:root` custom properties, `*.css` / `*.scss` with named scales, `DESIGN.json`.
-- Components: top-level `components/`, `ui/`, `design-system/`, `app/components/`, `src/components/`. Sample 5–10 component filenames to infer the primitive set (Button, Input, Card, etc.).
-- Motion: search for `transition`, `animate`, `framer-motion`, `motion/react`, `cubic-bezier(`, `ease-` utilities.
-- Color: collect any hex / oklch / hsl values found in token files. If hex, plan to convert to OKLCH on output.
-- Type: font imports (`next/font`, `@fontsource/*`, Google Fonts links in `<head>`).
+Ask a structured question for the few high-leverage values that change everything downstream and
+that the code can only hint at: **register** (brand / product / hybrid), **color strategy**
+(Restrained / Committed / Full Palette / Drenched — pre-filled from the detected token count),
+and **primary framework** (pre-filled from `package.json`, ask to confirm). This converges extract
+with the questionnaire flow rather than bypassing it.
 
-### UX evidence (for `DESIGN.md` UX foundation)
+## Write
 
-- Route structure: `app/`, `pages/`, `routes/` directory layout → information architecture skeleton.
-- Top-level page filenames → navigation surface.
-- Empty state / error boundary files (`error.tsx`, `not-found.tsx`, `loading.tsx`) → which flows have edge states wired up.
-
-### Product evidence (for `PRODUCT.md`)
-
-Hardest to infer from code. Pull from:
-- `README.md` headline + first paragraph → candidate one-liner.
-- `package.json` `description` field.
-- Marketing pages (`app/(marketing)/*`, `pages/index.*`) — visible copy.
-- `LICENSE`, repo metadata.
-
-Treat all of this as **candidate, unconfirmed**.
-
-## Phase 2 — Audit
-
-For each of the four briefs, classify as:
-
-- `complete` — file exists and every section in the matching template is filled in with non-placeholder content.
-- `thin` — file exists but ≥ 1 template section is empty, TODO, or one-line placeholder.
-- `missing` — file does not exist.
-
-Render an audit table to the user before writing anything:
-
-```
-Brief         Status      Notes
-PRODUCT.md    missing     no file; README has a one-liner candidate
-DESIGN.md     thin        UI tokens present, UX foundation empty
-CODE.md       complete    all 9 sections present
-AGENTS.md      missing     will regenerate after briefs are filled
-```
-
-Ask the user which briefs to (re)generate. Default to all `missing` and `thin`. Never modify `complete` briefs without explicit overwrite confirmation.
-
-## Phase 3 — Extract per brief
-
-Process the briefs in order of inferability so the user sees the easy wins first and answers the hardest questions last.
-
-### Order
-
-1. `CODE.md` — most evidence, fewest questions.
-2. `DESIGN.md` — UI from tokens / components, UX from routes + user input.
-3. `PRODUCT.md` — mostly user input, README-seeded.
-4. `AGENTS.md` + `CLAUDE.md` — handled by the `orchestrator` skill in Phase 6.
-
-### For each non-complete brief
-
-1. **Pre-fill** every template slot you can from the scan.
-2. **Mark provenance** for every pre-filled value:
-   - ` [inferred — confirm]` — derived from the codebase, user hasn't confirmed.
-   - ` [default — confirm]` — fell back to the questionnaire's defaults table.
-   - (no marker) — read directly from an existing `complete` section the user opted to keep.
-3. **Ask only what's left** — for any slot still empty after inference and defaults, ask the matching questions from the corresponding `questionnaires/*.questions.md` using `AskUserQuestion` (structured) and chat (open follow-ups). Skip questions the scan already answered.
-4. **Validate** against the brief's guardrails (`guardrails/code-anti-patterns.md`, `guardrails/{ux,design}-anti-patterns.md`, `guardrails/product-anti-patterns.md`). Push back once on anti-pattern smells, same as the forward-direction skills.
-5. **Embed anti-pattern lists inline** in the relevant template slots (`{{CODE_ANTI_PATTERNS}}`, `{{DESIGN_ANTI_PATTERNS}}`, etc.) — same as the forward skills.
-6. **Preview** the populated brief, accept one round of edits, then **write** to the project root.
-
-If `DESIGN.json` exists in the repo, read its tokens into `DESIGN.md` color/type/spacing slots; if it doesn't but the user supplied concrete tokens during the gap-confirmation step, offer to write `DESIGN.json` using `templates/DESIGN.tokens.template.json`.
-
-## Phase 4 — Re-orchestrate
-
-Once the three briefs exist (whether freshly written or carried forward), invoke the `orchestrator` skill to regenerate `AGENTS.md` and `CLAUDE.md`. Do not hand-write these — they are derived.
-
-## Phase 5 — Fork review
-
-This is the new bit, and the reason the user asked for `extract` instead of running the four forward commands.
-
-For every value you marked ` [inferred — confirm]`, present it as a **fork point**: a place the codebase was ambiguous and you made a call. Group fork points by brief.
-
-Format each fork point as:
-
-```
-[brief: section]
-  Inferred: <what you wrote>
-  Evidence: <what in the codebase pointed here>
-  Alternatives: <1–2 plausible other reads>
-  Action: accept | override | branch
-```
-
-After listing all fork points, ask the user — using `AskUserQuestion` where the choice is bounded — what to do with each:
-
-- **accept** — strip the `[inferred — confirm]` marker, move on.
-- **override** — capture the user's correction inline and rewrite the affected brief section.
-- **branch** — exit `extract` and recommend the relevant brief command (`/starter:product-brief`, `/starter:design-brief`, `/starter:code-brief`) to iterate further. Print the command and stop; the user resumes it themselves.
-
-If the user **branches** on any brief, do not re-run `orchestrator` after the fork review — the brief is now in flight, and `AGENTS.md` should be regenerated only after the user finishes iterating.
+Honor the same pre-flight as the brief skills: if `PRODUCT.md` / `DESIGN.md` / `CODE.md` already
+exist, ask **reuse / merge / overwrite**. Write the drafts (plus `DESIGN.json` if real tokens were
+found) with every inferred-but-unconfirmed value marked, and every gap left as an explicit TODO.
 
 ## Done
 
-Print a one-screen summary:
-
 ```
-✓ Audited 4 briefs ({{N_complete}} complete, {{N_thin}} thin, {{N_missing}} missing)
-✓ Wrote {{LIST_OF_FILES}}
-✓ Surfaced {{N}} fork points ({{N_accepted}} accepted, {{N_overridden}} overridden, {{N_branched}} branched)
+✓ Extracted drafts: PRODUCT.md, DESIGN.md, CODE.md{{, DESIGN.json}}
+  {{X}} slots filled from evidence · {{Y}} left as [TODO — confirm]
 
-Next:
-- If you branched on any brief, run the matching /starter:<brief> command to iterate.
-- If everything was accepted or overridden, AGENTS.md and CLAUDE.md are up to date.
-- Edit any brief by hand and re-run /starter:orchestrate to refresh AGENTS.md.
+Next steps:
+- Review the drafts — extract seeds, it doesn't decide. Fix the TODOs.
+- Run the validate flow to check the extracted briefs against the code.
+- Run the brief flows to confirm the TODOs; each ends by wiring up AGENTS.md
+  if it is missing.
 ```
 
 ## Important
 
-- **Never invent product context.** Inference from a README headline is candidate, not truth. Mark it ` [inferred — confirm]` and let the fork review handle it.
-- **Code-grounded values are not free passes either.** A `package.json` says what's installed, not what's intentional. The user might be carrying a dependency they want to drop. Surface stack reads as fork points if the README or other signals hint at a transition.
-- **Respect `complete` briefs.** If the user keeps a brief, do not silently rewrite its sections during `orchestrate` either — the orchestrator should consume the kept file as-is.
-- **Don't overuse fork review.** If the codebase was unambiguous on a slot, don't manufacture an alternative just to fill the table. Fork points are real ambiguities, not formality.
-- **Voice matches the rest of the pack** — direct, opinionated, no hedging. Same anti-patterns enforced.
+- Read-only until the write step. Never modify application code.
+- Never invent product or brand context. A draft slot is either evidence-backed or a marked TODO.
+- Confidence is part of the output: say which slots are inferred and which are confirmed.

@@ -71,7 +71,14 @@ something a teammate could quote in a review. -->
 
 ## Accessibility & Inclusion commitments
 
-<!-- Default: WCAG 2.1 AA. List any commitments above or below that baseline
+<!-- Default: WCAG 2.2 AA. List any commitments above or below that baseline
 and why. -->
 
 {{ACCESSIBILITY}}
+
+## Anti-patterns (always reject)
+
+<!-- Embedded from guardrails/product-anti-patterns.md — one line per ban.
+Always included. -->
+
+{{PRODUCT_ANTI_PATTERNS}}

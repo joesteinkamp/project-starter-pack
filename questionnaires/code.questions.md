@@ -68,6 +68,13 @@ The `code-brief` skill walks the user through this question set.
 
 → `{{STACK_AUTH}}`
 
+### Q5b. Other load-bearing services
+
+> Any other services the agent must respect — payments, email, search, queues,
+> analytics, AI providers, CDN? Free-form follow-up.
+
+→ `{{STACK_OTHER}}` (leave blank with a TODO if there are none worth pinning)
+
 ### Q6. Repo strategy
 
 - `Single app`
@@ -172,3 +179,13 @@ The `code-brief` skill walks the user through this question set.
 - If `CODE.md` exists, ask: **reuse / merge / overwrite**.
 - Validate stack choices are internally consistent (e.g. don't pair Cloudflare Pages with a Node-only library).
 - Always pull anti-patterns from `guardrails/code-anti-patterns.md` so the brief carries the bans inline.
+
+## Extraction hints (brownfield)
+
+The `extract` flow fills most of this brief straight from the code: `package.json` /
+`pyproject.toml` / `go.mod` seed `{{STACK_FRONTEND}}`, `{{STACK_BACKEND}}`, and `{{STACK_OTHER}}`;
+DB drivers and host config seed `{{STACK_DATABASE}}`, `{{STACK_HOSTING}}`, `{{STACK_AUTH}}`;
+package manager + tsconfig + linter config seed `{{LANGUAGES_TOOLING}}`; folder boundaries seed
+`{{ARCHITECTURE}}` and `{{CODE_CONVENTIONS}}`; test dirs seed `{{TESTING}}`; CI/deploy config seeds
+`{{DEPLOYMENT}}`; perf/bundle config seeds `{{PERFORMANCE}}`; auth/CSP/secrets handling seeds
+`{{SECURITY}}`. This brief is the most reliably extractable of the three.

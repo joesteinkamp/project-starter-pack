@@ -136,7 +136,12 @@ The `design-brief` skill walks the user through this question set. **UX question
 - `both` — light default, dark companion
 - `system` — follow OS preference
 
-→ informs color tokens
+→ informs color tokens, and decides which theme blocks `DESIGN.json` carries.
+The `color` block always holds the **default** theme's values (light values for
+`light`/`both`/`system`, dark values for `dark`). `both` and `system` add a
+`themes.dark` override block — Q16 collects both value sets. A single-theme
+answer (`light` **or** `dark`) means no `themes` block at all: the file states
+exactly what the design system commits to, symmetrically in both directions.
 
 #### Q14. Motion stance
 
@@ -146,7 +151,8 @@ The `design-brief` skill walks the user through this question set. **UX question
 - `considered` — purposeful transitions, expo-out default
 - `expressive` — motion is part of the brand
 
-→ writes to `{{MOTION}}`
+→ writes to `{{MOTION}}`, and seeds the `DESIGN.json` motion tokens
+`{{MOTION_EASING}}`, `{{MOTION_FAST}}`, `{{MOTION_BASE}}`, `{{MOTION_SLOW}}`
 
 ### Pass 2 — Open follow-ups (UI)
 
@@ -159,25 +165,52 @@ The `design-brief` skill walks the user through this question set. **UX question
 
 #### Q16. Color tokens
 
-> Provide OKLCH values (or describe and the skill will propose) for:
-> background, foreground, muted, accent, border, plus any system colors
-> (success, warning, danger).
+> Provide OKLCH values (or describe and the skill will propose) for the seven
+> core tokens: background, foreground, muted, accent, **accentForeground**
+> (text/icons on an accent fill — must clear 4.5:1 on accent), **border**
+> (decorative hairlines/dividers only), and **borderStrong** (any border that
+> is a control's sole boundary — must clear 3:1 on background, WCAG 1.4.11).
+> If Q13 chose `both` or `system`, provide values for both themes and label the
+> columns Light / Dark, marking which is default. Any system colors (success,
+> warning, danger) go in the `DESIGN.md` prose table only — `DESIGN.json`
+> carries the seven core tokens per theme.
 
-→ `{{COLOR_TOKENS}}` (rationale in body) and the `colors:` block in DESIGN.md's YAML front matter
+→ `{{COLOR_TOKENS}}` (the prose table in `DESIGN.md`) and the `DESIGN.json`
+token slots `{{COLOR_BACKGROUND}}`, `{{COLOR_FOREGROUND}}`, `{{COLOR_MUTED}}`,
+`{{COLOR_ACCENT}}`, `{{COLOR_ACCENT_FOREGROUND}}`, `{{COLOR_BORDER}}`,
+`{{COLOR_BORDER_STRONG}}` (the **default** theme, per Q13) — plus, when Q13
+chose `both` or `system`, the `themes.dark` slots `{{COLOR_BACKGROUND_DARK}}`,
+`{{COLOR_FOREGROUND_DARK}}`, `{{COLOR_MUTED_DARK}}`, `{{COLOR_ACCENT_DARK}}`,
+`{{COLOR_ACCENT_FOREGROUND_DARK}}`, `{{COLOR_BORDER_DARK}}`,
+`{{COLOR_BORDER_STRONG_DARK}}` (delete the whole `themes` block for a
+single-theme answer, `light` or `dark` alike)
 
 #### Q17. Typography specifics
 
 > Display family, body family, mono family. Base size. Scale ratio (≥1.25).
 > Line height for body (≥1.4). Measure cap (default 65-75ch).
 
-→ `{{TYPOGRAPHY}}`
+→ `{{TYPOGRAPHY}}` (the prose section in `DESIGN.md`) and the `DESIGN.json`
+token slots `{{FONT_DISPLAY}}`, `{{FONT_BODY}}`, `{{FONT_MONO}}`,
+`{{TYPE_SCALE_RATIO}}`, `{{TYPE_BASE_SIZE}}`, `{{TYPE_LINE_HEIGHT}}`,
+`{{TYPE_MEASURE}}` — line height and measure are tokens, not just prose, so
+The `validate` flow and the guardrails can check them mechanically
 
 #### Q18. Spacing & layout
 
 > Spacing unit and scale. Grid system (or none). When are cards allowed,
 > when are they not?
 
-→ `{{SPACING_LAYOUT}}`
+→ `{{SPACING_LAYOUT}}` (the prose section in `DESIGN.md`) and the `DESIGN.json`
+token slots `{{SPACING_UNIT}}`, `{{SPACING_SCALE}}`
+
+#### Q18b. Breakpoints & responsive strategy
+
+> Container-query-first, or named viewport breakpoints? If breakpoints: list
+> each one and what changes there. Without this, every coding agent invents
+> its own — the one-off-values problem the token file exists to prevent.
+
+→ `{{BREAKPOINTS}}` (in `DESIGN.md`)
 
 #### Q19. Component primitives (8-12)
 
@@ -191,7 +224,8 @@ The `design-brief` skill walks the user through this question set. **UX question
 | Slot | Default | Mark |
 |---|---|---|
 | `{{INTERACTION_PRINCIPLES}}` | Recognition over recall, undo over confirm, progressive disclosure, keyboard-first | `[default — confirm]` |
-| `{{ACCESSIBILITY_UX}}` | WCAG 2.1 AA, keyboard reachability, visible focus, prefers-reduced-motion, 8th-grade reading level | `[default — confirm]` |
+| `{{ACCESSIBILITY_UX}}` | Inherit the WCAG level `PRODUCT.md` committed to (its own default is 2.2 AA — never restate a different level here), keyboard reachability, visible focus, prefers-reduced-motion, 8th-grade reading level | `[default — confirm]` |
+| `{{BREAKPOINTS}}` | Container-query-first; no named viewport breakpoints unless a layout genuinely changes shape | `[default — confirm]` |
 | `{{COLOR_STRATEGY}}` | Restrained — neutrals + one accent | `[default — confirm]` |
 | `{{MOTION}}` | expo-out easing, durations 120/200/320ms, prefers-reduced-motion respected, never animate layout | `[default — confirm]` |
 | `{{DESIGN_ANTI_PATTERNS}}` | Pull from `guardrails/design-anti-patterns.md` verbatim | always included |
@@ -201,5 +235,23 @@ The `design-brief` skill walks the user through this question set. **UX question
 - If `DESIGN.md` exists, ask: **reuse / merge / overwrite**.
 - Validate user flows have at least one edge case and at least one empty/error state listed.
 - Validate color tokens use OKLCH (not hex/HSL) — auto-convert with a note if the user provides hex.
+- **Compute contrast, don't eyeball it** — for every theme: foreground/background,
+  muted/background, and accent/background (as text) must clear 4.5:1;
+  accentForeground/accent must clear 4.5:1; borderStrong/background must clear
+  3:1 (WCAG 1.4.11) — all against the level `PRODUCT.md` committed to. Fix or
+  flag any failing pair before writing, and record the measured ratios in the
+  `DESIGN.md` color table.
 - Validate typography includes a measure cap.
 - Always pull anti-patterns from `guardrails/design-anti-patterns.md` and `guardrails/ux-anti-patterns.md` so the brief carries the bans inline.
+
+## Extraction hints (brownfield)
+
+When the `extract` flow runs against existing code: theme/token files and CSS seed
+`{{COLOR_STRATEGY}}`, `{{COLOR_TOKENS}}`, and the `DESIGN.json` color tokens — including the
+`_DARK` counterparts under `themes.dark` when the code ships a dark theme (flagging raw hex
+for OKLCH conversion); font imports and scale variables seed `{{TYPOGRAPHY}}` and the type tokens;
+spacing variables seed `{{SPACING_LAYOUT}}` and the spacing tokens; media/container queries seed
+`{{BREAKPOINTS}}`; transition tokens seed
+`{{MOTION}}`; the components directory seeds `{{COMPONENTS}}`; routes/nav seed
+`{{INFORMATION_ARCHITECTURE}}`. UX intent (`{{USER_FLOWS}}`, `{{USER_KNOWLEDGE}}`,
+`{{VISUAL_REGISTER}}`) is left as `[TODO — confirm]` — code shows *what*, not *why*.

@@ -1,0 +1,50 @@
+{
+  "$description": "Design tokens (PSP format: DTCG-inspired, CSS-ready string values, colors in OKLCH). `color` holds the DEFAULT theme's values — whatever Q13 chose as the default. A second theme lives under `themes.<mode>.color` as an override layer, so tooling emits ONE stable name per token (e.g. --color-background, bg-background) and swaps values per theme. Single-theme systems delete the `themes` block entirely. Numeric slots (scale ratio, line height) are emitted bare, not quoted.",
+  "color": {
+    "background": { "$value": "oklch(0.98 0.008 85)", "$type": "color" },
+    "foreground": { "$value": "oklch(0.27 0.02 50)", "$type": "color" },
+    "muted": { "$value": "oklch(0.52 0.015 60)", "$type": "color" },
+    "accent": { "$value": "oklch(0.52 0.13 35)", "$type": "color" },
+    "accentForeground": { "$value": "oklch(0.98 0.008 85)", "$type": "color", "$description": "text/icons on an accent fill — must clear 4.5:1 on accent" },
+    "border": { "$value": "oklch(0.90 0.010 75)", "$type": "color", "$description": "decorative hairlines and dividers only" },
+    "borderStrong": { "$value": "oklch(0.64 0.010 75)", "$type": "color", "$description": "control boundaries (inputs, outlines) — must clear 3:1 on background (WCAG 1.4.11)" }
+  },
+  "themes": {
+    "dark": {
+      "color": {
+        "background": { "$value": "oklch(0.22 0.01 70)", "$type": "color" },
+        "foreground": { "$value": "oklch(0.90 0.012 80)", "$type": "color" },
+        "muted": { "$value": "oklch(0.66 0.012 75)", "$type": "color" },
+        "accent": { "$value": "oklch(0.66 0.12 38)", "$type": "color" },
+        "accentForeground": { "$value": "oklch(0.22 0.01 70)", "$type": "color", "$description": "text/icons on an accent fill — must clear 4.5:1 on accent" },
+        "border": { "$value": "oklch(0.38 0.010 70)", "$type": "color", "$description": "decorative hairlines and dividers only" },
+        "borderStrong": { "$value": "oklch(0.52 0.010 70)", "$type": "color", "$description": "control boundaries (inputs, outlines) — must clear 3:1 on background (WCAG 1.4.11)" }
+      }
+    }
+  },
+  "typography": {
+    "fontFamily": {
+      "display": { "$value": "Fraunces, Georgia, serif", "$type": "fontFamily" },
+      "body": { "$value": "Spectral, Georgia, serif", "$type": "fontFamily" },
+      "mono": { "$value": "Berkeley Mono, ui-monospace, monospace", "$type": "fontFamily" }
+    },
+    "scale": {
+      "ratio": { "$value": 1.25, "$type": "number" },
+      "base": { "$value": "18px", "$type": "dimension" }
+    },
+    "lineHeight": { "$value": 1.6, "$type": "number", "$description": "body line height — never below 1.4" },
+    "measure": { "$value": "68ch", "$type": "dimension", "$description": "paragraph measure cap — never wider than 75ch" }
+  },
+  "spacing": {
+    "unit": { "$value": "4px", "$type": "dimension" },
+    "scale": { "$value": [4, 8, 12, 16, 24, 32, 48, 64], "$type": "scale", "$description": "steps in px, multiples of unit" }
+  },
+  "motion": {
+    "easing": { "$value": "cubic-bezier(0.16, 1, 0.3, 1)", "$type": "easing", "$description": "CSS timing function" },
+    "duration": {
+      "fast": { "$value": "120ms", "$type": "duration" },
+      "base": { "$value": "200ms", "$type": "duration" },
+      "slow": { "$value": "320ms", "$type": "duration" }
+    }
+  }
+}

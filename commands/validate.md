@@ -1,13 +1,11 @@
 ---
-description: Cross-check PRODUCT.md, DESIGN.md, and CODE.md for contradictions and anti-pattern hits
+description: Cross-check the briefs (PRODUCT.md, DESIGN.md, DESIGN.json, CODE.md) for contradictions and review the repo against them
+argument-hint: [optional focus or path]
+allowed-tools: Bash(git:*), Task, Read, Grep, Glob
 ---
 
-Invoke the `validator` skill.
+Invoke the `validate` skill. Focus: $ARGUMENTS
 
-Run a consistency pass over the three briefs:
-1. Read `PRODUCT.md`, `DESIGN.md`, and `CODE.md` from the project root. If any are missing, surface which command writes them and stop.
-2. Walk the cross-brief checklist (motion vs. stack, performance vs. design weight, register vs. microcopy, primary user vs. flows, accessibility vs. testing, anti-references vs. UI patterns).
-3. Re-apply the four anti-pattern guardrails against the briefs.
-4. Report a checklist with ✓ / ⚠ / ✗ per check, plus a "fix-it" section pointing at the specific brief and section to edit.
-
-End with the one-line summary the skill prescribes.
+It owns the full procedure: Mode A (brief consistency, always runs) and Mode B
+(code/UI vs briefs, only when the repo has application code). This is read-only —
+report findings, do not edit anything unless the user explicitly asks.
