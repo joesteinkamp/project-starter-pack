@@ -54,6 +54,10 @@ WCAG 2.1 AA baseline, plus: reader-controlled type size, line-height, and measur
 
 ## UI System
 
+### System source
+
+Authored in this brief. No external design system — Saga's visual language is its own, and `DESIGN.json` at the project root is the machine-readable token source.
+
 ### Visual register
 
 Quiet editorial — closer to a well-set trade paperback or *Eye* magazine than to a SaaS dashboard. Warm paper, real serif typography, generous margins, a single bookmark-ribbon accent. The reading surface should feel like a page, not an app screen.
@@ -114,6 +118,24 @@ Considered, not decorative. Default easing expo-out; duration buckets 120ms (sta
 12. **Divider** — hairline (border token), the default grouping device.
 
 Unusual-on-purpose choices: sharp (2px) corners instead of the SaaS pill radius; no drop shadows at rest anywhere; surfaces separated by hairlines and whitespace rather than elevation.
+
+### Lock levels
+
+Standard posture — the system is locked, the compositions are not:
+
+| Area | Level |
+|---|---|
+| Color tokens & strategy | locked |
+| Type scale & families | locked |
+| Spacing scale & breakpoints | locked |
+| Motion vocabulary (easing, durations) | locked |
+| Accessibility commitments | locked |
+| Anti-pattern bans (below) | always locked |
+| Composition within a screen | open |
+| Empty / error / loading state design | open |
+| Patterns not in Component primitives | open — flag as proposed |
+
+Open means invention is welcome — built from locked primitives, held to the interaction principles. When no component primitive fits, don't force one and don't invent silently: design from locked tokens and flag the result in the handoff as a **proposed pattern** — the gap it fills and what it's built from. A proposed pattern used in two real places gets promoted into Component primitives.
 
 ### UI Anti-patterns to avoid
 

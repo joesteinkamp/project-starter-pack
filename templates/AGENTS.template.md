@@ -13,12 +13,18 @@
 This repository's rules live in the brief files at the project root. This file does not
 duplicate them; it tells you which one to read **before** starting the matching kind of work:
 
-| Doing this? | Read this first |
-|---|---|
-| Building or changing **UI or UX** — layout, components, flows, states, motion | `DESIGN.md` (UX foundation + UI system), plus `DESIGN.json` for exact token values when present |
-| Writing **any user-facing words** — labels, buttons, errors, empty states, docs, marketing | `WRITING.md` (voice, terminology, microcopy, long-form) |
-| Making **product or brand decisions** — scope, positioning, personas, tone | `PRODUCT.md` (who it's for, why it exists, personality, anti-references) |
-| Writing **code** — stack, architecture, conventions, testing, performance, security | `CODE.md` |
+| Doing this? | Read this first | Skipping it means |
+|---|---|---|
+| Building or changing **UI or UX** — layout, components, flows, states, motion | `DESIGN.md` (UX foundation + UI system); `DESIGN.json` for exact token values | Inventing spacing, color, and patterns the system already fixed |
+| Writing **any user-facing words** — labels, buttons, errors, empty states, docs, marketing | `WRITING.md` (voice, terminology, microcopy, long-form) | Copy in generic AI voice, against terminology already chosen |
+| Making **product or brand decisions** — scope, positioning, personas, tone | `PRODUCT.md` (who it's for, why it exists, personality, anti-references) | Re-deciding scope and audience the product already settled |
+| Writing **code** — stack, architecture, conventions, testing, performance, security | `CODE.md` | Stack and architecture choices that contradict the repo |
+
+**Design and writing have a hard trigger:** read `DESIGN.md` before your first edit to a
+component, stylesheet, or token file, and `WRITING.md` before your first edit to any string a
+user will see — including a one-line tweak. Drift in these two is invisible; the output looks
+fine and is only wrong against a standard nobody re-reads. `CODE.md` needs no such trigger,
+because tests, lint, and review already catch stack and architecture divergence.
 
 Each brief carries its own **anti-pattern ban list embedded inline** — reading the file is
 also reading the bans. The bans are non-negotiable: if the user asks for one anyway, push back

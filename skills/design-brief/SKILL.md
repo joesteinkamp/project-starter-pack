@@ -37,7 +37,13 @@ Ask Q5–Q9 (UX) as free-form prompts. Ask one or two at a time. For user flows 
 
 ### Pass B1 — Structured
 
-Ask Q10–Q14 (UI) as structured questions.
+Ask Q9b (system source) first, as a structured question.
+
+- **`author`** → ask Q10–Q14b as structured questions, then continue to Pass B2.
+- **`adopt` / `adopt-and-extend`** → collect Q9b's open follow-up (system name and version, where
+  it lives, overrides, deliberately unused parts), then ask only Q14b (lock posture). Fill the
+  remaining UI slots as references to the adopted system plus the stated overrides — never a
+  restatement of its values. Skip Pass B2 except where an override needs detail.
 
 ### Pass B2 — Open follow-ups
 
@@ -55,7 +61,27 @@ Be direct. Don't soften.
 
 Apply the defaults table from `../../questionnaires/design.questions.md`. Mark defaulted lines with ` [default — confirm]`. Always pull the anti-pattern lists from `../../guardrails/design-anti-patterns.md` and `../../guardrails/ux-anti-patterns.md` into the relevant sections of the output — embedded inline, not just linked.
 
+## Lock levels rendering
+
+Render `{{LOCK_LEVELS}}` from Q14b's posture as a two-column Area / Level table (color tokens &
+strategy, type scale & families, spacing scale & breakpoints, motion vocabulary, accessibility
+commitments, anti-pattern bans, composition within a screen, empty/error/loading state design,
+patterns not in Component primitives), followed by the gap rule:
+
+> Open means invention is welcome — built from locked primitives, held to the interaction
+> principles. When no component primitive fits, don't force one and don't invent silently:
+> design from locked tokens and flag the result in the handoff as a **proposed pattern** — the
+> gap it fills and what it's built from. A proposed pattern used in two real places gets
+> promoted into Component primitives.
+
+The anti-pattern bans row reads `always locked` at every posture. On the adopt path, the table
+locks the adopted system wholesale and marks the overrides section as the open surface.
+
 ## DESIGN.json (optional tokens companion)
+
+On the `adopt` path, skip `DESIGN.json` — the adopted system's own token source is the
+machine-readable truth, and a copy of it would drift. On `adopt-and-extend`, offer it only if
+the overrides amount to a full core-token set; otherwise the overrides live in `DESIGN.md` alone.
 
 If the user provided concrete color/typography/spacing values, also populate `../../templates/DESIGN.tokens.template.json` and offer to write it to `DESIGN.json` at the project root. The filename matches the convention used by Impeccable so the two tools can share the file. If the user declined to specify tokens, skip the JSON file.
 

@@ -2,6 +2,125 @@
 
 AI-made changes to this repository: what changed and why.
 
+## 2026-08-01 — Claude Opus 5 (the router sells the read)
+
+**Ask:** After walking through how the generated `AGENTS.md` routes agents to one brief instead
+of loading all of them, Joe asked two questions: should the router carry stricter rules about
+reading those files, and should the routing table say more about each brief's value?
+
+**What changed:**
+
+- **The routing table gained a third column, "Skipping it means"** — each row now states the
+  cost of skipping (inventing values the system already fixed; generic AI voice against chosen
+  terminology; re-deciding settled scope; stack choices contradicting the repo) rather than only
+  naming the file's contents.
+- **A hard trigger for the design and writing rows only**, placed directly under the table: read
+  `DESIGN.md` before the first edit to a component, stylesheet, or token file, and `WRITING.md`
+  before the first edit to any user-visible string — including a one-line tweak. `CODE.md` is
+  explicitly carved out, because tests, lint, and review already catch stack and architecture
+  divergence.
+- **The "when in doubt, skim all four" hedge in Ground rules was left alone** — it stays as the
+  pressure valve.
+- Applied to `templates/AGENTS.template.md` and re-rendered into the `examples/saga-reader/AGENTS.md`
+  fixture. Router: 66 → 71 lines (template), 70 → 76 (example); still under 8% of the full brief
+  set. `./test.sh` green at 281 passed, no check retargeted — route checks match on filename and
+  the template↔example check compares headings, both untouched.
+
+**Why this approach:** the second column described *contents*, which the filename already
+implies; it never answered the question that actually gates the read — is this worth a tool call
+right now. Cost-of-skipping is the input a selective reader is missing. And the trigger is framed
+as a first *action* rather than a task category because self-classification is where routing
+fails in practice: a one-line color change doesn't feel like "building UI," so a category-shaped
+rule lets the agent reason its way out. The emphasis is uneven on purpose — skip-cost is
+asymmetric. Divergence from `CODE.md` gets caught by the toolchain; drift from `DESIGN.md` or
+`WRITING.md` produces output that looks fine and is only wrong against a standard nobody
+re-reads.
+
+**Considered and rejected:** *Blanket MUST/ALWAYS wording across all four rows* — strictness that
+nothing verifies is the same prompt-level assertion, louder, and it pushes agents toward the safe
+default of reading all four, which collapses routing back into the monolith it exists to avoid.
+*A `PreToolUse` hook on Edit/Write as actual enforcement* — the only real lever available, but
+Claude-only, so it trips the portability rule about one tool's experience diverging from the
+others'. *A new `validate` lens or Mode A pair for the trigger* — initially flagged as the
+follow-up where enforceable strictness belongs, then dropped on inspection: whether a file was
+read isn't visible in a diff, and the observable consequence (off-scale spacing, raw hex,
+off-voice copy) already falls under the existing UI/Design and Writing lenses. Nothing to add.
+
+## 2026-07-31 — Claude Fable 5 (extract generates a component registry)
+
+**Ask:** `extract` should create a `component-registry.json` when components exist, referenced
+from `DESIGN.md`, following the direction of Vercel Academy's shadcn-ui component-registry
+lesson.
+
+**What changed:**
+
+- **`extract` gained a conditional output**: when the scan finds a components directory, it also
+  writes `component-registry.json` at the project root in the shadcn registry format
+  (`$schema: https://ui.shadcn.com/schema/registry.json`) — one item per discovered component
+  with `name`, `type`, `description`, `files`, `dependencies`, `registryDependencies`.
+  Dependencies are read from imports, never guessed; a description the code can't support
+  becomes `TODO — describe`; the file must parse as JSON before writing.
+- **`DESIGN.md`'s `{{COMPONENTS}}` draft references it**: the section names the 8–12
+  *primitives* (the judgment call) and points at the registry as the full inventory, with a
+  regenerate-after-changes note. The brief says which components define the system; the
+  registry says which exist.
+- Being generated output, the registry is exempt from the reuse/merge/overwrite pre-flight —
+  regeneration is its update path. The extraction hints in `design.questions.md` and the
+  template's Component primitives comment both document the reference.
+
+**Why this approach:** the registry is evidence, so it belongs to the evidence-driven flow —
+`extract` can regenerate it from code, while the brief flows only declare intent. Splitting
+inventory (registry) from judgment (primitives) keeps `DESIGN.md` from becoming a hand-maintained
+component list that drifts.
+
+**Considered and rejected:** *a fixed-slot template for the registry* — variable-length
+generated content doesn't fit the slot ↔ question contract, so the skill carries the format spec
+inline. *Generating it from the design-brief flow* — greenfield has nothing to scan.
+*A `validate` drift check* (registry/primitives vs the components directory) — a real gap, but
+outside this ask's scope; noted as a candidate follow-up.
+
+## 2026-07-31 — Claude Fable 5 (lock levels and adopt-vs-author in the design brief)
+
+**Ask:** Joe brought a post arguing that an agent handed a design system has only two moves —
+follow it or break it — and that designers' third move (propose: hold the system and push it) is
+what current setups take away. Approved additions: a lock-levels section, and an adopt-vs-author
+fork so setup covers referencing an existing design system, not only authoring one.
+
+**What changed:**
+
+- **`DESIGN.template.md` gained two sections**: `System source` (`{{SYSTEM_SOURCE}}`) opening
+  the UI System half, and `Lock levels` (`{{LOCK_LEVELS}}`) directly above the anti-patterns so
+  locks and bans read together.
+- **`design.questions.md` gained two structured questions**: Q9b (author / adopt /
+  adopt-and-extend; the adopt paths collect the system's name, version, location, overrides, and
+  deliberately-unused parts) and Q14b (lock posture: tight / standard / loose). Both have
+  defaults (`author`ed, `standard`) so skipping them still renders a complete brief. Extraction
+  hints seed `{{SYSTEM_SOURCE}}` as `adopt` when a design-system package appears in the
+  manifest, and seed lock posture as `[default — confirm]` — code can't show intent.
+- **The design-brief skill branches Phase B on Q9b**: the adopt path skips value collection,
+  records pointer + overrides instead of restated values, skips `DESIGN.json` (the adopted
+  system's own token source is the machine-readable truth), and still asks lock posture. A
+  rendering section defines the locked/open table and the gap rule: when no primitive fits,
+  design from locked tokens and flag the result as a **proposed pattern**; two real uses promote
+  it into Component primitives.
+- **`design-anti-patterns.md`** states the bans are locked at every posture — an "open" area
+  never unlocks them. **`examples/saga-reader/DESIGN.md`** re-rendered with both sections filled
+  (authored, standard posture).
+
+**Why this approach:** the smallest surface that gives agents the third lane — one slot and one
+question per feature, with the posture question rendering a table rather than per-rule lock
+marks. Adopted systems are recorded as pointer + overrides on the same anti-drift principle as
+the `AGENTS.md` router: never copy content you can point at.
+
+**Considered and rejected:** *per-rule lock markers through the brief* — churns every slot,
+question, and the fixture. *Generating implementation artifacts* (`tokens.css`, Tailwind theme)
+— a second source of truth with no build step to keep it honest; deriving theme config from
+`DESIGN.json` is the coding agent's one-time job. *The post's `registry.md`, `proposals/`
+folder, and generative eval critic* — governance machinery beyond a starter's scope; the gap
+rule and the promotion sentence carry the intent at near-zero cost (the registry idea later
+returned, evidence-shaped, in the extract flow — see the entry above). *Restating an adopted
+system's values into the brief* — stale by the system's next release.
+
 ## 2026-07-28 — Claude Opus 5 (brief commands folded into `setup`'s scope option)
 
 **Ask:** execute `SETUP-OPTIONS-PLAN.md` — delete the three brief commands and make `setup` the

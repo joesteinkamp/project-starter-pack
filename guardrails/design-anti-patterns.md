@@ -1,6 +1,6 @@
 # Design Anti-patterns
 
-The visual-layer tells that an AI made it (or that a designer wasn't paying attention). The starter-pack treats these as banned by default.
+The visual-layer tells that an AI made it (or that a designer wasn't paying attention). The starter-pack treats these as banned by default. These bans are locked at every lock posture a brief chooses — an "open" area never unlocks them.
 
 ## Color
 
