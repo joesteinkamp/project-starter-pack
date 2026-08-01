@@ -2,6 +2,50 @@
 
 AI-made changes to this repository: what changed and why.
 
+## 2026-08-01 — Claude Opus 5 (the router sells the read)
+
+**Ask:** After walking through how the generated `AGENTS.md` routes agents to one brief instead
+of loading all of them, Joe asked two questions: should the router carry stricter rules about
+reading those files, and should the routing table say more about each brief's value?
+
+**What changed:**
+
+- **The routing table gained a third column, "Skipping it means"** — each row now states the
+  cost of skipping (inventing values the system already fixed; generic AI voice against chosen
+  terminology; re-deciding settled scope; stack choices contradicting the repo) rather than only
+  naming the file's contents.
+- **A hard trigger for the design and writing rows only**, placed directly under the table: read
+  `DESIGN.md` before the first edit to a component, stylesheet, or token file, and `WRITING.md`
+  before the first edit to any user-visible string — including a one-line tweak. `CODE.md` is
+  explicitly carved out, because tests, lint, and review already catch stack and architecture
+  divergence.
+- **The "when in doubt, skim all four" hedge in Ground rules was left alone** — it stays as the
+  pressure valve.
+- Applied to `templates/AGENTS.template.md` and re-rendered into the `examples/saga-reader/AGENTS.md`
+  fixture. Router: 66 → 71 lines (template), 70 → 76 (example); still under 8% of the full brief
+  set. `./test.sh` green at 281 passed, no check retargeted — route checks match on filename and
+  the template↔example check compares headings, both untouched.
+
+**Why this approach:** the second column described *contents*, which the filename already
+implies; it never answered the question that actually gates the read — is this worth a tool call
+right now. Cost-of-skipping is the input a selective reader is missing. And the trigger is framed
+as a first *action* rather than a task category because self-classification is where routing
+fails in practice: a one-line color change doesn't feel like "building UI," so a category-shaped
+rule lets the agent reason its way out. The emphasis is uneven on purpose — skip-cost is
+asymmetric. Divergence from `CODE.md` gets caught by the toolchain; drift from `DESIGN.md` or
+`WRITING.md` produces output that looks fine and is only wrong against a standard nobody
+re-reads.
+
+**Considered and rejected:** *Blanket MUST/ALWAYS wording across all four rows* — strictness that
+nothing verifies is the same prompt-level assertion, louder, and it pushes agents toward the safe
+default of reading all four, which collapses routing back into the monolith it exists to avoid.
+*A `PreToolUse` hook on Edit/Write as actual enforcement* — the only real lever available, but
+Claude-only, so it trips the portability rule about one tool's experience diverging from the
+others'. *A new `validate` lens or Mode A pair for the trigger* — initially flagged as the
+follow-up where enforceable strictness belongs, then dropped on inspection: whether a file was
+read isn't visible in a diff, and the observable consequence (off-scale spacing, raw hex,
+off-voice copy) already falls under the existing UI/Design and Writing lenses. Nothing to add.
+
 ## 2026-07-31 — Claude Fable 5 (extract generates a component registry)
 
 **Ask:** `extract` should create a `component-registry.json` when components exist, referenced
