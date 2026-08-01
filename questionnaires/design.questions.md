@@ -94,6 +94,23 @@ The `design-brief` skill walks the user through this question set. **UX question
 
 ### Pass 1 — Structured
 
+#### Q9b. System source
+
+> Are you authoring a visual system, or adopting one that already exists?
+
+- `author` — define it in this brief (continues with Q10–Q19)
+- `adopt` — an existing design system is the source of truth
+- `adopt-and-extend` — an existing system, plus deliberate overrides
+
+→ writes to `{{SYSTEM_SOURCE}}`. On `adopt` / `adopt-and-extend`, follow up
+open-form for: the system's name and version, where it lives (package, docs
+URL, token file path, design library), what this project overrides, and what
+it deliberately doesn't use. The remaining UI slots are then filled as
+references to the adopted system plus the stated overrides — never a
+restatement of its values, which would be stale by the system's next release.
+Skip Q10–Q14 and Q15–Q19 except where an override needs detail; always ask
+Q14b (lock posture).
+
 #### Q10. Color strategy
 
 > How saturated is the visual system?
@@ -153,6 +170,20 @@ exactly what the design system commits to, symmetrically in both directions.
 
 → writes to `{{MOTION}}`, and seeds the `DESIGN.json` motion tokens
 `{{MOTION_EASING}}`, `{{MOTION_FAST}}`, `{{MOTION_BASE}}`, `{{MOTION_SLOW}}`
+
+#### Q14b. Lock posture
+
+> When a coding agent builds UI from this brief, how much room does it have?
+
+- `tight` — everything locked; invention only through explicit proposals
+- `standard` — tokens, scales, motion vocabulary, and accessibility locked;
+  composition, empty states, and new patterns open
+- `loose` — only tokens and accessibility locked; everything else open
+
+→ writes to `{{LOCK_LEVELS}}` as a locked/open table plus the gap rule (the
+design-brief skill defines both). The anti-pattern bans are **always locked**,
+at every posture. If Q9b chose `adopt` / `adopt-and-extend`, the adopted
+system is locked wholesale and the overrides section is the open surface.
 
 ### Pass 2 — Open follow-ups (UI)
 
@@ -226,7 +257,9 @@ token slots `{{SPACING_UNIT}}`, `{{SPACING_SCALE}}`
 | `{{INTERACTION_PRINCIPLES}}` | Recognition over recall, undo over confirm, progressive disclosure, keyboard-first | `[default — confirm]` |
 | `{{ACCESSIBILITY_UX}}` | Inherit the WCAG level `PRODUCT.md` committed to (its own default is 2.2 AA — never restate a different level here), keyboard reachability, visible focus, prefers-reduced-motion, 8th-grade reading level | `[default — confirm]` |
 | `{{BREAKPOINTS}}` | Container-query-first; no named viewport breakpoints unless a layout genuinely changes shape | `[default — confirm]` |
+| `{{SYSTEM_SOURCE}}` | Authored in this brief — no external design system | `[default — confirm]` |
 | `{{COLOR_STRATEGY}}` | Restrained — neutrals + one accent | `[default — confirm]` |
+| `{{LOCK_LEVELS}}` | `standard` posture, rendered as the locked/open table + gap rule | `[default — confirm]` |
 | `{{MOTION}}` | expo-out easing, durations 120/200/320ms, prefers-reduced-motion respected, never animate layout | `[default — confirm]` |
 | `{{DESIGN_ANTI_PATTERNS}}` | Pull from `guardrails/design-anti-patterns.md` verbatim | always included |
 
@@ -252,6 +285,12 @@ When the `extract` flow runs against existing code: theme/token files and CSS se
 for OKLCH conversion); font imports and scale variables seed `{{TYPOGRAPHY}}` and the type tokens;
 spacing variables seed `{{SPACING_LAYOUT}}` and the spacing tokens; media/container queries seed
 `{{BREAKPOINTS}}`; transition tokens seed
-`{{MOTION}}`; the components directory seeds `{{COMPONENTS}}`; routes/nav seed
-`{{INFORMATION_ARCHITECTURE}}`. UX intent (`{{USER_FLOWS}}`, `{{USER_KNOWLEDGE}}`,
+`{{MOTION}}`; the components directory seeds `{{COMPONENTS}}` — and, when present, generates
+`component-registry.json` at the project root (shadcn registry format), which the
+`{{COMPONENTS}}` draft references as the full inventory; routes/nav seed
+`{{INFORMATION_ARCHITECTURE}}`. A design-system dependency in the manifest (a
+component or token package) seeds `{{SYSTEM_SOURCE}}` as `adopt` — with local
+theme files read as its overrides — otherwise `{{SYSTEM_SOURCE}}` is seeded as
+authored. `{{LOCK_LEVELS}}` is seeded at the `standard` posture as
+`[default — confirm]` — lock posture is intent, and code can't show intent. UX intent (`{{USER_FLOWS}}`, `{{USER_KNOWLEDGE}}`,
 `{{VISUAL_REGISTER}}`) is left as `[TODO — confirm]` — code shows *what*, not *why*.
