@@ -112,8 +112,8 @@ Populate `../../templates/AGENTS.template.md`:
   in any tool — reach one by name, or through `setup` with its scope word (Claude Code:
   `/starter:setup design`, plus `/starter:extract` and `/starter:validate`; Codex:
   `$<flow>`, which runs any skill directly; Cursor: `/starter-setup design`, or the skill
-  by name; Antigravity and anything else: plain language). Keep it under a dozen lines —
-  it is a pointer, not documentation.
+  by name; Antigravity: the skill by name; anything else: plain language). Keep it under a
+  dozen lines — it is a pointer, not documentation.
 
 Populate `../../templates/CLAUDE.template.md`:
 

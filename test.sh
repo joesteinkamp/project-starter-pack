@@ -636,7 +636,7 @@ for c in commands/*.md; do
   if [ -f "skills/$want/SKILL.md" ]; then
     ok "flow '$name' exists as skill '$want'"
   else
-    bad "command $name has no skill (expected skills/$want/SKILL.md) — unreachable in Codex"
+    bad "command $name has no skill (expected skills/$want/SKILL.md) — unreachable in Codex and Antigravity"
   fi
 done
 for d in skills/*/; do
@@ -792,6 +792,116 @@ if [ -x ./install.sh ]; then
   done
 else
   bad "install.sh is missing or not executable"
+fi
+
+# 10g-bis. Claude's command install, checked BEHAVIORALLY against a throwaway
+#      HOME. install.sh is a blast-radius file: a wrong edit here fails open —
+#      it reports "linked N command(s)" while linking the wrong paths, or churns
+#      a real user's ~/.claude on every run. Asserting on the filesystem is the
+#      only way to catch that; grepping the script would just re-state it.
+#
+#      The invocation must come out as /starter:<verb>, matching the plugin
+#      path exactly. Claude Code derives a command's name from its path, so the
+#      namespace is a DIRECTORY (commands/starter/setup.md -> /starter:setup),
+#      which is why this asserts on the nesting and not just on presence.
+if [ -x ./install.sh ]; then
+  TH="$(mktemp -d)"
+  mkdir -p "$TH/.claude"
+  if HOME="$TH" ./install.sh --yes claude >"$TH/out.log" 2>&1; then
+    nsdir="$TH/.claude/commands/starter"
+    missing=""; foreign=""
+    for c in commands/*.md; do
+      [ -e "$c" ] || continue
+      b="$(basename "$c")"; [ "$b" = README.md ] && continue
+      link="$nsdir/$b"
+      if [ ! -L "$link" ]; then
+        missing="$missing $b"
+      else
+        # Must resolve back into THIS checkout — a copy would go stale on pull,
+        # and a link to the generated Cursor port would install the wrong dialect.
+        tgt="$(readlink -f "$link" 2>/dev/null)"
+        [ "$tgt" = "$ROOT/$c" ] || foreign="$foreign $b->$tgt"
+      fi
+    done
+    [ -z "$missing" ] && ok "install.sh links every command into ~/.claude/commands/starter/" \
+                      || bad "install.sh (claude) never linked:$missing"
+    [ -z "$foreign" ] && ok "installed Claude commands resolve to the canonical commands/*.md" \
+                      || bad "installed Claude command points somewhere unexpected:$foreign"
+
+    # Idempotence: a second run must not churn what the first produced. This is
+    # the check that keeps `git pull && ./install.sh` from rewriting a user's
+    # config dir every time.
+    before="$(find "$TH/.claude" | sort | cksum)"
+    HOME="$TH" ./install.sh --yes claude >/dev/null 2>&1
+    after="$(find "$TH/.claude" | sort | cksum)"
+    [ "$before" = "$after" ] && ok "install.sh (claude) is idempotent" \
+                             || bad "install.sh (claude) changed ~/.claude on a second run"
+
+    # Uninstall must remove exactly ours and nothing else. (mkdir -p so this
+    # stands on its own: if the links above never landed, the foreign-file
+    # check should still report on its own terms, not cascade.)
+    mkdir -p "$nsdir"
+    printf 'mine\n' > "$nsdir/not-ours.md"
+    HOME="$TH" ./install.sh --uninstall claude >/dev/null 2>&1
+    left="$(find "$nsdir" -name '*.md' 2>/dev/null | grep -v 'not-ours.md' || true)"
+    [ -z "$left" ] && ok "install.sh --uninstall removes the Claude commands" \
+                   || bad "install.sh --uninstall left Claude commands behind: ${left//$'\n'/, }"
+    [ -f "$nsdir/not-ours.md" ] && ok "uninstall leaves a user's own file in the namespace dir" \
+                                || bad "install.sh --uninstall deleted a file it did not install"
+  else
+    bad "install.sh --yes claude failed against a temp HOME: $(tail -3 "$TH/out.log" 2>/dev/null | tr '\n' ' ')"
+  fi
+  rm -rf "$TH"
+else
+  bad "install.sh is missing or not executable (skipped the Claude command install checks)"
+fi
+
+# 10g-skills. Every target must actually receive the skills, checked against a
+#      throwaway HOME. "Skills are the engine" is the pack's central claim, and
+#      a target that silently installs nothing breaks it while every string-level
+#      check still passes — which is exactly how Antigravity spent releases
+#      documented as having "no skill surface" when it has a full one.
+#
+#      Each entry is: target | marker dir that means "this tool is installed" |
+#      skills dir it must populate, both relative to HOME.
+if [ -x ./install.sh ]; then
+  while IFS='|' read -r tgt marker sdir; do
+    [ -n "$tgt" ] || continue
+    TH="$(mktemp -d)"
+    mkdir -p "$TH/$marker"
+    if HOME="$TH" ./install.sh --yes "$tgt" >"$TH/out.log" 2>&1; then
+      missing=""
+      for d in skills/*/; do
+        s="$(basename "$d")"
+        link="$TH/$sdir/$s"
+        if [ ! -L "$link" ] || [ "$(readlink -f "$link" 2>/dev/null)" != "$ROOT/skills/$s" ]; then
+          missing="$missing $s"
+        fi
+      done
+      [ -z "$missing" ] && ok "install.sh ($tgt) links every skill into ~/$sdir" \
+                        || bad "install.sh ($tgt) never linked:$missing"
+    else
+      bad "install.sh --yes $tgt failed against a temp HOME: $(tail -3 "$TH/out.log" 2>/dev/null | tr '\n' ' ')"
+    fi
+    rm -rf "$TH"
+  done <<'TARGETS'
+claude|.claude|.claude/skills
+codex|.codex|.codex/skills
+cursor|.cursor|.cursor/skills
+antigravity|.gemini/antigravity-cli|.gemini/config/skills
+TARGETS
+fi
+
+# 10g-ter. The namespace install.sh uses and the syntax the CLAUDE template
+#      advertises are one string in two files. If they drift, every generated
+#      project tells the user to type a command that does not resolve.
+NS_IN_INSTALL="$(grep -oE '^NS="[a-z-]+"' install.sh | head -1 | sed 's/^NS="//; s/"$//')"
+if [ -z "$NS_IN_INSTALL" ]; then
+  bad "install.sh declares no NS= command namespace"
+elif grep -qF "/${NS_IN_INSTALL}:setup" templates/CLAUDE.template.md; then
+  ok "install.sh namespace '$NS_IN_INSTALL' matches the /${NS_IN_INSTALL}: syntax the CLAUDE template advertises"
+else
+  bad "install.sh installs commands as /${NS_IN_INSTALL}:<verb> but CLAUDE.template.md advertises something else"
 fi
 
 # 10h. The Gemini sunset is real: no template, no example render, no live target.

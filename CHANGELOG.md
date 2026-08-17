@@ -2,6 +2,63 @@
 
 AI-made changes to this repository: what changed and why.
 
+## 2026-08-17 — Claude Opus 5 (the installer reaches every tool's real surface)
+
+**Ask:** Joe asked whether the repo had an installer, then to run it — which surfaced that Claude
+Code got skills but no commands, reachable only by cloning the repo as a plugin. On reporting
+that, he corrected a second, larger error: "antigravity definitely has skills." It does. The pack
+had been calling it a tool with no skill or command surface and installing nothing for it.
+
+**What changed:**
+
+- **Claude commands now install.** `install.sh`'s `claude` target symlinks `commands/*.md` into
+  `~/.claude/commands/starter/`, so `/starter:setup`, `/starter:extract`, and `/starter:validate`
+  work without the plugin path. The files are linked unrendered — they are already in Claude's
+  dialect; `render-ports.sh` exists only because Cursor cannot read it.
+- **Antigravity is a real skill target.** `~/.gemini/config/skills/<name>`, symlinked like every
+  other tool. Its presence is keyed on *either* `~/.gemini/config` or `~/.gemini/antigravity-cli`,
+  because the customization root is created lazily and keying only on it would skip a genuine
+  install.
+- **The "no skill surface" claim was removed everywhere it had propagated** — `INSTALL.md`,
+  `README.md` (both tool tables; Antigravity's invocation column was six natural-language phrases,
+  now six skill names), `render-ports.sh`'s "why only Cursor" comment, `skills/setup/SKILL.md`
+  (so newly generated `AGENTS.md` files stop telling Antigravity users that plain language is
+  their only route), `templates/AGENTS.template.md`, and the `saga-reader` fixture.
+- **Behavioral installer tests.** `test.sh` runs the real installer against a throwaway `HOME`:
+  every skill lands as a symlink resolving into the checkout for all four targets; Claude's
+  commands land in the namespace dir, resolve to the canonical `commands/*.md`, survive a second
+  run unchanged, and uninstall without touching a file the installer did not create. Plus a
+  drift check binding `install.sh`'s `NS=` to the `/starter:` syntax `CLAUDE.template.md`
+  advertises. 287 → 291 passed, no check retargeted or relaxed.
+
+**Why this approach:** Claude's commands go in a `starter/` **subdirectory** because Claude Code
+derives a command's name from its path, making the invocation `/starter:setup` — byte-identical to
+what the plugin path produces. One tool must not have two invocations for the same flow depending
+on how it was installed. Both behaviors were verified empirically before anything was built on
+them: a throwaway `probe-ns/hello.md` resolved as `/probe-ns:hello`, and a probe skill dropped in
+`~/.gemini/config/skills/` activated under `agy -p` from its description alone. The new tests
+assert on the filesystem rather than grepping the scripts, because `install.sh` is a blast-radius
+file that fails open — every string-level check passed for the entire time Antigravity was
+installing nothing, which is precisely how the error survived two releases.
+
+**Considered and rejected:** *Flat `starter-<verb>.md` files for Claude*, mirroring Cursor's ports
+— deterministic across versions and needing no verification, but it yields `/starter-setup`,
+contradicting every `/starter:` string in `CLAUDE.template.md`, `README.md`, and `INSTALL.md`, and
+splitting one tool's invocation by install method. *A `skills.json` entry for Antigravity* pointing
+at the checkout's `skills/` dir — one file instead of six symlinks, and it would pick up new skills
+automatically, but it means merging into a user-owned JSON file with a fail-open merge and a
+messier uninstall, for no gain over the symlink pattern the other three already use. *Grep-based
+assertions on `install.sh`* — cheaper, but they only restate the script back to itself; the bug
+being fixed here is exactly the one that shape of check cannot see.
+
+**Supersedes** the Antigravity support added in *2026-07-27 (portability: four tools, one pack)*.
+That entry made Antigravity a target on the premise that reading `AGENTS.md` natively was its whole
+surface, and scoped `install.sh` to Claude, Codex, and Cursor accordingly. The new information is
+that Antigravity ships a full customization system — Rules, Skills, Plugins, Hooks, MCP — whose
+skills use the same `skills/<name>/SKILL.md` format and progressive disclosure as every other
+tool. What was true is that it has no *command* surface; the pack conflated that with having no
+surface at all. Its own bundled `agy-customizations` skill is the authoritative reference.
+
 ## 2026-08-01 — Claude Opus 5 (the router sells the read)
 
 **Ask:** After walking through how the generated `AGENTS.md` routes agents to one brief instead

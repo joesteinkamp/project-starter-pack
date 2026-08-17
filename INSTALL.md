@@ -25,27 +25,38 @@ destination is never replaced (the installer says so and moves on).
 
 | Tool | Installed | Invoke |
 |---|---|---|
-| **Claude Code** | `~/.claude/skills/<flow>` (symlink per skill) | by name, or `/starter:setup` / `/starter:extract` / `/starter:validate` if you use the plugin path below |
+| **Claude Code** | `~/.claude/skills/<flow>` and `~/.claude/commands/starter/<verb>.md` | `/starter:setup`, `/starter:extract`, `/starter:validate`, or any flow by name |
 | **Codex** | `~/.codex/skills/<flow>` | `$<flow>` — e.g. `$setup`, `$design-brief` |
 | **Cursor** | `~/.cursor/skills/<flow>` and `~/.cursor/commands/starter-<flow>.md` | `/starter-setup`, `/starter-extract`, `/starter-validate`, or any skill by name |
-| **Antigravity** | nothing — it has no skill or command surface | plain language: *"walk me through the product brief using the project-starter-pack questionnaire at `<path>`"* |
+| **Antigravity** | `~/.gemini/config/skills/<flow>` (symlink per skill) | by name, or plain language: *"walk me through the product brief"* |
 
 The command surface is three verbs — generate, seed, check. The three brief flows are skills only:
 run one through `setup` with a scope word (`/starter:setup design`) or ask for it by name. Codex and
 Antigravity are unaffected either way — neither ever had a command surface.
 
-Antigravity is still fully supported: it reads the generated `AGENTS.md` in your projects natively,
-and `install.sh` prints the exact phrasing to start a flow. The generated `AGENTS.md` also records
-the pack's path in its "Maintaining these files" section, so an agent can find it later
-without you.
+Antigravity's skills go in its **machine-global customization root**, `~/.gemini/config/` — one of
+its three discovery locations, and the only one that isn't per-workspace. The format is the same
+`skills/<name>/SKILL.md` every other tool uses, with the same progressive disclosure (only the name
+and description are in context until the flow is activated), so the pack's skills install verbatim.
+On top of that it reads the generated `AGENTS.md` in your projects natively, and that file records
+the pack's path in its "Maintaining these files" section — so plain language reaches the same flows
+even in a workspace where the skills aren't installed.
 
-The Cursor command files are **generated** from `commands/*.md` by `render-ports.sh`, which
-`install.sh` runs every time. Never hand-edit them — edit the canonical command and re-install.
+Claude's commands install into a `starter/` **subdirectory**, because Claude Code builds a
+command's name from its path — `~/.claude/commands/starter/setup.md` is `/starter:setup`. That is
+the same invocation the plugin path below produces, on purpose: one tool should not have two
+different invocations for the same flow depending on how it was installed. Cursor has no
+namespacing, so its ports stay flat, prefixed files (`/starter-setup`).
+
+Claude's command files are symlinked from `commands/*.md` unchanged — they are written in Claude's
+dialect. The Cursor ones are **generated** from those same files by `render-ports.sh`, which
+`install.sh` runs every time. Never hand-edit a port — edit the canonical command and re-install.
 
 ## Option 2 — Claude Code plugin (zero scripts)
 
-Claude-Code-only users can skip `install.sh` entirely and clone the repo as a plugin. This gets the
-`/starter:*` commands and the skills together:
+Claude-Code-only users can skip `install.sh` entirely and clone the repo as a plugin. It delivers
+the same `/starter:*` commands and skills, with no script run and no symlinks — and it can be
+scoped to a single project, which `install.sh` cannot:
 
 ```bash
 # this project only
@@ -60,8 +71,9 @@ git clone https://github.com/joesteinkamp/project-starter-pack.git ~/.claude/plu
 Then `/starter:setup` (optionally `/starter:setup product|design|code|all`), `/starter:extract`,
 and `/starter:validate` — plus every flow by name, as a skill.
 
-The two paths coexist, but there is no reason to run both for Claude Code — pick the plugin if
-Claude Code is the only tool you use, and `install.sh` if it isn't.
+The two paths coexist and now deliver the same surface, so there is no reason to run both. Pick the
+plugin for a project-scoped install or to avoid running a script; pick `install.sh` if you use any
+of the other three tools, or want one `git pull` to update them all.
 
 ## Optional — advisory hooks
 
@@ -80,13 +92,14 @@ Requires `jq`. See [`hooks/README.md`](./hooks/README.md).
 ## Verify
 
 In your AI tool, ask for the setup flow — `/starter:setup` in Claude Code, `$setup` in Codex,
-`/starter-setup` in Cursor, or "run the project starter pack setup" anywhere. You should see it ask
-what to run (everything, or one brief) before the intro.
+`/starter-setup` in Cursor, `setup` by name in Antigravity, or "run the project starter pack setup"
+anywhere. You should see it ask what to run (everything, or one brief) before the intro.
 
 If nothing happens, check that the symlink exists and resolves:
 
 ```bash
-ls -l ~/.codex/skills/setup      # should point into your checkout
+ls -l ~/.codex/skills/setup          # should point into your checkout
+ls -l ~/.gemini/config/skills/setup  # same, for Antigravity
 ```
 
 ## Update

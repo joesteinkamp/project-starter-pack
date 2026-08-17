@@ -8,16 +8,34 @@
 #
 # Targets:
 #   claude       ~/.claude/skills/<name>            (symlink per skill)
+#              + ~/.claude/commands/starter/<name>.md  (symlink per command)
 #   codex        ~/.codex/skills/<name>             (symlink per skill; invoke $<name>)
 #   cursor       ~/.cursor/skills/<name>            (symlink per skill)
 #              + ~/.cursor/commands/starter-<name>.md  (rendered ports, symlinked)
-#   antigravity  nothing to install — it reads the generated AGENTS.md natively
-#                and starts flows from natural language. Prints the pointer.
+#   antigravity  ~/.gemini/config/skills/<name>     (symlink per skill)
+#
+# Antigravity's customization root is ~/.gemini/config (the machine-global one of
+# its three discovery locations; the others are per-workspace). Skills live at
+# <root>/skills/<name>/SKILL.md in the same format every other tool uses, with
+# the same progressive disclosure — so the pack's six skills install verbatim.
+# It has no command surface, so there is nothing else to install for it.
 #
 # Everything is SYMLINKED, never copied: `git pull` in this checkout updates all
 # four tools at once. Re-running is idempotent. A target whose config directory
 # does not exist is skipped cleanly — installing a tool you don't have is not an
 # error.
+#
+# Why Claude commands go in a `starter/` SUBDIRECTORY and Cursor's are prefixed
+# files: Claude Code derives the command name from the path, joining a
+# subdirectory to the file as `/<dir>:<name>`. So commands/setup.md installed at
+# ~/.claude/commands/starter/setup.md is invoked `/starter:setup` — identical to
+# the plugin path below, which is the point. One tool must not have two
+# invocations for the same flow depending on how it was installed. Cursor has no
+# such namespacing, so its ports keep the flat `starter-` prefix.
+#
+# The commands are symlinked straight from commands/*.md with no rendering: they
+# are written in Claude's own dialect, and render-ports.sh exists only because
+# Cursor cannot read that dialect.
 #
 # Claude Code users who prefer the zero-script path can instead clone this repo
 # into ~/.claude/plugins/ and get the /starter:* commands plus the skills; see
@@ -26,8 +44,10 @@ set -euo pipefail
 
 DIR="$(cd "$(dirname "$0")" && pwd)"
 SKILLS="$DIR/skills"
+CMDS="$DIR/commands"
 PORTS="$DIR/commands/cursor"
 PREFIX="starter-"
+NS="starter"      # Claude command namespace dir -> /starter:<name>
 
 mode="install"
 assume_yes=0
@@ -44,6 +64,18 @@ done
 [ ${#targets[@]} -eq 0 ] && targets=(claude codex cursor antigravity)
 
 skill_names() { local d; for d in "$SKILLS"/*/; do [ -f "$d/SKILL.md" ] && basename "$d"; done; }
+
+# Canonical commands only: the top level of commands/, never the generated
+# cursor/ ports (a subdir, so the glob skips it) and never README.md.
+command_names() {
+  local f b
+  for f in "$CMDS"/*.md; do
+    [ -e "$f" ] || continue
+    b="$(basename "$f" .md)"
+    [ "$b" = "README" ] && continue
+    printf '%s\n' "$b"
+  done
+}
 
 # Is $1 a symlink that resolves into this checkout? Only those are ours to
 # replace or remove — a real directory or a link elsewhere is the user's.
@@ -88,6 +120,29 @@ install_skills() {  # $1 = tool label, $2 = tool config dir, $3 = skills dir
   echo "  $label: linked $n skill(s) -> $dest"
 }
 
+install_claude_commands() {
+  local base="$HOME/.claude" dest="$HOME/.claude/commands/$NS" n=0 c p
+  [ -d "$base" ] || return 0
+  if [ "$mode" = uninstall ]; then
+    for p in "$dest"/*.md; do [ -e "$p" ] || continue; unlink_one "$p" && n=$((n+1)); done
+    # Only ever removes the namespace dir, and only when empty — anything the
+    # user put in there keeps the dir alive.
+    rmdir "$dest" 2>/dev/null || true
+    echo "  claude: removed $n command(s) from $dest"
+    return 0
+  fi
+  mkdir -p "$dest"
+  # Prune ours for commands that no longer exist, before linking the current set.
+  for p in "$dest"/*.md; do
+    [ -e "$p" ] || continue
+    [ -e "$CMDS/$(basename "$p")" ] || unlink_one "$p"
+  done
+  while IFS= read -r c; do
+    link_one "$CMDS/$c.md" "$dest/$c.md"; n=$((n+1))
+  done < <(command_names)
+  echo "  claude: linked $n command(s) -> $dest  (invoke /$NS:setup)"
+}
+
 install_cursor_commands() {
   local base="$HOME/.cursor" dest="$HOME/.cursor/commands" n=0 p
   [ -d "$base" ] || return 0
@@ -113,18 +168,21 @@ install_cursor_commands() {
 }
 
 install_antigravity() {
-  if [ "$mode" = uninstall ]; then
-    echo "  antigravity: nothing was installed — nothing to remove"
+  # Antigravity is present if EITHER its CLI state dir or its customization root
+  # exists — the root is created lazily, so keying only on it would skip a real
+  # install on a machine that has never written a global customization.
+  local root="$HOME/.gemini/config"
+  if [ ! -d "$root" ] && [ ! -d "$HOME/.gemini/antigravity-cli" ]; then
+    echo "  antigravity: ~/.gemini not found — tool not installed here (skipped)"
     return 0
   fi
-  cat <<EOF
-  antigravity: nothing to install — it has no skill or command surface.
-    It reads the generated AGENTS.md in your projects natively, and starts a
-    flow from plain language. Point it at this checkout:
-      "walk me through the product brief using the project-starter-pack
-       questionnaire at $DIR"
-    Flows: setup · product-brief · design-brief · code-brief · validate · extract
+  [ "$mode" = install ] && mkdir -p "$root"
+  install_skills antigravity "$root" "$root/skills"
+  [ "$mode" = install ] && cat <<EOF
+    It also reads the generated AGENTS.md in your projects natively, so plain
+    language reaches the same flows without naming a skill.
 EOF
+  return 0
 }
 
 # --- run --------------------------------------------------------------------
@@ -139,7 +197,7 @@ fi
 echo "== project-starter-pack: $mode =="
 for t in "${targets[@]}"; do
   case "$t" in
-    claude)      install_skills claude "$HOME/.claude" "$HOME/.claude/skills" ;;
+    claude)      install_skills claude "$HOME/.claude" "$HOME/.claude/skills"; install_claude_commands ;;
     codex)       install_skills codex  "$HOME/.codex"  "$HOME/.codex/skills" ;;
     cursor)      install_skills cursor "$HOME/.cursor" "$HOME/.cursor/skills"; install_cursor_commands ;;
     antigravity) install_antigravity ;;
