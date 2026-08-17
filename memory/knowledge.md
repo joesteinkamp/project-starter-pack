@@ -43,3 +43,26 @@ in #15 were confirmed before being built on, cheaply:
 `~/.gemini/antigravity-cli/builtin/skills/agy-customizations/`, with `docs/skills.md`,
 `docs/plugins.md`, `docs/hooks.md`, `docs/json_configs.md`, and `docs/rules.md`. Read that before
 assuming anything about what Antigravity supports.
+
+## Frontmatter must be valid YAML, not YAML-ish (2026-08-17)
+
+A plain (unquoted) YAML scalar **cannot contain `": "`** — colon-space is the key/value separator,
+so `description: Guided setup. Scoped at the start: everything` is a syntax error, not a style
+quibble (`mapping values are not allowed in this context`).
+
+`skills/setup/SKILL.md` shipped exactly that. Claude Code, Codex, and Cursor all parsed it anyway.
+Antigravity rejected the file and dropped the skill **silently** — no error, no warning, no entry
+in the skill list. The pack's front-door flow was simply absent in one tool of four, and stayed
+that way from the moment Antigravity support merged until the next session happened to look at a
+real skill list. `test.sh` now fails on the pattern.
+
+**The generalizable rule:** the strictest parser in the target set decides what is portable.
+"Three of four tools accept it" is not evidence of correctness — it is three lenient parsers and
+one that follows the spec. When output feeds several tools, validate against the spec, not against
+whichever tool you happen to be running in.
+
+**And the testing lesson, which is the more expensive one:** a check that a file is *present* is
+not a check that it *works*. The installer tests written one session earlier asserted that
+symlinks landed in the right place, and passed the entire time the flagship skill was failing to
+load. For anything that another program has to parse, assert on the parse — ask the tool what it
+sees, do not ask the filesystem what was written. Both probes for that live in the entry above.

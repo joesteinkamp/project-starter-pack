@@ -75,6 +75,41 @@ The two paths coexist and now deliver the same surface, so there is no reason to
 plugin for a project-scoped install or to avoid running a script; pick `install.sh` if you use any
 of the other three tools, or want one `git pull` to update them all.
 
+## Option 3 — Antigravity plugin
+
+Antigravity has its own plugin system, and its CLI installs one straight from the repo URL:
+
+```bash
+agy plugin install https://github.com/joesteinkamp/project-starter-pack.git
+agy plugin list                          # confirm it imported
+agy plugin uninstall project-starter-pack
+```
+
+That clones into `~/.gemini/config/plugins/project-starter-pack/` and loads all six skills. The
+repo doubles as the plugin directory with no rearranging, because Antigravity expects a plugin's
+skills at `<plugin>/skills/<name>/SKILL.md` — the layout this repo already has. `plugin.json` at
+the root is the marker that declares it one.
+
+That manifest carries **only a name**, on purpose. Antigravity reads just `name` and `disabled`;
+every other field it might hold would be a second copy of what `.claude-plugin/plugin.json`
+already states, with nothing keeping the two in sync. `test.sh` binds the two names together.
+
+Worth knowing: `agy plugin install` also converts a *Claude* plugin. Pointed at a repo with no
+`plugin.json`, it reads `.claude-plugin/plugin.json` and writes the Antigravity manifest itself —
+so this path worked before the manifest was committed. It is committed anyway, so a fresh clone
+validates as a native Antigravity plugin instead of depending on a compatibility shim. The
+converter also turns `commands/*.md` into skills; harmless here, since those are thin wrappers
+that invoke the same-named skill.
+
+The plugin deliberately ships **no `rules/`**: rules in a plugin merge into the active rule set for
+every project, and this repo's `AGENTS.md` is about developing the pack, not using it. It ships no
+`hooks.json` either — the advisory hooks are opt-in by design and stay that way.
+
+Choose this over `install.sh` if Antigravity is the only tool you use, or you want the flows
+version-managed by its plugin manager. `install.sh` still wins if you use more than one tool, or
+want a `git pull` in one checkout to update them all. As with Claude, running both installs the
+same skills twice; there is no reason to.
+
 ## Optional — advisory hooks
 
 Warn-only nudges when an edit drifts from the design system or the writing rules. Opt-in, never
