@@ -728,6 +728,33 @@ else
   bad "commands/setup.md no longer contains \$ARGUMENTS — the 'setup product|design|code|all' fast path is unreachable"
 fi
 
+# 10c-yaml. Frontmatter must be VALID YAML, not merely YAML-ish. A plain
+#      (unquoted) scalar cannot contain ": " — that is the key/value separator,
+#      and a parser is entitled to reject the whole document.
+#
+#      This is not theoretical. `skills/setup/SKILL.md` shipped a description
+#      reading "Scoped at the start: everything (…)". Claude Code, Codex, and
+#      Cursor all tolerated it; Antigravity rejected the file and dropped the
+#      skill — SILENTLY, with no error and no entry in the skill list. The
+#      pack's front-door flow was simply absent in one tool of four, and nothing
+#      here noticed, because every other check reads the file as text.
+#
+#      Quote the value or reword it. Do not "fix" this check by allowing the
+#      pattern: the strictest parser in the set decides what is portable.
+yaml_bad=""
+for f in skills/*/SKILL.md commands/*.md; do
+  [ -e "$f" ] || continue
+  # Frontmatter only: everything between the first '---' and the next one.
+  hits="$(awk 'NR==1 && $0!="---"{exit} NR==1{next} /^---$/{exit} {print}' "$f" \
+          | grep -nE '^[A-Za-z_-]+:[[:space:]]+[^"'"'"'>|[{[:space:]].*:[[:space:]]' || true)"
+  [ -n "$hits" ] && yaml_bad="$yaml_bad $f"
+done
+if [ -n "$yaml_bad" ]; then
+  bad "unquoted frontmatter value contains ': ' (invalid YAML; Antigravity drops the file silently):$yaml_bad"
+else
+  ok "every skill/command frontmatter value is valid unquoted YAML (no bare ': ')"
+fi
+
 # 10d. Skills address shared resources relative to their own SKILL.md, so a skill
 #      dir symlinked alone into ~/.codex/skills still resolves them.
 for d in skills/*/; do
@@ -902,6 +929,32 @@ elif grep -qF "/${NS_IN_INSTALL}:setup" templates/CLAUDE.template.md; then
   ok "install.sh namespace '$NS_IN_INSTALL' matches the /${NS_IN_INSTALL}: syntax the CLAUDE template advertises"
 else
   bad "install.sh installs commands as /${NS_IN_INSTALL}:<verb> but CLAUDE.template.md advertises something else"
+fi
+
+# 10g-quater. Two plugin manifests, one identity. Claude reads
+#      .claude-plugin/plugin.json; Antigravity reads plugin.json at the root of
+#      the plugin dir (which is this repo root, since its skills/ layout already
+#      matches what Antigravity expects). Only the name has to agree — the
+#      Antigravity manifest is deliberately name-only, because every other field
+#      it could carry is a second copy of something Claude's manifest already
+#      states, and Antigravity reads none of them.
+if [ -f plugin.json ] && [ -f .claude-plugin/plugin.json ]; then
+  ag_name="$(jq -r '.name // empty' plugin.json 2>/dev/null)"
+  cc_name="$(jq -r '.name // empty' .claude-plugin/plugin.json 2>/dev/null)"
+  if [ -z "$ag_name" ]; then
+    bad "plugin.json has no name (Antigravity would fall back to the directory name)"
+  elif [ "$ag_name" = "$cc_name" ]; then
+    ok "plugin manifests agree on the name '$ag_name'"
+  else
+    bad "plugin name drift: plugin.json says '$ag_name', .claude-plugin/plugin.json says '$cc_name'"
+  fi
+  # Keep it name-only. Anything else is duplicated metadata that Antigravity
+  # does not read and nothing keeps in sync.
+  extra="$(jq -r 'keys - ["name","disabled"] | join(", ")' plugin.json 2>/dev/null)"
+  [ -z "$extra" ] && ok "plugin.json carries no duplicated metadata" \
+                  || bad "plugin.json carries fields Antigravity does not read and nothing syncs: $extra"
+else
+  bad "a plugin manifest is missing (need both plugin.json and .claude-plugin/plugin.json)"
 fi
 
 # 10h. The Gemini sunset is real: no template, no example render, no live target.

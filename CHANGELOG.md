@@ -2,6 +2,53 @@
 
 AI-made changes to this repository: what changed and why.
 
+## 2026-08-17 — Claude Opus 5 (Antigravity plugin path, and the YAML bug it exposed)
+
+**Ask:** Joe asked for the Antigravity plugin path — the gap flagged at the end of the previous
+session, the analogue of the Claude plugin: a zero-script install for Antigravity-only users.
+
+**What changed:**
+
+- **`plugin.json` at the repo root**, so the repo installs as a native Antigravity plugin:
+  `agy plugin install <repo-url>` clones it into `~/.gemini/config/plugins/` and loads all six
+  skills. Documented as `INSTALL.md` Option 3. No files were rearranged — Antigravity expects a
+  plugin's skills at `<plugin>/skills/<name>/SKILL.md`, which is the layout this repo already had,
+  so the plugin is a manifest and nothing else.
+- **Fixed `skills/setup/SKILL.md`.** Its description read `Scoped at the start: everything (…)`.
+  A plain YAML scalar cannot contain `": "` — that is the key/value separator — so this is a
+  syntax error, not a style question (`Psych::SyntaxError: mapping values are not allowed in this
+  context`). Claude Code, Codex, and Cursor all tolerate it. Antigravity rejects the file and drops
+  the skill **silently**: no error, no warning, no entry in the skill list.
+- **Two new checks.** `test.sh` now parses skill and command frontmatter and fails on any unquoted
+  value containing `": "`, and binds the two plugin manifests' names together. 291 → 294 passed,
+  no check retargeted or relaxed.
+
+**Why this approach:** the manifest carries **only a name**. Antigravity reads just `name` and
+`disabled`, so every other field it could hold would be a second copy of something
+`.claude-plugin/plugin.json` already states, with nothing keeping the two in sync — the check
+enforces that minimalism rather than trusting it. The YAML fix reworded rather than quoted, so all
+six skills stay stylistically identical (unquoted) and a test carries the guarantee instead of a
+convention nobody re-reads. The framing that generalizes: the strictest parser in the set decides
+what is portable, and "three of four tools accept it" is not evidence of correctness.
+
+**Considered and rejected:** *Shipping no manifest at all* — `agy plugin install` converts a
+**Claude** plugin, reading `.claude-plugin/plugin.json` and writing the Antigravity manifest
+itself, so this path already worked with zero repo changes. Rejected because that is a
+compatibility shim, not the documented native form; a fresh clone should validate as an
+Antigravity plugin on its own terms. *A full manifest mirroring Claude's* — duplicated metadata
+the tool never reads, and a drift surface for nothing. *Shipping `rules/` in the plugin* — plugin
+rules merge into the active rule set for every project, and this repo's `AGENTS.md` is about
+developing the pack, not using it; installing it would inject the generator's own instructions
+into unrelated work. *Shipping `hooks.json`* — the advisory hooks are opt-in by contract and a
+plugin that enables them silently breaks that.
+
+**This corrects the previous entry** (*the installer reaches every tool's real surface*, same
+day). The Antigravity support added there was missing `setup` — the pack's front door — from the
+moment it merged. The installer tests written alongside it asserted that symlinks landed, not that
+skills load, so nothing caught it. The bug surfaced only because building the plugin path meant
+looking at the actual skill list in the tool. A test that checks a file is *present* is not a test
+that it *works*.
+
 ## 2026-08-17 — Claude Opus 5 (the installer reaches every tool's real surface)
 
 **Ask:** Joe asked whether the repo had an installer, then to run it — which surfaced that Claude

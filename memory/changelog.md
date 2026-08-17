@@ -11,6 +11,19 @@ tracks edits to the governing docs listed in `AGENTS.md`.
 
 <!-- Entries appear below as the agent edits governing docs. -->
 
+## 2026-08-17 — `memory/knowledge.md`: YAML frontmatter validity
+
+Added "Frontmatter must be valid YAML, not YAML-ish". A `": "` in an unquoted description is a
+syntax error; Claude Code, Codex, and Cursor tolerated it while Antigravity silently dropped the
+`setup` skill, leaving the pack's front door missing in one tool of four from the moment
+Antigravity support merged.
+
+Recorded because two lessons generalize past this bug: the strictest parser in the target set
+decides what is portable ("three of four tools accept it" means three lenient parsers and one
+correct one), and a check that a file is *present* is not a check that it *works* — the installer
+tests from the session before asserted symlinks landed and passed the whole time the skill was
+failing to load.
+
 ## 2026-08-17 — `memory/knowledge.md`: first entry, on Antigravity's skills system
 
 Added "Antigravity has a full skills system" — where its skills live, its five customization

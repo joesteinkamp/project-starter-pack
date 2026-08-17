@@ -1,6 +1,6 @@
 ---
 name: setup
-description: Guided project setup — runs the starter-pack briefs, then wires up AGENTS.md and CLAUDE.md. Scoped at the start: everything (Product Brief, Design Brief with its WRITING.md companion, Technical Brief) or just the brief(s) the user picks. Use when the user wants to set up a new project, run the whole starter pack, go from an empty repo to a fully-instructed AI, or fill in a brief a set-up project is still missing. Triggers on "set up this project", "run the starter pack", "project setup flow", "set up the briefs", "starter setup", "onboard this repo".
+description: Guided project setup — runs the starter-pack briefs, then wires up AGENTS.md and CLAUDE.md. Scoped at the start to everything (Product Brief, Design Brief with its WRITING.md companion, Technical Brief) or just the brief(s) the user picks. Use when the user wants to set up a new project, run the whole starter pack, go from an empty repo to a fully-instructed AI, or fill in a brief a set-up project is still missing. Triggers on "set up this project", "run the starter pack", "project setup flow", "set up the briefs", "starter setup", "onboard this repo".
 ---
 
 # Setup Skill

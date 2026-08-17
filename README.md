@@ -146,7 +146,9 @@ running the flow to see the depth and voice each brief expects.
 ./install.sh --uninstall  # remove exactly what was installed
 ```
 
-See [INSTALL.md](./INSTALL.md) for per-tool detail and the Claude-plugin alternative.
+Or install it as a plugin instead, if you use only one tool — Claude Code (`git clone` into
+`~/.claude/plugins/`) or Antigravity (`agy plugin install <repo-url>`). See
+[INSTALL.md](./INSTALL.md) for per-tool detail and both plugin paths.
 
 ## Development
 
@@ -180,7 +182,9 @@ wiring and why enforcement stays advisory.
 .
 ├── install.sh                    # Multi-tool installer (symlinks; --uninstall reverses)
 ├── render-ports.sh               # Generates the Cursor command ports from commands/
-├── .claude-plugin/plugin.json    # Claude Code plugin manifest (the zero-script path)
+├── .claude-plugin/plugin.json    # Claude Code plugin manifest (its zero-script path)
+├── plugin.json                   # Antigravity plugin manifest (name only; its skills/ layout
+│                                 #   already matches, so the repo IS the plugin dir)
 ├── commands/                     # Slash command entry points — thin wrappers over skills
 ├── skills/                       # The flows themselves: one SKILL.md each, the source of truth
 ├── conventions/                  # Shared skill mechanics (how questions get asked per tool)
