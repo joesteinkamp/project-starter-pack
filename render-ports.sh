@@ -9,10 +9,11 @@
 # on every run). To change a command, edit commands/<name>.md and re-render. The
 # ports are gitignored: generated locally, never committed.
 #
-# Why only Cursor: Claude Code reads commands/ directly through the plugin
-# manifest; Codex has no command surface (it runs the skills as `$<name>`); and
-# Antigravity installs nothing at all. Cursor is the one tool that wants a
-# plain-markdown command file it cannot generate itself.
+# Why only Cursor: Claude Code reads commands/ directly — through the plugin
+# manifest, or from the symlinks install.sh puts in ~/.claude/commands/starter/;
+# either way it speaks this dialect natively. Codex and Antigravity have no
+# command surface at all (both run the skills by name). Cursor is the one tool
+# that wants a plain-markdown command file it cannot generate itself.
 #
 # Translation rules (canonical -> Cursor port):
 #   - frontmatter:  stripped. Cursor commands are plain markdown; `description`

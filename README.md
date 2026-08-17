@@ -35,35 +35,37 @@ project wired.
 | | Claude Code | Codex | Cursor | Antigravity |
 |---|---|---|---|---|
 | **Reads the output** | via `CLAUDE.md` (`@AGENTS.md`) | `AGENTS.md` natively | `AGENTS.md` natively | `AGENTS.md` natively |
-| **Runs the flows** | skills + `/starter:*` commands | skills (`$<flow>`) | skills + `/starter-*` commands | natural language |
+| **Runs the flows** | skills + `/starter:*` commands | skills (`$<flow>`) | skills + `/starter-*` commands | skills (by name) |
 | **Advisory hooks** | ✅ | ✅ | ✅ | ✅ |
 
-Skills are the portable engine — three of the four tools run them natively, and the fourth reaches
-the same flows through plain language. Commands are a convenience layer on top, and there are only
-three of them — `setup`, `extract`, `validate`: generate, seed, check. Which brief you want isn't a
-namespace, it's a question `setup` asks.
+Skills are the portable engine — **all four tools run them natively**, in the same
+`skills/<name>/SKILL.md` format with the same progressive disclosure. Commands are a convenience
+layer on top, they exist in only two of the four, and there are only three of them — `setup`,
+`extract`, `validate`: generate, seed, check. Which brief you want isn't a namespace, it's a
+question `setup` asks.
 
 ### Invoking a flow
 
 | Flow | Claude Code | Codex | Cursor | Antigravity |
 |---|---|---|---|---|
-| `setup` | `/starter:setup` | `$setup` | `/starter-setup` | "run the project starter pack setup" |
-| `product-brief` | `/starter:setup product` | `$product-brief` | `/starter-setup product` | "walk me through the product brief" |
-| `design-brief` | `/starter:setup design` | `$design-brief` | `/starter-setup design` | "walk me through the design brief" |
-| `code-brief` | `/starter:setup code` | `$code-brief` | `/starter-setup code` | "walk me through the technical brief" |
-| `validate` | `/starter:validate` | `$validate` | `/starter-validate` | "check the briefs for contradictions" |
-| `extract` | `/starter:extract` | `$extract` | `/starter-extract` | "extract briefs from this codebase" |
+| `setup` | `/starter:setup` | `$setup` | `/starter-setup` | `setup` |
+| `product-brief` | `/starter:setup product` | `$product-brief` | `/starter-setup product` | `product-brief` |
+| `design-brief` | `/starter:setup design` | `$design-brief` | `/starter-setup design` | `design-brief` |
+| `code-brief` | `/starter:setup code` | `$code-brief` | `/starter-setup code` | `code-brief` |
+| `validate` | `/starter:validate` | `$validate` | `/starter-validate` | `validate` |
+| `extract` | `/starter:extract` | `$extract` | `/starter-extract` | `extract` |
 
 `setup` takes a scope word — `product`, `design`, `code`, or `all`. Give it one and it runs only
 that brief; give it nothing and it asks which briefs to run, annotated with which already exist in
 the repo. Either way it ends with the `AGENTS.md` wire-up, so a single-brief run still leaves the
-router current. Codex has no command surface at all, so there `$product-brief` runs the skill
+router current. Neither Codex nor Antigravity has a command surface, so there a flow is named
 directly — which is why the three brief flows stay first-class skills with no command of their own.
 
 In every tool, describing the work in your own words also triggers the matching flow — "let's define
-the design system", "set up product context". The generated `AGENTS.md` carries a
-"Maintaining these files" section recording where the pack lives on disk, so an agent in a
-tool with no command surface can still find and run it.
+the design system", "set up product context". Skills are matched on their description, so this is
+the same mechanism as naming one, not a fallback. The generated `AGENTS.md` also carries a
+"Maintaining these files" section recording where the pack lives on disk, so an agent can find and
+run it even in a workspace where the skills aren't installed.
 
 ## The wire-up: AGENTS.md and CLAUDE.md
 

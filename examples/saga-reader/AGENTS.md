@@ -72,5 +72,6 @@ with its scope word (`product`, `design`, `code`, `all`).
 - **Claude Code** — `/starter:setup design`, plus `/starter:extract` and `/starter:validate`.
 - **Codex** — `$<flow>`, e.g. `$design-brief`; it runs any skill directly.
 - **Cursor** — `/starter-setup design`, or ask for the skill by name.
-- **Antigravity and anything else** — plain language works: "walk me through the design brief
+- **Antigravity** — ask for the skill by name, e.g. `design-brief`.
+- **Anything else** — plain language works: "walk me through the design brief
   using the project-starter-pack questionnaire at `~/code/project-starter-pack`".
