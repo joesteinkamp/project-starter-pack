@@ -11,6 +11,20 @@ tracks edits to the governing docs listed in `AGENTS.md`.
 
 <!-- Entries appear below as the agent edits governing docs. -->
 
+## 2026-08-17 — `memory/knowledge.md`: first entry, on Antigravity's skills system
+
+Added "Antigravity has a full skills system" — where its skills live, its five customization
+types, and the CLI probes that verify them. Written because the pack spent two releases asserting
+Antigravity had no skill surface and installing nothing for it (corrected in #15): the claim was
+wrong in `README.md`, `INSTALL.md`, `render-ports.sh`, `skills/setup/SKILL.md`, the `AGENTS.md`
+template, and the example fixture, while every `test.sh` check stayed green because all of them
+were string-level.
+
+The entry records the generalizable part, not just the fact: a claim about what a *tool* supports
+cannot be verified by grepping this repo, so probe the tool. It names the two one-line probes used
+(`agy -p`, `claude -p "/<dir>:<name>"`) and points at Antigravity's own bundled
+`agy-customizations` skill as the authority.
+
 ## 2026-07-30 — `AGENTS.md` and `CLAUDE.md` rewritten; pointer direction flipped
 
 `AGENTS.md` was a one-line stub pointing at `CLAUDE.md`, which carried all the content. That is
