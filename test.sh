@@ -1218,5 +1218,85 @@ else
 fi
 
 # ---------------------------------------------------------------------------
+section "13. Guardrail fixtures (false positives, not only misses)"
+# A grep-based linter dies of false positives. Every live detector ships a file
+# that must trip it and a file that must not, and check-guardrail-fixtures.sh
+# enforces both directions. The mutations below prove the checker actually
+# bites: broadening a regex until it swallows a clean fixture, and narrowing it
+# until it stops finding its own trips fixture, must BOTH fail.
+CGF=./check-guardrail-fixtures.sh
+if [ -f "$CGF" ] && command -v jq >/dev/null 2>&1; then
+  [ -x "$CGF" ] && ok "$CGF is executable" || bad "$CGF is not executable"
+  bash -n "$CGF" 2>/dev/null && ok "$CGF parses" || bad "$CGF has a syntax error"
+
+  if "$CGF" >/dev/null 2>&1; then
+    ok "every live detector passes its own fixtures"
+  else
+    bad "check-guardrail-fixtures.sh fails on the shipped fixtures"
+    "$CGF" 2>&1 | sed 's/^/      /' >&2
+  fi
+
+  # Every live detector must have both halves, with the extension its scope
+  # implies. Missing either is a failure, not a skip.
+  missing_fx=0
+  while IFS='|' read -r id scope; do
+    [ -n "$id" ] || continue
+    case "$scope" in style|tokens) fx=css ;; prose) fx=md ;; code) fx=ts ;; *) fx=txt ;; esac
+    for half in trips clean; do
+      [ -f "fixtures/guardrails/$id/$half.$fx" ] \
+        || { bad "$id has no fixtures/guardrails/$id/$half.$fx"; missing_fx=1; }
+    done
+  done < <(jq -r '
+    to_entries
+    | map(select(.value.kind == "regex" or .value.kind == "regexi" or .value.kind == "count"))
+    | sort_by(.key)[] | "\(.key)|\(.value.scope // "")"' guardrails/registry.json)
+  [ "$missing_fx" -eq 0 ] && ok "every live detector ships both a trips and a clean fixture"
+
+  fx_tmp="$(mktemp -d "${TMPDIR:-/tmp}/psp-fx.XXXXXX")"
+
+  # A detector missing its fixtures entirely must be reported, not skipped.
+  cp -r fixtures/guardrails "$fx_tmp/fx"
+  rm -rf "$fx_tmp/fx/DES-18"
+  if PSP_FIXTURES="$fx_tmp/fx" "$CGF" >/dev/null 2>&1; then
+    bad "checker passed a live detector with no fixtures at all"
+  else
+    ok "checker rejects: a live detector with no fixtures"
+  fi
+  rm -rf "$fx_tmp/fx"
+
+  # Broaden a regex until it swallows a clean fixture. DES-18's clean file
+  # holds `filter: blur(2px)`, which is blur but not glassmorphism.
+  jq '.["DES-18"].pattern = "blur"' guardrails/registry.json > "$fx_tmp/broad.json"
+  if PSP_REGISTRY="$fx_tmp/broad.json" "$CGF" >/dev/null 2>&1; then
+    bad "checker passed a regex broadened until it hits a clean fixture"
+  else
+    ok "checker rejects: a regex broadened onto a clean fixture (false positive)"
+  fi
+
+  # Narrow a regex until it no longer finds its own trips fixture.
+  jq '.["DES-18"].pattern = "backdrop-filter[[:space:]]*:[[:space:]]*saturate"' \
+    guardrails/registry.json > "$fx_tmp/narrow.json"
+  if PSP_REGISTRY="$fx_tmp/narrow.json" "$CGF" >/dev/null 2>&1; then
+    bad "checker passed a regex that no longer finds its own trips fixture"
+  else
+    ok "checker rejects: a regex narrowed off its own trips fixture (missed ban)"
+  fi
+
+  # A threshold raised above its trips fixture is the same failure for a count.
+  jq '.["WRT-23"].threshold = 99' guardrails/registry.json > "$fx_tmp/thr.json"
+  if PSP_REGISTRY="$fx_tmp/thr.json" "$CGF" >/dev/null 2>&1; then
+    bad "checker passed a count threshold raised past its own trips fixture"
+  else
+    ok "checker rejects: a count threshold raised past its trips fixture"
+  fi
+
+  rm -rf "$fx_tmp"
+  "$CGF" >/dev/null 2>&1 && ok "fixtures unchanged by the mutations above" \
+                         || bad "the mutations above leaked into the real fixtures"
+else
+  bad "check-guardrail-fixtures.sh is missing (or jq is absent) — detectors have no false-positive net"
+fi
+
+# ---------------------------------------------------------------------------
 printf '\n%d passed, %d failed\n' "$pass" "$fail"
 [ "$fail" -eq 0 ]

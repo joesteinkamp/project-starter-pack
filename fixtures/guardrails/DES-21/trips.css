@@ -1,0 +1,3 @@
+.a { transition: all 0.2s; }
+.b { transition: margin-top 0.2s ease; }
+.c { transition-property: width; }

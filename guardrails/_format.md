@@ -128,8 +128,8 @@ the action, not the restated ban: `animate transform/opacity instead`, not `don'
 1. Write the prose entry with the next free ID for that file.
 2. Add its sidecar row.
 3. Run `./build-guardrails.sh`.
-4. If it carries a live detector, add its fixtures (`fixtures/guardrails/<ID>/`) — a detector
-   without a clean fixture is how a linter dies of false positives.
+4. If it carries a live detector, add **both** fixtures (see below). This is not optional:
+   `check-guardrail-fixtures.sh` fails on a live detector missing either half.
 5. Run `./test.sh`.
 
 Nothing else is edited. No hook changes, no `test.sh` changes. That property is the point of this
@@ -137,3 +137,25 @@ format, and `test.sh` section 12 asserts it.
 
 **Adding or restructuring a guardrail needs the user's approval first** — see `AGENTS.md`,
 *When to ask the user*.
+
+## Fixtures
+
+A live detector (`regex`, `regexi`, or `count`) is incomplete without a pair of fixtures:
+
+```
+fixtures/guardrails/<ID>/trips.<ext>   must trip the detector
+fixtures/guardrails/<ID>/clean.<ext>   must not
+```
+
+The extension follows the scope: `style` and `tokens` take `.css`, `prose` takes `.md`, `code`
+takes `.ts`. `check-guardrail-fixtures.sh` enforces both directions, and additionally checks that
+no clean fixture trips **any** live detector of its scope — which is what catches a neighbouring
+regex quietly growing greedy.
+
+**The clean half is the one that matters.** A detector that misses a ban costs one missed nudge; a
+detector that fires on honest code costs the user's trust in every nudge, and they turn the hooks
+off. So the clean fixture should hold the near-misses that a careless regex would swallow: the id
+selector and the `href="#anchor"` that are not hex colours, the `transition: opacity` that is not a
+layout transition, the `filter: blur` that is not glassmorphism, the "robust" and "leverage" that
+`WRT-01` deliberately does not enforce. Write the near-miss you were tempted to match, then prove
+you don't.
