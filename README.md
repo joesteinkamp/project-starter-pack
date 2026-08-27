@@ -55,6 +55,9 @@ question `setup` asks.
 | `validate` | `/starter:validate` | `$validate` | `/starter-validate` | `validate` |
 | `extract` | `/starter:extract` | `$extract` | `/starter-extract` | `extract` |
 
+`validate` measures rather than estimates where it can: when the project has a `DESIGN.json`, it runs `scripts/validate-tokens.sh`, which computes the WCAG contrast of every meaningful token pair in every theme block the file ships and exits non-zero on a pair below its floor. The script needs only `jq` and can be run on its own:
+`scripts/validate-tokens.sh path/to/DESIGN.json`.
+
 `setup` takes a scope word — `product`, `design`, `code`, or `all`. Give it one and it runs only
 that brief; give it nothing and it asks which briefs to run, annotated with which already exist in
 the repo. Either way it ends with the `AGENTS.md` wire-up, so a single-brief run still leaves the

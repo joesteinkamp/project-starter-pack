@@ -759,7 +759,7 @@ fi
 #      dir symlinked alone into ~/.codex/skills still resolves them.
 for d in skills/*/; do
   sname="$(basename "$d")"
-  if strip_fences "${d}SKILL.md" | grep -qE '(^|[^./])`(questionnaires|templates|guardrails|conventions)/'; then
+  if strip_fences "${d}SKILL.md" | grep -qE '(^|[^./])`(questionnaires|templates|guardrails|conventions|scripts|fixtures)/'; then
     bad "skills/$sname references a resource without ../../ — breaks when the skill dir is installed alone"
   else
     ok "skills/$sname resolves resources relative to itself"
@@ -962,6 +962,90 @@ if [ -e templates/GEMINI.template.md ] || [ -e examples/saga-reader/GEMINI.md ];
   bad "a GEMINI file is still shipped — the Gemini CLI target was retired"
 else
   ok "no GEMINI template or example render (retired tool)"
+fi
+
+# ---------------------------------------------------------------------------
+section "11. Token contrast validator (measured, not estimated)"
+# skills/validate Mode A used to hand a language model an OKLCH-to-luminance
+# arithmetic problem. scripts/validate-tokens.sh does it instead, so these
+# checks assert the two things that matter: it PASSES the shipped fixture with
+# the right numbers, and it FAILS loudly when it should. A validator only ever
+# proven to pass is the failure mode being defended against here.
+VT=scripts/validate-tokens.sh
+if [ -f "$VT" ]; then
+  [ -x "$VT" ] && ok "$VT is executable" || bad "$VT is not executable"
+  bash -n "$VT" 2>/dev/null && ok "$VT parses" || bad "$VT has a syntax error"
+
+  # The skill must run it rather than doing the arithmetic itself.
+  if grep -qF 'scripts/validate-tokens.sh' skills/validate/SKILL.md; then
+    ok "skills/validate runs the contrast validator"
+  else
+    bad "skills/validate no longer runs $VT — Mode A is back to estimating contrast"
+  fi
+
+  if command -v jq >/dev/null 2>&1; then
+    EX=examples/saga-reader/DESIGN.json
+    vt_tmp="$(mktemp -d "${TMPDIR:-/tmp}/psp-vt.XXXXXX")"
+
+    # 1. The fixture passes, and checks BOTH theme blocks (10 pairs, not 5).
+    if out="$("$ROOT/$VT" "$ROOT/$EX" 2>&1)"; then
+      ok "validator passes on $EX"
+      pairs="$(printf '%s' "$out" | grep -c '^PASS')"
+      [ "$pairs" -eq 10 ] && ok "validator checked all 10 pairs (5 per theme block)" \
+                          || bad "validator checked $pairs pairs on $EX, expected 10"
+    else
+      bad "validator FAILS on the shipped fixture $EX — exit $?"
+    fi
+
+    # 2. A pair pushed below its floor exits 1 and names the pair AND its ratio.
+    jq '.color.borderStrong["$value"] = "oklch(0.78 0.010 75)"' "$ROOT/$EX" > "$vt_tmp/bad.json"
+    if out="$("$ROOT/$VT" "$vt_tmp/bad.json" 2>&1)"; then
+      bad "validator passed a borderStrong pair below the 3:1 floor"
+    else
+      code=$?
+      [ "$code" -eq 1 ] && ok "seeded contrast failure exits 1" \
+                        || bad "seeded contrast failure exited $code, expected 1"
+      printf '%s' "$out" | grep -q 'FAIL.*borderStrong/background' \
+        && ok "seeded failure names the failing pair" \
+        || bad "seeded failure does not name borderStrong/background"
+      printf '%s' "$out" | grep -qE 'borderStrong/background[[:space:]]+[0-9]+\.[0-9]+' \
+        && ok "seeded failure reports the measured ratio" \
+        || bad "seeded failure reports no ratio — a finding without evidence"
+    fi
+
+    # 3. A non-OKLCH value must ERROR, never be silently skipped. The
+    #    questionnaire's "use OKLCH" is model-enforced, so a hex CAN reach here.
+    jq '.themes.dark.color.muted["$value"] = "#8a8a8a"' "$ROOT/$EX" > "$vt_tmp/hex.json"
+    out="$("$ROOT/$VT" "$vt_tmp/hex.json" 2>&1)"; code=$?
+    [ "$code" -eq 2 ] && ok "unparseable token value exits 2" \
+                      || bad "hex token value exited $code, expected 2"
+    printf '%s' "$out" | grep -q 'ERROR.*dark' \
+      && ok "unparseable token is reported, not skipped" \
+      || bad "hex token value was skipped silently — 'all pass' would be a lie"
+
+    # 4. A missing token is an error too, for the same reason.
+    jq 'del(.color.accentForeground)' "$ROOT/$EX" > "$vt_tmp/miss.json"
+    "$ROOT/$VT" "$vt_tmp/miss.json" >/dev/null 2>&1; code=$?
+    [ "$code" -eq 2 ] && ok "missing token exits 2" \
+                      || bad "missing token exited $code, expected 2"
+
+    # 5. Single-theme systems delete `themes` entirely (per the design-brief
+    #    skill), so the validator must handle five pairs, not crash.
+    jq 'del(.themes)' "$ROOT/$EX" > "$vt_tmp/single.json"
+    if out="$("$ROOT/$VT" "$vt_tmp/single.json" 2>&1)"; then
+      [ "$(printf '%s' "$out" | grep -c '^PASS')" -eq 5 ] \
+        && ok "single-theme file checks 5 pairs" \
+        || bad "single-theme file did not check exactly 5 pairs"
+    else
+      bad "validator fails on a single-theme DESIGN.json"
+    fi
+
+    rm -rf "$vt_tmp"
+  else
+    echo "  (jq absent: validator behaviour checks skipped)"
+  fi
+else
+  bad "scripts/validate-tokens.sh is missing — Mode A has no way to measure contrast"
 fi
 
 # ---------------------------------------------------------------------------

@@ -64,7 +64,7 @@ Quiet editorial — closer to a well-set trade paperback or *Eye* magazine than 
 
 ### Color strategy
 
-**Strategy:** Restrained — warm paper neutrals plus a single terracotta accent (the bookmark ribbon), used on under 10% of any surface. Light default, true-dark companion. All values in OKLCH; no pure black or white.
+**Strategy:** Restrained — warm paper neutrals plus a single terracotta accent (the bookmark ribbon), used on under 10% of any surface. Light default, true-dark companion. All values in OKLCH; no pure black.
 
 | Token | Light (OKLCH) | Dark (OKLCH) | Role |
 |---|---|---|---|
@@ -142,7 +142,8 @@ Open means invention is welcome — built from locked primitives, held to the in
 **Color**
 
 - No purple gradients on dark backgrounds as an "AI/tech" default.
-- No pure black (`#000`) or pure white (`#FFF`) on body surfaces — OKLCH neutrals with warmth.
+- No pure black (`#000`) on body surfaces — OKLCH neutrals with warmth. Pure white is fine.
+- No raw hex in style files; colors come from the `DESIGN.json` OKLCH tokens.
 - No neon-on-black accent system.
 - No more than one decisive accent (Restrained = one accent on ≤10% of surface).
 - No gray text on colored backgrounds; contrast verified, not eyeballed.

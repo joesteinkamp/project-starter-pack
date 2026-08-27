@@ -2,10 +2,12 @@
 #
 # guard-design.sh — advisory PostToolUse hook (warn-only, never blocks).
 #
-# When DESIGN.json is present in the project, the design system is OKLCH-based
-# (see guardrails/design-anti-patterns.md: "No pure black/white" / "Use OKLCH").
-# Raw hex colors in style files are usually a slip back to the old palette, so
-# this nudges — it does not block. Exit is always 0.
+# When DESIGN.json is present in the project, the design system is OKLCH-based,
+# so a raw hex in a style file is usually a slip back to the old palette. This
+# enforces guardrails/design-anti-patterns.md: "No raw hex where a token system
+# applies". Note the neighbouring ban is "No pure black (#000)" only — the
+# registry permits pure white, so do not widen this to a black/white claim.
+# It nudges; it does not block. Exit is always 0.
 #
 # Wire it on the edit event of whichever tool you run (install-hooks.sh does it
 # for Claude Code, Codex, Cursor, and Antigravity). It reads the tool-call JSON

@@ -18,7 +18,7 @@ in; otherwise the guardrails embedded in the briefs are the enforcement.
 
 | Hook | Fires on | Nudge |
 |---|---|---|
-| `guard-design.sh` | an edit to a style/component file **when `DESIGN.json` exists** | raw hex colors where the OKLCH token system applies |
+| `guard-design.sh` | an edit to a style/component file **when `DESIGN.json` exists** | raw hex colors where the OKLCH token system applies ("No raw hex where a token system applies") |
 | `check-anti-patterns.sh` | an edit to a style/component file | a few high-signal `design-anti-patterns.md` bans: animating layout properties, `backdrop-filter: blur` (glassmorphism), gradient/clipped text |
 | `check-writing-slop.sh` | an edit to a prose file (`.md`, `.mdx`, `.txt`) | a few high-signal `writing-anti-patterns.md` bans: AI-flagship vocabulary ("delve", "tapestry", "paradigm shift"), empty framing phrases ("it's worth noting", "in conclusion"), em-dash clusters |
 
