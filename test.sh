@@ -431,29 +431,42 @@ if [ -d hooks ]; then
       bad "wired hook hooks/$s does not exist"
     fi
   done
-  # Guardrail ↔ hook linkage, both directions.
-  DG=guardrails/design-anti-patterns.md
-  WG=guardrails/writing-anti-patterns.md
-  check_link() { # TERM GUARDRAIL HOOK_FILE PATTERN
-    local term="$1" guard="$2" hook="$3" pattern="$4"
-    if grep -qiF "$term" "$guard"; then
-      ok "$(basename "$guard" .md) still covers: $term"
+  # Guardrail <-> hook linkage, both directions. This used to be seven
+  # hand-written check_link pairs greping the prose for a term and the hook for
+  # a pattern. Both sides are now generated: build-guardrails.sh compiles the
+  # prose + sidecars into registry.json and refuses to emit a ban whose ID is
+  # missing on either side, and the hooks read that registry instead of
+  # hardcoding. So the contract holds for EVERY ban rather than seven, and what
+  # is left to check here is that the generated artifact is current and that
+  # the hooks actually consult it.
+  if command -v jq >/dev/null 2>&1; then
+    if [ -f guardrails/registry.json ]; then
+      ok "guardrails/registry.json is committed (hooks read it at edit time, where no build runs)"
+      if "$ROOT/build-guardrails.sh" --check >/dev/null 2>&1; then
+        ok "registry.json is in sync with the guardrail sources"
+      else
+        bad "registry.json is stale — run ./build-guardrails.sh and commit the result"
+      fi
+      # Every live detector must belong to a scope some hook actually runs.
+      orphan="$(jq -r '
+        to_entries
+        | map(select((.value.kind|test("^(regex|regexi|count)$"))
+                     and ((.value.scope // "") | test("^(style|tokens|prose)$") | not)))
+        | map(.key) | join(", ")' guardrails/registry.json)"
+      [ -z "$orphan" ] && ok "every live detector has a hook that runs its scope" \
+                       || bad "live detector(s) in a scope no hook runs: $orphan"
+      # Each of the three hooks must delegate to the registry, not hardcode.
+      for hk in check-anti-patterns check-writing-slop guard-design; do
+        if grep -qF 'hook_check_scope' "hooks/$hk.sh"; then
+          ok "hooks/$hk.sh reads the registry"
+        else
+          bad "hooks/$hk.sh no longer reads the registry — bans are hardcoded again"
+        fi
+      done
     else
-      bad "a hook keys on '$term' but $(basename "$guard") no longer mentions it"
+      bad "guardrails/registry.json is missing — run ./build-guardrails.sh"
     fi
-    if grep -qF "$pattern" "$hook"; then
-      ok "$(basename "$hook") still checks: $pattern"
-    else
-      bad "$(basename "$guard") bans '$term' but $(basename "$hook") no longer greps for '$pattern'"
-    fi
-  }
-  check_link "layout properties" "$DG" hooks/check-anti-patterns.sh "transition"
-  check_link "glassmorphism"     "$DG" hooks/check-anti-patterns.sh "backdrop-filter"
-  check_link "gradient text"     "$DG" hooks/check-anti-patterns.sh "background-clip"
-  check_link "OKLCH"             "$DG" hooks/guard-design.sh        "OKLCH"
-  check_link "delve"             "$WG" hooks/check-writing-slop.sh  "delve"
-  check_link "worth noting"      "$WG" hooks/check-writing-slop.sh  "worth noting"
-  check_link "em-dash clusters"  "$WG" hooks/check-writing-slop.sh  "—"
+  fi
   # Behavioral fixtures — the install lifecycle and the hooks' pattern matching
   # are exercised for real, not just parsed. The installer's worst historical
   # defects (false success, deleting user hooks, destroying the backup) live
@@ -1046,6 +1059,162 @@ if [ -f "$VT" ]; then
   fi
 else
   bad "scripts/validate-tokens.sh is missing — Mode A has no way to measure contrast"
+fi
+
+# ---------------------------------------------------------------------------
+section "12. Guardrail registry (prose is the source, detectors are generated)"
+# The point of the registry is that adding a ban to the prose arms its detector
+# in the same edit. These checks assert that property directly, plus every way
+# build-guardrails.sh is supposed to refuse to emit a registry. A generator
+# that only ever succeeds is how a stale artifact ships.
+BG=./build-guardrails.sh
+if [ -f "$BG" ] && command -v jq >/dev/null 2>&1; then
+  [ -x "$BG" ] && ok "$BG is executable" || bad "$BG is not executable"
+  bash -n "$BG" 2>/dev/null && ok "$BG parses" || bad "$BG has a syntax error"
+  [ -f guardrails/_format.md ] && ok "guardrails/_format.md states the contract" \
+                               || bad "guardrails/_format.md is missing"
+
+  # Every prose registry has a sidecar, and every ban in one appears in the other.
+  # (The generator enforces this; this asserts the FILES exist so a missing
+  # sidecar is caught as a missing file rather than an empty parse.)
+  for g in guardrails/*-anti-patterns.md; do
+    sc="${g%.md}.detect.md"
+    [ -f "$sc" ] && ok "$(basename "$g") has its detector sidecar" \
+                 || bad "$(basename "$g") has no $(basename "$sc")"
+  done
+
+  # IDs are the join key and are immutable: every ban must carry one.
+  missing=0
+  for g in guardrails/*-anti-patterns.md; do
+    while IFS= read -r ln; do
+      case "$ln" in
+        '- **'*)  printf '%s' "$ln" | grep -qE '^- \*\*\([A-Z]+-[0-9]+\)' || { bad "un-IDed ban in $(basename "$g"): ${ln:0:60}"; missing=1; } ;;
+        '## '*)   case "$ln" in
+                    '## '[A-Z]*-[0-9]*' — '*) ;;
+                    *) printf '%s' "$ln" | grep -qE '^## [0-9]+\.' && { bad "un-IDed ban in $(basename "$g"): $ln"; missing=1; } ;;
+                  esac ;;
+      esac
+    done < "$g"
+  done
+  [ "$missing" -eq 0 ] && ok "every ban in every registry carries an ID"
+
+  # Every probe below runs against a COPY of guardrails/, via
+  # PSP_GUARDRAILS_DIR. The live tree is never mutated, so an interrupted run
+  # cannot leave a half-applied probe behind in a tracked file.
+  gr_tmp="$(mktemp -d "${TMPDIR:-/tmp}/psp-gr.XXXXXX")"
+  cp -r guardrails "$gr_tmp/work"
+  GW="$gr_tmp/work"
+
+  # --- the property the whole design exists for -----------------------------
+  # A new ban with a detect: field must be enforced by the hook with NO other
+  # edit: no hook change, no test.sh change. Add one, rebuild, and prove the
+  # hook warns on a file that trips it.
+  printf '%s\n' '- **(WRT-99) No test-only sentinel ban.** Added by test.sh, never committed.' \
+    >> "$GW/writing-anti-patterns.md"
+  printf '%s\n' '| WRT-99 | certain | prose | regexi:`zzsentinelzz` | remove the sentinel |' \
+    >> "$GW/writing-anti-patterns.detect.md"
+  if PSP_GUARDRAILS_DIR="$GW" "$BG" >/dev/null 2>&1; then
+    ok "a new ban + sidecar row regenerates the registry"
+    # Swap the live registry for the probe one just long enough to prove the
+    # hook picks up a ban nobody taught it about, then put the real one back.
+    cp guardrails/registry.json "$gr_tmp/registry.live"
+    cp "$GW/registry.json" guardrails/registry.json
+    printf 'this line contains ZZSENTINELZZ and nothing else.\n' > "$gr_tmp/probe.md"
+    out="$(printf '{"tool_input":{"file_path":"%s"}}' "$gr_tmp/probe.md" \
+           | HOOK_PLATFORM=claude "$ROOT/hooks/check-writing-slop.sh" 2>&1)"
+    cp "$gr_tmp/registry.live" guardrails/registry.json
+    printf '%s' "$out" | grep -q 'WRT-99' \
+      && ok "the new ban is enforced by the hook with no other edit" \
+      || bad "a new ban with a detect: field did NOT reach the hook — the registry is not wired"
+  else
+    bad "adding a well-formed ban broke the generator"
+  fi
+  # Reset the working copy for the rejection probes below.
+  rm -rf "$GW"; cp -r guardrails "$GW"
+
+  # A backslash in a pattern must survive the registry -> hook handoff. jq's
+  # @tsv escapes it, which silently disables the detector; this is that guard.
+  printf 'we delve into it.\n' > "$gr_tmp/bs.md"
+  out="$(printf '{"tool_input":{"file_path":"%s"}}' "$gr_tmp/bs.md" \
+         | HOOK_PLATFORM=claude "$ROOT/hooks/check-writing-slop.sh" 2>&1)"
+  printf '%s' "$out" | grep -q 'WRT-01' \
+    && ok "a pattern containing \\b survives the registry handoff" \
+    || bad "a \\b-bearing pattern did not fire — the registry handoff is escaping backslashes"
+
+  # A clean file must stay silent. The words WRT-01 deliberately excludes are
+  # the test: 'robust'/'leverage' are honest in tech docs (a scoped call).
+  printf 'A robust system that leverages seamless caching. We utilize it.\n' > "$gr_tmp/clean.md"
+  out="$(printf '{"tool_input":{"file_path":"%s"}}' "$gr_tmp/clean.md" \
+         | HOOK_PLATFORM=claude "$ROOT/hooks/check-writing-slop.sh" 2>&1)"
+  [ -z "$out" ] && ok "hook stays silent on a clean file (no false positives)" \
+                || bad "hook fired on a clean file: $out"
+
+  # --- the generator must refuse, loudly, on each malformed input ------------
+  probe_reject() {  # $1 = label, $2 = sed expr, $3 = basename under $GW
+    cp "$GW/$3" "$gr_tmp/one.bak"; sed -i "$2" "$GW/$3"
+    if PSP_GUARDRAILS_DIR="$GW" "$BG" >/dev/null 2>&1; then
+      bad "generator accepted: $1"
+    else
+      ok "generator rejects: $1"
+    fi
+    cp "$gr_tmp/one.bak" "$GW/$3"
+  }
+  probe_reject "a duplicate ID"            's/^## UX-05 —/## UX-04 —/'                      ux-anti-patterns.md
+  probe_reject "a ban with no sidecar row" '/^| CODE-07 |/d'                                 code-anti-patterns.detect.md
+  probe_reject "a sidecar row with no ban" '/^## PRD-08 —/d'                                 product-anti-patterns.md
+  probe_reject "an invalid confidence"     's/^| WRT-02 | scoped |/| WRT-02 | maybe |/'      writing-anti-patterns.detect.md
+  probe_reject "an invalid scope"          's/^| WRT-02 | scoped | prose |/| WRT-02 | scoped | pixels |/' writing-anti-patterns.detect.md
+  probe_reject "an unknown detect kind"    's/| DES-14 | — | — | manual |/| DES-14 | — | — | vibes |/'     design-anti-patterns.detect.md
+  probe_reject "a live detector with no fix" 's/| use deliberately or not at all  |/| —  |/'              design-anti-patterns.detect.md
+  probe_reject "a manual ban with a confidence" 's/| DES-14 | — | — |/| DES-14 | certain | — |/'          design-anti-patterns.detect.md
+  probe_reject "an invalid regex"          's/backdrop-filter\[\[:space:\]\]\*:\[\[:space:\]\]\*blur/backdrop-filter(unclosed/' design-anti-patterns.detect.md
+  probe_reject "a non-numeric count"       's/count:5:/count:many:/'                         writing-anti-patterns.detect.md
+
+  "$BG" --check >/dev/null 2>&1 \
+    && ok "the live guardrails were never touched by the probes above" \
+    || bad "a probe leaked into the live guardrails — registry.json no longer matches the sources"
+  rm -rf "$gr_tmp"
+
+  # --- the fixture cites real bans, and drops none --------------------------
+  # This is the check that was missing. examples/saga-reader/DESIGN.md shipped
+  # a ban on pure white that design-anti-patterns.md explicitly permits, and
+  # the suite stayed green because nothing bound a rendered ban to its source.
+  # IDs are that binding.
+  example_ids() {
+    grep -rohE '(PRD|UX|DES|WRT|CODE)-[0-9]+(–[0-9]+)?' examples/ 2>/dev/null | while read -r tok; do
+      case "$tok" in
+        *–*) pfx="${tok%%-*}"; rng="${tok#*-}"
+             lo="${rng%%–*}"; hi="${rng##*–}"
+             n="$((10#$lo))"
+             while [ "$n" -le "$((10#$hi))" ]; do printf '%s-%02d\n' "$pfx" "$n"; n=$((n + 1)); done ;;
+        *)   printf '%s\n' "$tok" ;;
+      esac
+    done | sort -u
+  }
+  cited="$(example_ids)"
+  known="$(jq -r 'keys[]' guardrails/registry.json | sort -u)"
+
+  unknown="$(comm -23 <(printf '%s\n' "$cited") <(printf '%s\n' "$known") | tr '\n' ' ')"
+  [ -z "$(printf '%s' "$unknown" | tr -d '[:space:]')" ] \
+    && ok "every guardrail ID cited in examples/ is a real ban" \
+    || bad "examples/ cite ID(s) that are not in the registry: $unknown"
+
+  # Completeness, for the registries the briefs render as a full list. UX is
+  # excluded on purpose: the design-brief weaves ux-anti-patterns into DESIGN.md
+  # prose rather than rendering the list (same reason test.sh section 4 exempts
+  # it from the slot check), so only a subset is ever cited.
+  for pfx in PRD CODE DES WRT; do
+    want="$(printf '%s\n' "$known" | grep -E "^$pfx-" | sort -u)"
+    got="$(printf '%s\n' "$cited"  | grep -E "^$pfx-" | sort -u)"
+    dropped="$(comm -23 <(printf '%s\n' "$want") <(printf '%s\n' "$got") | tr '\n' ' ')"
+    if [ -z "$(printf '%s' "$dropped" | tr -d '[:space:]')" ]; then
+      ok "the example renders every $pfx ban ($(printf '%s\n' "$want" | grep -c . ) of them)"
+    else
+      bad "the example render dropped $pfx ban(s): $dropped"
+    fi
+  done
+else
+  bad "build-guardrails.sh is missing (or jq is absent) — the registry cannot be generated"
 fi
 
 # ---------------------------------------------------------------------------

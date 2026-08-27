@@ -1,0 +1,566 @@
+{
+  "CODE-01": {
+    "file": "code-anti-patterns.md",
+    "kind": "manual",
+    "name": "Premature abstraction"
+  },
+  "CODE-02": {
+    "confidence": "certain",
+    "file": "code-anti-patterns.md",
+    "kind": "unwritten",
+    "name": "Half-finished implementations",
+    "scope": "code"
+  },
+  "CODE-03": {
+    "file": "code-anti-patterns.md",
+    "kind": "manual",
+    "name": "Defensive over trust"
+  },
+  "CODE-04": {
+    "file": "code-anti-patterns.md",
+    "kind": "manual",
+    "name": "Comment-as-rename-substitute"
+  },
+  "CODE-05": {
+    "file": "code-anti-patterns.md",
+    "kind": "manual",
+    "name": "Dead code kept \"in case\""
+  },
+  "CODE-06": {
+    "confidence": "scoped",
+    "file": "code-anti-patterns.md",
+    "kind": "unwritten",
+    "name": "Backward-compat shims for code you control",
+    "scope": "code"
+  },
+  "CODE-07": {
+    "confidence": "certain",
+    "file": "code-anti-patterns.md",
+    "kind": "unwritten",
+    "name": "Over-eager error handling",
+    "scope": "code"
+  },
+  "CODE-08": {
+    "file": "code-anti-patterns.md",
+    "kind": "manual",
+    "name": "State machines disguised as booleans"
+  },
+  "CODE-09": {
+    "confidence": "scoped",
+    "file": "code-anti-patterns.md",
+    "kind": "unwritten",
+    "name": "Test-by-implementation",
+    "scope": "code"
+  },
+  "CODE-10": {
+    "confidence": "scoped",
+    "file": "code-anti-patterns.md",
+    "kind": "unwritten",
+    "name": "Snapshot tests as a primary signal",
+    "scope": "code"
+  },
+  "CODE-11": {
+    "confidence": "certain",
+    "file": "code-anti-patterns.md",
+    "kind": "unwritten",
+    "name": "\"Utility files\" that grow forever",
+    "scope": "code"
+  },
+  "CODE-12": {
+    "confidence": "certain",
+    "file": "code-anti-patterns.md",
+    "kind": "unwritten",
+    "name": "Silent type widening",
+    "scope": "code"
+  },
+  "CODE-13": {
+    "confidence": "certain",
+    "file": "code-anti-patterns.md",
+    "kind": "unwritten",
+    "name": "Magic timing",
+    "scope": "code"
+  },
+  "CODE-14": {
+    "confidence": "certain",
+    "file": "code-anti-patterns.md",
+    "kind": "unwritten",
+    "name": "Bypassing safety as a shortcut",
+    "scope": "code"
+  },
+  "DES-01": {
+    "confidence": "scoped",
+    "file": "design-anti-patterns.md",
+    "kind": "unwritten",
+    "name": "No purple gradients on dark backgrounds",
+    "scope": "style"
+  },
+  "DES-02": {
+    "confidence": "certain",
+    "file": "design-anti-patterns.md",
+    "kind": "unwritten",
+    "name": "No pure black (#000)",
+    "scope": "tokens"
+  },
+  "DES-03": {
+    "confidence": "certain",
+    "file": "design-anti-patterns.md",
+    "fix": "use the OKLCH tokens from DESIGN.json",
+    "kind": "regex",
+    "name": "No raw hex where a token system applies.",
+    "pattern": ":[[:space:]]*[^;{}]*#([0-9a-fA-F]{8}|[0-9a-fA-F]{6}|[0-9a-fA-F]{3,4})\\b",
+    "scope": "tokens"
+  },
+  "DES-04": {
+    "file": "design-anti-patterns.md",
+    "kind": "token",
+    "name": "No neon-on-black"
+  },
+  "DES-05": {
+    "file": "design-anti-patterns.md",
+    "kind": "token",
+    "name": "No more than one decisive accent."
+  },
+  "DES-06": {
+    "file": "design-anti-patterns.md",
+    "kind": "token",
+    "name": "No gray text on colored backgrounds."
+  },
+  "DES-07": {
+    "file": "design-anti-patterns.md",
+    "kind": "token",
+    "name": "No system-default-only stacks"
+  },
+  "DES-08": {
+    "confidence": "certain",
+    "file": "design-anti-patterns.md",
+    "kind": "unwritten",
+    "name": "No tight line-height (<1.4) for body copy.",
+    "scope": "style"
+  },
+  "DES-09": {
+    "confidence": "certain",
+    "file": "design-anti-patterns.md",
+    "kind": "unwritten",
+    "name": "No measure wider than 75ch",
+    "scope": "style"
+  },
+  "DES-10": {
+    "file": "design-anti-patterns.md",
+    "kind": "token",
+    "name": "No type scale flatter than 1.2."
+  },
+  "DES-11": {
+    "confidence": "certain",
+    "file": "design-anti-patterns.md",
+    "fix": "rarely meets contrast and reads as dated",
+    "kind": "regex",
+    "name": "No gradient text.",
+    "pattern": "(-webkit-)?background-clip[[:space:]]*:[[:space:]]*text",
+    "scope": "style"
+  },
+  "DES-12": {
+    "file": "design-anti-patterns.md",
+    "kind": "render",
+    "name": "No all-caps headlines longer than 4 words."
+  },
+  "DES-13": {
+    "file": "design-anti-patterns.md",
+    "kind": "render",
+    "name": "No nested cards"
+  },
+  "DES-14": {
+    "file": "design-anti-patterns.md",
+    "kind": "manual",
+    "name": "No identical-card grids of features."
+  },
+  "DES-15": {
+    "file": "design-anti-patterns.md",
+    "kind": "manual",
+    "name": "No hero-metric template"
+  },
+  "DES-16": {
+    "confidence": "scoped",
+    "file": "design-anti-patterns.md",
+    "kind": "unwritten",
+    "name": "No side-stripe borders",
+    "scope": "style"
+  },
+  "DES-17": {
+    "confidence": "scoped",
+    "file": "design-anti-patterns.md",
+    "kind": "unwritten",
+    "name": "No drop shadows as default surface elevation.",
+    "scope": "style"
+  },
+  "DES-18": {
+    "confidence": "certain",
+    "file": "design-anti-patterns.md",
+    "fix": "use deliberately or not at all",
+    "kind": "regex",
+    "name": "No glassmorphism by default.",
+    "pattern": "backdrop-filter[[:space:]]*:[[:space:]]*blur",
+    "scope": "style"
+  },
+  "DES-19": {
+    "confidence": "scoped",
+    "file": "design-anti-patterns.md",
+    "kind": "unwritten",
+    "name": "No rounded rectangles with drop shadows everywhere.",
+    "scope": "style"
+  },
+  "DES-20": {
+    "confidence": "certain",
+    "file": "design-anti-patterns.md",
+    "kind": "unwritten",
+    "name": "No bounce easing.",
+    "scope": "style"
+  },
+  "DES-21": {
+    "confidence": "certain",
+    "file": "design-anti-patterns.md",
+    "fix": "animate transform/opacity instead",
+    "kind": "regex",
+    "name": "No animations on layout properties",
+    "pattern": "(^|[^[:alnum:]-])transition(-property)?[[:space:]]*:[[:space:]]*([^;}]*[[:space:],])?(all|width|height|top|left|right|bottom|margin(-[a-z]+)?|padding(-[a-z]+)?|gap|inset|flex-basis)([[:space:],;}]|$)|(^|[\"\\'[:space:]])transition-(all|width|height)([\"\\'[:space:]]|$)",
+    "scope": "style"
+  },
+  "DES-22": {
+    "confidence": "certain",
+    "file": "design-anti-patterns.md",
+    "kind": "unwritten",
+    "name": "No motion that ignores `prefers-reduced-motion`.",
+    "scope": "style"
+  },
+  "DES-23": {
+    "file": "design-anti-patterns.md",
+    "kind": "manual",
+    "name": "No \"delight\" animations on critical paths."
+  },
+  "DES-24": {
+    "file": "design-anti-patterns.md",
+    "kind": "render",
+    "name": "No identical icon-above-headline-above-paragraph card grids"
+  },
+  "DES-25": {
+    "file": "design-anti-patterns.md",
+    "kind": "manual",
+    "name": "No three-column \"How it works\" section"
+  },
+  "DES-26": {
+    "file": "design-anti-patterns.md",
+    "kind": "render",
+    "name": "No \"trusted by\" logo strip"
+  },
+  "DES-27": {
+    "file": "design-anti-patterns.md",
+    "kind": "render",
+    "name": "No screenshot of the product floating on a tilted plane with a glow underneath."
+  },
+  "PRD-01": {
+    "file": "product-anti-patterns.md",
+    "kind": "manual",
+    "name": "Vague personas"
+  },
+  "PRD-02": {
+    "file": "product-anti-patterns.md",
+    "kind": "manual",
+    "name": "Generic positioning"
+  },
+  "PRD-03": {
+    "file": "product-anti-patterns.md",
+    "kind": "manual",
+    "name": "Education framing for an aware audience"
+  },
+  "PRD-04": {
+    "confidence": "scoped",
+    "file": "product-anti-patterns.md",
+    "kind": "unwritten",
+    "name": "Hedging language in brand voice",
+    "scope": "prose"
+  },
+  "PRD-05": {
+    "file": "product-anti-patterns.md",
+    "kind": "manual",
+    "name": "Feature lists as positioning"
+  },
+  "PRD-06": {
+    "confidence": "scoped",
+    "file": "product-anti-patterns.md",
+    "kind": "unwritten",
+    "name": "Ornamental success metrics",
+    "scope": "prose"
+  },
+  "PRD-07": {
+    "confidence": "scoped",
+    "file": "product-anti-patterns.md",
+    "kind": "unwritten",
+    "name": "Anti-references that aren't real",
+    "scope": "prose"
+  },
+  "PRD-08": {
+    "confidence": "scoped",
+    "file": "product-anti-patterns.md",
+    "kind": "unwritten",
+    "name": "Brand personality of three buzzwords",
+    "scope": "prose"
+  },
+  "UX-01": {
+    "confidence": "scoped",
+    "file": "ux-anti-patterns.md",
+    "kind": "unwritten",
+    "name": "Confirm-instead-of-undo",
+    "scope": "code"
+  },
+  "UX-02": {
+    "file": "ux-anti-patterns.md",
+    "kind": "manual",
+    "name": "Modal-first thinking"
+  },
+  "UX-03": {
+    "file": "ux-anti-patterns.md",
+    "kind": "render",
+    "name": "Hidden state"
+  },
+  "UX-04": {
+    "file": "ux-anti-patterns.md",
+    "kind": "manual",
+    "name": "Empty states that aren't empty states"
+  },
+  "UX-05": {
+    "confidence": "certain",
+    "file": "ux-anti-patterns.md",
+    "kind": "unwritten",
+    "name": "Generic error messages",
+    "scope": "prose"
+  },
+  "UX-06": {
+    "file": "ux-anti-patterns.md",
+    "kind": "manual",
+    "name": "Forms that re-validate on blur and only show errors at submit"
+  },
+  "UX-07": {
+    "file": "ux-anti-patterns.md",
+    "kind": "render",
+    "name": "Click targets smaller than 44×44"
+  },
+  "UX-08": {
+    "file": "ux-anti-patterns.md",
+    "kind": "manual",
+    "name": "Dark patterns"
+  },
+  "UX-09": {
+    "file": "ux-anti-patterns.md",
+    "kind": "manual",
+    "name": "Lossy navigation"
+  },
+  "UX-10": {
+    "file": "ux-anti-patterns.md",
+    "kind": "manual",
+    "name": "Accessibility as cleanup"
+  },
+  "UX-11": {
+    "file": "ux-anti-patterns.md",
+    "kind": "manual",
+    "name": "Onboarding as a tour"
+  },
+  "UX-12": {
+    "file": "ux-anti-patterns.md",
+    "kind": "manual",
+    "name": "Recall-over-recognition"
+  },
+  "WRT-01": {
+    "confidence": "certain",
+    "file": "writing-anti-patterns.md",
+    "fix": "use the plainer word",
+    "kind": "regexi",
+    "name": "No AI-flagship words.",
+    "pattern": "\\b(delve|delves|delving|tapestry|paradigm shift|game.changer)\\b",
+    "scope": "prose"
+  },
+  "WRT-02": {
+    "confidence": "scoped",
+    "file": "writing-anti-patterns.md",
+    "kind": "unwritten",
+    "name": "No empty adverbs.",
+    "scope": "prose"
+  },
+  "WRT-03": {
+    "confidence": "certain",
+    "file": "writing-anti-patterns.md",
+    "fix": "delete it; the sentence survives",
+    "kind": "regexi",
+    "name": "No empty phrases.",
+    "pattern": "it'?s worth noting|at the end of the day|in today'?s world|let'?s dive in",
+    "scope": "prose"
+  },
+  "WRT-04": {
+    "confidence": "certain",
+    "file": "writing-anti-patterns.md",
+    "kind": "unwritten",
+    "name": "No binary contrasts.",
+    "scope": "prose"
+  },
+  "WRT-05": {
+    "confidence": "certain",
+    "file": "writing-anti-patterns.md",
+    "kind": "unwritten",
+    "name": "No negative listing.",
+    "scope": "prose"
+  },
+  "WRT-06": {
+    "file": "writing-anti-patterns.md",
+    "kind": "manual",
+    "name": "No colon reveals."
+  },
+  "WRT-07": {
+    "confidence": "certain",
+    "file": "writing-anti-patterns.md",
+    "kind": "unwritten",
+    "name": "No dramatic fragmentation.",
+    "scope": "prose"
+  },
+  "WRT-08": {
+    "file": "writing-anti-patterns.md",
+    "kind": "manual",
+    "name": "No robotic rhythm."
+  },
+  "WRT-09": {
+    "file": "writing-anti-patterns.md",
+    "kind": "manual",
+    "name": "No synonym cycling."
+  },
+  "WRT-10": {
+    "confidence": "certain",
+    "file": "writing-anti-patterns.md",
+    "fix": "lead with the point",
+    "kind": "regexi",
+    "name": "No throat-clearing.",
+    "pattern": "here'?s the thing|let me be clear|i'?ll be honest",
+    "scope": "prose"
+  },
+  "WRT-11": {
+    "confidence": "certain",
+    "file": "writing-anti-patterns.md",
+    "fix": "cut the setup; let the claim stand",
+    "kind": "regexi",
+    "name": "No faux-insight setups.",
+    "pattern": "what nobody tells you|the part everyone misses",
+    "scope": "prose"
+  },
+  "WRT-12": {
+    "confidence": "certain",
+    "file": "writing-anti-patterns.md",
+    "kind": "unwritten",
+    "name": "No rhetorical setups.",
+    "scope": "prose"
+  },
+  "WRT-13": {
+    "confidence": "certain",
+    "file": "writing-anti-patterns.md",
+    "kind": "unwritten",
+    "name": "No weasel attribution.",
+    "scope": "prose"
+  },
+  "WRT-14": {
+    "confidence": "certain",
+    "file": "writing-anti-patterns.md",
+    "kind": "unwritten",
+    "name": "No importance puffery.",
+    "scope": "prose"
+  },
+  "WRT-15": {
+    "confidence": "scoped",
+    "file": "writing-anti-patterns.md",
+    "kind": "unwritten",
+    "name": "No fake-strong verbs.",
+    "scope": "prose"
+  },
+  "WRT-16": {
+    "confidence": "certain",
+    "file": "writing-anti-patterns.md",
+    "kind": "unwritten",
+    "name": "No trailing analysis clauses.",
+    "scope": "prose"
+  },
+  "WRT-17": {
+    "confidence": "certain",
+    "file": "writing-anti-patterns.md",
+    "fix": "end on the concrete point or the next action",
+    "kind": "regexi",
+    "name": "No summary-recap endings.",
+    "pattern": "in conclusion",
+    "scope": "prose"
+  },
+  "WRT-18": {
+    "file": "writing-anti-patterns.md",
+    "kind": "manual",
+    "name": "No fake-profound kickers."
+  },
+  "WRT-19": {
+    "confidence": "certain",
+    "file": "writing-anti-patterns.md",
+    "kind": "unwritten",
+    "name": "No emoji in headings.",
+    "scope": "prose"
+  },
+  "WRT-20": {
+    "file": "writing-anti-patterns.md",
+    "kind": "manual",
+    "name": "No mid-sentence decorative bold."
+  },
+  "WRT-21": {
+    "file": "writing-anti-patterns.md",
+    "kind": "manual",
+    "name": "No bullet lists where prose reads better."
+  },
+  "WRT-22": {
+    "confidence": "certain",
+    "file": "writing-anti-patterns.md",
+    "kind": "unwritten",
+    "name": "No headers over two-sentence sections.",
+    "scope": "prose"
+  },
+  "WRT-23": {
+    "confidence": "certain",
+    "file": "writing-anti-patterns.md",
+    "fix": "keep 1-2 per piece; prefer commas or periods",
+    "kind": "count",
+    "name": "No em-dash clusters.",
+    "pattern": "—",
+    "scope": "prose",
+    "threshold": 5
+  },
+  "WRT-24": {
+    "confidence": "certain",
+    "file": "writing-anti-patterns.md",
+    "kind": "unwritten",
+    "name": "No cutesy error messages.",
+    "scope": "prose"
+  },
+  "WRT-25": {
+    "confidence": "scoped",
+    "file": "writing-anti-patterns.md",
+    "kind": "unwritten",
+    "name": "No blame-the-user copy.",
+    "scope": "prose"
+  },
+  "WRT-26": {
+    "confidence": "scoped",
+    "file": "writing-anti-patterns.md",
+    "kind": "unwritten",
+    "name": "No exclamation-point enthusiasm in system messages.",
+    "scope": "prose"
+  },
+  "WRT-27": {
+    "file": "writing-anti-patterns.md",
+    "kind": "manual",
+    "name": "No hedging where the UI must commit."
+  },
+  "WRT-28": {
+    "confidence": "scoped",
+    "file": "writing-anti-patterns.md",
+    "kind": "unwritten",
+    "name": "No vague verbs on buttons.",
+    "scope": "prose"
+  }
+}

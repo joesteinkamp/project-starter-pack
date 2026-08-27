@@ -19,7 +19,11 @@ resource paths below.
 ## Setup
 
 1. Guardrails are at `../../guardrails/{product,ux,design,writing,code}-anti-patterns.md`.
-2. Read the five guardrail files so you can cite specific bans by name.
+2. Read the five guardrail files so you can cite specific bans **by ID** — every ban carries one
+   (`DES-18`, `WRT-01`, `UX-07`, `CODE-12`, `PRD-03`). `../../guardrails/registry.json` is the
+   generated index of all of them: it records each ban's name, its file, and whether a script
+   can find it (`kind`). A finding that cites an ID is one a reader can look up; a finding that
+   paraphrases a ban is not.
 3. Read the project briefs from the project root: `PRODUCT.md`, `DESIGN.md`, `DESIGN.json` (if present), `CODE.md`, and `WRITING.md` (if present — the `design-brief` flow regenerates it).
 4. If the project has a `DESIGN.json`, run `../../scripts/validate-tokens.sh DESIGN.json`. It
    measures every WCAG pair in every theme block and prints each ratio; exit 1 means a pair is
@@ -88,6 +92,11 @@ Nothing was changed. Tell me which findings to fix and I'll apply them.
 ## Important
 
 - Read-only. Never edit during a validate run; only report.
-- Every finding must cite a brief section or a named guardrail — no generic advice that isn't anchored in this project's rules.
+- Every finding must cite a brief section or a guardrail **ID** — no generic advice that isn't
+  anchored in this project's rules. An ID that is not in `registry.json` is not a real ban;
+  don't invent one.
+- A ban whose registry `kind` is `manual` or `render` is yours to judge — that is exactly what
+  no script can check, so it is where this review earns its keep. A `kind` of `regex` means a
+  hook already warns on it; don't pad the report with what the tooling caught.
 - If the briefs themselves are thin or missing, surface that as the first finding (an agent can't follow rules that were never written).
 - This is the project's brief-aware check; the operator's global instructions may also define a generic review pass — they complement, they don't replace this one.

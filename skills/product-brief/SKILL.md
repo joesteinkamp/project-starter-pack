@@ -41,7 +41,7 @@ Be direct. The starter-pack's voice is opinionated.
 
 ## Defaults pass
 
-For any unanswered slot, fill with the defaults table in `../../questionnaires/product.questions.md`. Mark each defaulted line with ` [default — confirm]` in the output so the user sees what was assumed. Always pull the anti-pattern list from `../../guardrails/product-anti-patterns.md` into `{{PRODUCT_ANTI_PATTERNS}}` — embedded inline, not just linked.
+For any unanswered slot, fill with the defaults table in `../../questionnaires/product.questions.md`. Mark each defaulted line with ` [default — confirm]` in the output so the user sees what was assumed. Always pull the anti-pattern list from `../../guardrails/product-anti-patterns.md` into `{{PRODUCT_ANTI_PATTERNS}}` — embedded inline, not just linked. **Keep each ban's ID** (`PRD-03`) in the rendered line: it is what lets a later review cite the ban by name. Render the prose only — the `.detect.md` sidecar is machine state and never goes into a brief.
 
 ## Preview & write
 

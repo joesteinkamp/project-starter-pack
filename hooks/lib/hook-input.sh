@@ -80,3 +80,73 @@ hook_is_prose_file() {
     *) return 1 ;;
   esac
 }
+
+# --- registry-driven detection ----------------------------------------------
+# The bans live in guardrails/*-anti-patterns.md and their detectors in the
+# matching .detect.md sidecars; build-guardrails.sh compiles both into
+# guardrails/registry.json. The hooks read that, so adding a ban to the prose
+# arms its detector without editing a hook. See guardrails/_format.md.
+#
+# Resolved relative to this file, never the cwd: the hooks are wired by
+# absolute path into the checkout (install-hooks.sh), while they run inside
+# whatever project the user is editing.
+# NOTE: inside a function, BASH_SOURCE[0] is THIS file (hooks/lib/), not the
+# hook that sourced it — hence ../../, not ../. Getting this wrong fails open:
+# the registry is simply absent, every detector is skipped, and the hook still
+# exits 0 having enforced nothing.
+hook_registry() {
+  printf '%s/../../guardrails/registry.json' "$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+}
+
+# Does $1 fall in scope $2?
+hook_in_scope() {
+  case "$2" in
+    style|tokens) hook_is_style_file "$1" ;;
+    prose)        hook_is_prose_file "$1" ;;
+    *)            return 1 ;;
+  esac
+}
+
+# Run every live detector of scope $2 against file $1, printing one advisory
+# line per hit. Silent (and successful) when jq or the registry is absent — the
+# hooks are advisory and must never fail the tool call that triggered them.
+hook_check_scope() {
+  local file="$1" scope="$2" reg
+  reg="$(hook_registry)"
+  if [ ! -f "$reg" ]; then
+    echo "psp-hooks: no guardrails/registry.json at $reg — run ./build-guardrails.sh. Nothing was checked." >&2
+    return 0
+  fi
+  command -v jq >/dev/null 2>&1 || {
+    echo "psp-hooks: jq not found — guardrail detectors skipped. Nothing was checked." >&2
+    return 0
+  }
+  hook_in_scope "$file" "$scope" || return 0
+
+  # \x01 as the field separator, not @tsv: @tsv escapes backslashes, which
+  # silently turns a pattern like \b(delve|...)\b into a literal-backslash
+  # match that never fires. `join` under -r emits the pattern verbatim.
+  local id kind pattern threshold fix name src hits
+  while IFS=$'\x01' read -r id kind pattern threshold fix name src; do
+    [ -n "$id" ] || continue
+    case "$kind" in
+      regex)  grep -qE  -- "$pattern" "$file" 2>/dev/null || continue ;;
+      regexi) grep -qiE -- "$pattern" "$file" 2>/dev/null || continue ;;
+      count)
+        hits="$(grep -oE -- "$pattern" "$file" 2>/dev/null | wc -l | tr -d '[:space:]')"
+        [ "${hits:-0}" -gt "${threshold:-0}" ] 2>/dev/null || continue
+        echo "$id in $file — $name ($hits occurrences, keep to $threshold) — $fix ($src, advisory)" >&2
+        continue ;;
+      *) continue ;;
+    esac
+    echo "$id in $file — $name — $fix ($src, advisory)" >&2
+  done < <(jq -r --arg scope "$scope" '
+    to_entries
+    | map(select(.value.scope == $scope
+                 and (.value.kind == "regex" or .value.kind == "regexi" or .value.kind == "count")))
+    | sort_by(.key)[]
+    | [ .key, .value.kind, .value.pattern, (.value.threshold // 0 | tostring),
+        (.value.fix // ""), .value.name, .value.file ]
+    | join("\u0001")' "$reg" 2>/dev/null)
+  return 0
+}

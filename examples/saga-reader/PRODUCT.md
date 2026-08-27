@@ -66,11 +66,11 @@ WCAG 2.1 AA baseline, with reading-specific commitments above it: user-controlle
 
 ## Anti-patterns (always reject)
 
-- Vague personas that could describe ten million people.
-- Generic positioning that would fit a competitor's site.
-- Education framing for an audience that already knows the problem.
-- Hedging language ("might", "could", "consider") in brand voice.
-- Feature lists standing in for positioning.
-- Ornamental metrics ("engagement") instead of real ones.
-- Anti-references that aren't real, named things.
-- Brand personality of three interchangeable buzzwords.
+- **PRD-01** Vague personas that could describe ten million people.
+- **PRD-02** Generic positioning that would fit a competitor's site.
+- **PRD-03** Education framing for an audience that already knows the problem.
+- **PRD-04** Hedging language ("might", "could", "consider") in brand voice.
+- **PRD-05** Feature lists standing in for positioning.
+- **PRD-06** Ornamental metrics ("engagement") instead of real ones.
+- **PRD-07** Anti-references that aren't real, named things.
+- **PRD-08** Brand personality of three interchangeable buzzwords.
