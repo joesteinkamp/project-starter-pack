@@ -1,8 +1,10 @@
 # Roadmap — making the anti-pattern rules enforceable
 
-> **Status: plan, not implementation.** Nothing in `guardrails/`, `hooks/`, `skills/`, or
-> `test.sh` was changed to produce this document. Every number below was measured against the
-> tree at the time of writing; the commands that produced them are quoted so they can be re-run.
+> **Status: Phases 0–3 built. Phase 4 (CI) not built, by recommendation.**
+> `./test.sh` went 294 → 336 passed, 0 failed, with no check deleted or relaxed. The plan below is
+> kept as written; what actually happened, including where the build diverged from it, is recorded
+> under **Outcome** at the end and in per-phase status lines. Every number in the investigation
+> sections was measured against the tree and still holds.
 
 The repo enforces its anti-pattern rules twice and binds the two nowhere. Five prose registries in
 `guardrails/` (88 bans, 253 lines) are embedded into the briefs; seven hardcoded greps across three
@@ -235,6 +237,11 @@ So:
 
 ### Phase 0 — Fix the drift that already exists
 
+> **Built.** Joe chose to add the ban rather than narrow the hook's claim, so
+> `design-anti-patterns.md` gained `DES-03` ("No raw hex where a token system applies") and the
+> registry grew to 89 bans. The fixture's pure-white contradiction is fixed in both the ban list
+> and the colour-strategy line.
+
 **What changes.** One paragraph of cleanup, no new format, no new files. Correct
 `examples/saga-reader/DESIGN.md:145` so it stops banning pure white, which
 `guardrails/design-anti-patterns.md:8` explicitly permits. Then resolve the claim-6 exception:
@@ -264,6 +271,11 @@ and does not need a gate.
 ---
 
 ### Phase 1 — Compute the contrast instead of asking a model for it
+
+> **Built.** `scripts/validate-tokens.sh`, pure bash + jq, no new dependency. All ten pairs on the
+> fixture match the ratios predicted in open question 3. `test.sh` section 11 seeds four failures
+> (a pair below floor, a hex value, a missing token, a single-theme file); all four were
+> mutation-tested by breaking the validator and confirming the suite goes red.
 
 **What changes.** `skills/validate/SKILL.md` Mode A hands a language model an OKLCH-to-luminance
 arithmetic problem across ten token pairs and asks it not to eyeball the answer. Replace that with
@@ -311,6 +323,10 @@ not resolve.
 ---
 
 ### Phase 2 — Make `guardrails/` a real registry — **keystone**
+
+> **Built**, after Joe settled decisions 1, 2 and 5: per-file prefixes, sidecar tables, and
+> `confidence` instead of `severity`. 89 bans, 10 live detectors, 39 marked `unwritten`.
+> Two bugs surfaced that only behavioural testing could have caught — see **Outcome**.
 
 **What changes.** Every ban gains a stable, immutable ID in the prose, and a machine record
 carrying `severity`-or-`confidence`, a `detect:` expression or `manual`, and the file scope it
@@ -365,6 +381,9 @@ the seven current pairs before the old ones come out.
 
 ### Phase 3 — Fixtures, to catch false positives rather than only misses
 
+> **Built.** Ten `trips`/`clean` pairs, plus a cross-check that no clean fixture trips any live
+> detector of its scope. The checker is itself mutation-tested in `test.sh` section 13.
+
 **What changes.** A grep-based linter dies of false positives, not of missing rules. For each ban
 carrying a `detect:` expression, ship a minimal file that must trip it and a clean counterpart that
 must not, in the `must_find` / `must_not_find` shape of the sibling's `check_fixtures.py`. This is
@@ -394,7 +413,11 @@ incomplete without both fixtures — a contributor-facing requirement, not just 
 
 ---
 
-### Phase 4 — CI — **speculative; recommended against in its proposed form**
+### Phase 4 — CI — **not built, per the recommendation below**
+
+> **Skipped deliberately.** `check-guardrail-fixtures.sh` is invoked from `./test.sh`, which keeps
+> the one-gate contract. Adding `.github/workflows/` remains available as a five-line workflow that
+> runs `./test.sh`; it is Joe's call and nothing in the built work depends on it.
 
 **What changes.** The sibling roadmap adds `.github/workflows/`. The recommendation here is
 different and is argued under reserved decision 3: fold `check-guardrail-fixtures.sh` into
@@ -584,6 +607,105 @@ decides *what* blocks, and adding it later means touching all 88 bans. Under Opt
 that is one column in five sidecar tables and cheap; under Option A it is 88 edits in the prose
 files. **Decisions 2 and 5 interact**: choosing inline makes deferring severity more expensive, and
 is a reason to settle severity now if Option A is chosen.
+
+---
+
+## Outcome
+
+Phases 0–3 are built. `./test.sh`: **294 → 336 passed, 0 failed**, with no check deleted or
+relaxed. Section 9's seven `check_link` pairs were retargeted, as the plan required, into a
+structural contract that covers every ban instead of seven.
+
+### The decisions, as settled
+
+| # | Decision | Settled as | Note |
+|---|---|---|---|
+| 1 | ID scheme | Per-file prefixes | `PRD-01…08`, `UX-01…12`, `DES-01…27`, `WRT-01…28`, `CODE-01…14` |
+| 2 | Field location | Sidecar, ID in the prose | `<name>-anti-patterns.detect.md` beside each registry |
+| 3 | CI | Not built | `check-guardrail-fixtures.sh` runs from `./test.sh`; one gate kept |
+| 4 | Dependency | None | jq does the contrast math exactly |
+| 5 | Severity | `confidence` (`certain`/`scoped`) instead | Nothing branches on severity; all hooks `exit 0` |
+
+Decision 4 was the one the plan closed by evidence rather than judgment, and it held.
+
+### Where the build diverged from the plan
+
+**The registry grew to 89 bans, not 88.** Joe chose to resolve the claim-6 exception by adding the
+missing ban rather than narrowing the hook's claim, so `DES-03` ("No raw hex where a token system
+applies") now exists and `guard-design.sh` enforces a rule that is written down. Every count in
+the classification above is stated against the original 88 and is unchanged otherwise.
+
+**A `detect` value the plan did not anticipate: `unwritten`.** The classification distinguished
+bans that *are* mechanically detectable from bans that *have* a detector, and the registry needed
+somewhere to keep that difference. Without it, a ban with no regex would be indistinguishable from
+a ban that can never have one. So the shipped vocabulary is `regex` / `regexi` / `count` /
+`unwritten` / `token` / `render` / `manual`, and the remaining work is now a query rather than a
+guess:
+
+```
+jq '[.[] | select(.kind == "unwritten")] | length' guardrails/registry.json   # 39
+```
+
+10 live detectors, 39 unwritten, 40 that no script will ever find. The 10 live cover exactly the
+strings the 7 old greps covered — one old grep spanned four separate bans, so attribution got
+finer without the enforced set changing.
+
+**`PSP_GUARDRAILS_DIR`, `PSP_REGISTRY`, `PSP_FIXTURES`.** The first version of `test.sh`'s probes
+mutated the live `guardrails/` tree and restored it afterwards. Interrupting a run left a
+half-applied probe in a tracked file, which is a suite that can corrupt the thing it checks. All
+probes now run against copies through these overrides, and a final check asserts the live tree was
+never touched.
+
+### Two bugs that only behavioural testing would have caught
+
+Both were found by running the hooks and reading their output, not by parsing files. Both are now
+guarded in `test.sh`.
+
+1. **`BASH_SOURCE` inside a function resolves to the defining file.** `hook_registry()` lives in
+   `hooks/lib/hook-input.sh`, so `../guardrails` pointed at `hooks/guardrails` — one level short.
+   The failure was silent and **failed open**: no registry found, every detector skipped, `exit 0`,
+   no output. A hook that enforces nothing looks exactly like a hook with nothing to report. The
+   missing-registry case now prints to stderr, so "checked nothing" can never again read as "found
+   nothing".
+
+2. **jq's `@tsv` escapes backslashes.** Every pattern containing `\b` — `WRT-01`'s word list,
+   `DES-03`'s hex matcher — arrived at the hook as a literal-backslash match that could never fire.
+   The registry looked correct, the hook looked correct, and two of ten detectors were dead. Both
+   handoffs now `join("\u0001")` under `-r`, and `test.sh` asserts specifically that a
+   `\b`-bearing pattern still fires.
+
+The generalizable lesson is the one already in `memory/knowledge.md`: *a check that a file is
+present is not a check that it works.* Both bugs would have passed any string-level test of the
+registry, the sidecars, and the hooks. Only running a detector against a file it should catch
+found them.
+
+### What is now true that was not
+
+- Adding a ban to the prose plus its sidecar row arms its detector with **no edit to any hook**,
+  and `test.sh` section 12 proves it by adding a sentinel ban and watching the hook fire.
+- `./build-guardrails.sh` refuses to emit a registry on a duplicate ID, a missing field, an invalid
+  severity or scope, an unparseable regex, a live detector with no fix, a live detector in a scope
+  no hook runs, or an ID present on one side of the pair and not the other. Each of the eleven is
+  probed.
+- Contrast is measured. `skills/validate` no longer asks a model for arithmetic; it runs a script
+  and quotes the ratios.
+- Every ban the example renders cites a real ID, and every ban is rendered. The contradiction fixed
+  in Phase 0 could not recur silently.
+- A regex cannot be broadened onto honest code without a clean fixture failing.
+
+### The stopping point held
+
+The plan claimed Phase 1 was the earliest point that left the repo better with nothing wasted, and
+that turned out to be right: `scripts/validate-tokens.sh` needed no ID scheme, no registry, and
+none of the reserved decisions, and it is the only phase that would have survived Joe deciding
+against the whole registry idea.
+
+### What is left
+
+`Later` in the plan, unchanged and unstarted: extending `detect:` coverage from 10 toward the 31
+clean regexes, `writing-anti-patterns.md` first at 16. Each addition is a prose entry, a sidecar
+row, and a fixture pair — no hook edit, no `test.sh` edit. The `WRITING.md` boundary remains
+out of scope for this repo alone, pending the sibling repo's Plan 1 phase 1.
 
 ---
 
