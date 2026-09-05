@@ -1,0 +1,6 @@
+/* The three near-misses named in the original hook comment: a colour
+   transition, a custom property whose name merely contains "all", and a
+   Tailwind utility that is not a layout transition. */
+.d { transition: opacity 200ms; }
+.e { transition: transform 150ms cubic-bezier(0.16, 1, 0.3, 1); }
+.f { animation-duration: var(--all-fast); }

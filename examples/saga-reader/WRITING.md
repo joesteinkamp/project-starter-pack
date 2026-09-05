@@ -40,12 +40,12 @@ Onboarding, release notes, and docs keep the same register at a longer measure:
 
 ## Writing anti-patterns to avoid
 
-- AI-flagship words (delve, leverage, seamless, robust, tapestry, elevate, "game changer", "paradigm shift"); empty adverbs; filler phrases ("it's worth noting", "let's dive in").
-- Binary contrasts ("It's not X. It's Y."), negative listing, colon reveals, dramatic fragmentation, robotic rhythm, synonym cycling.
-- Throat-clearing and faux-insight openers ("Here's the thing", "what nobody tells you"); rhetorical setups; weasel attribution ("studies show") without a named source.
-- Importance puffery ("pivotal moment"), fake-strong verbs ("serves as a hub"), trailing analysis clauses ("…, highlighting our commitment").
-- Summary-recap endings ("In conclusion") and fake-profound kickers; end on the concrete point.
-- Formatting slop: emoji in headings, decorative bold, bullets where prose reads better, headers over tiny sections, em-dash clusters.
-- Microcopy slop: cutesy errors ("Oops!"), blame-the-user copy, exclamation-point enthusiasm, hedging labels, vague button verbs ("Submit", "OK").
+- **WRT-01–03** AI-flagship words (delve, leverage, seamless, robust, tapestry, elevate, "game changer", "paradigm shift"); empty adverbs; filler phrases ("it's worth noting", "let's dive in").
+- **WRT-04–09** Binary contrasts ("It's not X. It's Y."), negative listing, colon reveals, dramatic fragmentation, robotic rhythm, synonym cycling.
+- **WRT-10–13** Throat-clearing and faux-insight openers ("Here's the thing", "what nobody tells you"); rhetorical setups; weasel attribution ("studies show") without a named source.
+- **WRT-14–16** Importance puffery ("pivotal moment"), fake-strong verbs ("serves as a hub"), trailing analysis clauses ("…, highlighting our commitment").
+- **WRT-17–18** Summary-recap endings ("In conclusion") and fake-profound kickers; end on the concrete point.
+- **WRT-19–23** Formatting slop: emoji in headings, decorative bold, bullets where prose reads better, headers over tiny sections, em-dash clusters.
+- **WRT-24–28** Microcopy slop: cutesy errors ("Oops!"), blame-the-user copy, exclamation-point enthusiasm, hedging labels, vague button verbs ("Submit", "OK").
 
 > Slop test: if a reader who has skimmed a thousand AI-written pages would say "yep, AI wrote this," find the tell, kill it, ship.

@@ -1,0 +1,6 @@
+/* Near-misses the detector must not claim: an id selector, an anchor
+   attribute, and a hover pseudo-class all contain a # or a : without ever
+   being a hex colour in a value position. */
+#dad { color: oklch(0.98 0.008 85); }
+.link[href="#anchor"] { color: oklch(0.52 0.13 35); }
+a:hover { background: var(--color-accent); }

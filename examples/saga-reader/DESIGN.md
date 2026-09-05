@@ -33,11 +33,11 @@ Empty / loading / error / offline: **Library empty** = "No books yet — import 
 
 ### Interaction principles
 
-- Recognition over recall — always show the exact place ("p.42, *Chapter 3*"), never make the reader remember it.
-- Undo over confirm — deleting a highlight shows an inline "Deleted · Undo," never an "Are you sure?" modal.
-- Progressive disclosure — note-taking, tags, and export reveal on demand; the default surface is just text.
-- Keyboard-first for power flows — arrow keys turn pages, `h` highlights the selection, `/` searches Marks.
-- The system speaks the reader's language — "page," "chapter," "highlight," never "session," "annotation object," "resume token."
+- Recognition over recall (**UX-12**) — always show the exact place ("p.42, *Chapter 3*"), never make the reader remember it.
+- Undo over confirm (**UX-01**, **UX-02**) — deleting a highlight shows an inline "Deleted · Undo," never an "Are you sure?" modal.
+- Progressive disclosure (**UX-11**) — note-taking, tags, and export reveal on demand; the default surface is just text.
+- Keyboard-first for power flows (**UX-10**) — arrow keys turn pages, `h` highlights the selection, `/` searches Marks.
+- The system speaks the reader's language (**UX-05**) — "page," "chapter," "highlight," never "session," "annotation object," "resume token."
 
 ### Accessibility & Inclusion
 
@@ -64,7 +64,7 @@ Quiet editorial — closer to a well-set trade paperback or *Eye* magazine than 
 
 ### Color strategy
 
-**Strategy:** Restrained — warm paper neutrals plus a single terracotta accent (the bookmark ribbon), used on under 10% of any surface. Light default, true-dark companion. All values in OKLCH; no pure black or white.
+**Strategy:** Restrained — warm paper neutrals plus a single terracotta accent (the bookmark ribbon), used on under 10% of any surface. Light default, true-dark companion. All values in OKLCH; no pure black.
 
 | Token | Light (OKLCH) | Dark (OKLCH) | Role |
 |---|---|---|---|
@@ -141,39 +141,44 @@ Open means invention is welcome — built from locked primitives, held to the in
 
 **Color**
 
-- No purple gradients on dark backgrounds as an "AI/tech" default.
-- No pure black (`#000`) or pure white (`#FFF`) on body surfaces — OKLCH neutrals with warmth.
-- No neon-on-black accent system.
-- No more than one decisive accent (Restrained = one accent on ≤10% of surface).
-- No gray text on colored backgrounds; contrast verified, not eyeballed.
+- **DES-01** No purple gradients on dark backgrounds as an "AI/tech" default.
+- **DES-02** No pure black (`#000`) on body surfaces — OKLCH neutrals with warmth. Pure white is fine.
+- **DES-03** No raw hex in style files; colors come from the `DESIGN.json` OKLCH tokens.
+- **DES-04** No neon-on-black accent system.
+- **DES-05** No more than one decisive accent (Restrained = one accent on ≤10% of surface).
+- **DES-06** No gray text on colored backgrounds; contrast verified, not eyeballed.
 
 **Typography**
 
-- No system-default-only stacks as a design choice.
-- No body line-height below 1.4.
-- No measure wider than 75ch for paragraph text.
-- No type scale flatter than 1.2.
-- No gradient text. No all-caps headlines longer than 4 words.
+- **DES-07** No system-default-only stacks as a design choice.
+- **DES-08** No body line-height below 1.4.
+- **DES-09** No measure wider than 75ch for paragraph text.
+- **DES-10** No type scale flatter than 1.2.
+- **DES-11** No gradient text.
+- **DES-12** No all-caps headlines longer than 4 words.
 
 **Layout & components**
 
-- No nested cards; group with spacing or hairlines.
-- No identical-card feature grids; vary scale and weight.
-- No hero-metric template unless the metric is genuinely the product.
-- No side-stripe "highlight" borders.
-- No drop shadows as default elevation (state changes only).
-- No glassmorphism by default. No rounded-rectangle-plus-shadow everywhere.
+- **DES-13** No nested cards; group with spacing or hairlines.
+- **DES-14** No identical-card feature grids; vary scale and weight.
+- **DES-15** No hero-metric template unless the metric is genuinely the product.
+- **DES-16** No side-stripe "highlight" borders.
+- **DES-17** No drop shadows as default elevation (state changes only).
+- **DES-18** No glassmorphism by default.
+- **DES-19** No rounded-rectangle-plus-shadow everywhere.
 
 **Motion**
 
-- No bounce easing. No animating layout properties (animate transforms).
-- No motion that ignores `prefers-reduced-motion`.
-- No "delight" animations on critical paths.
+- **DES-20** No bounce easing.
+- **DES-21** No animating layout properties (animate transforms).
+- **DES-22** No motion that ignores `prefers-reduced-motion`.
+- **DES-23** No "delight" animations on critical paths.
 
 **Composition tells**
 
-- No icon-above-headline-above-paragraph card grids.
-- No three-column "How it works." No 6-logo "trusted by" strip.
-- No tilted-screenshot-with-a-glow hero.
+- **DES-24** No icon-above-headline-above-paragraph card grids.
+- **DES-25** No three-column "How it works."
+- **DES-26** No 6-logo "trusted by" strip.
+- **DES-27** No tilted-screenshot-with-a-glow hero.
 
 > Slop test: if a designer who has seen a thousand AI UIs would say "yep, AI," find the tell, kill it, ship.

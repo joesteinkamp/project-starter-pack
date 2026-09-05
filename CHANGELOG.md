@@ -2,6 +2,77 @@
 
 AI-made changes to this repository: what changed and why.
 
+## 2026-08-27 — Claude Opus 5 (guardrails become a registry; contrast becomes arithmetic)
+
+**Ask:** Joe asked for a plan to make the anti-pattern rules enforceable, written to `ROADMAP.md`
+and nothing implemented, then — once it was reviewed — to implement it. He settled the reserved
+decisions up front: per-file ID prefixes, sidecar detector tables, `confidence` over `severity`,
+and resolving the hex discrepancy by adding the missing ban rather than narrowing the hook that was
+already enforcing it.
+
+**What changed:**
+
+- **89 bans carry immutable IDs** (`PRD`/`UX`/`DES`/`WRT`/`CODE`), with their machine records in
+  `<name>-anti-patterns.detect.md` sidecars. `build-guardrails.sh` compiles both sides into
+  `guardrails/registry.json` and refuses to emit anything if an ID appears on one side and not the
+  other. `guardrails/_format.md` states the contract.
+- **The three hooks stopped hardcoding.** Each runs the detectors of one scope (`style` / `tokens`
+  / `prose`) out of the registry, so adding a ban to the prose arms its detector in the same edit.
+  `test.sh` proves it by adding a sentinel ban, rebuilding, and watching the hook fire.
+- **`scripts/validate-tokens.sh`** computes WCAG contrast for every token pair in every theme
+  block. `skills/validate` Mode A used to hand a language model OKLCH-to-luminance arithmetic and
+  ask it not to eyeball the answer; it now runs the script and quotes the ratios.
+- **Ten `trips`/`clean` fixture pairs**, plus a cross-check that no clean fixture trips any live
+  detector of its scope.
+- **Two live drift bugs fixed.** `examples/saga-reader` banned pure white, which
+  `design-anti-patterns.md` explicitly permits; and `guard-design.sh` flagged every raw hex while
+  no prose ban said so. The first was a fixture contradicting its source with the suite green; the
+  second was a detector enforcing a rule the registry did not contain.
+- **294 → 336 checks**, none deleted or relaxed. Section 9's seven hand-written `check_link` pairs
+  were retargeted into a structural contract covering every ban rather than seven.
+
+**Why this approach:** the sidecar exists because the brief flows copy guardrail prose into a
+user's briefs ("embedded inline, not just linked") — a `detect:` regex in the prose is one paste
+from a designer's `DESIGN.md`, and only the ID belongs in front of a human. There is no severity
+field because all three hooks `exit 0` by design, so a severity would change nothing and drift;
+`confidence` (`certain`/`scoped`) changes behaviour today and turns a two-release-old code comment
+(*"robust" and "leverage" are excluded because tech docs use them honestly*) into a test. The
+contrast validator was built **before** the registry keystone, against the order the sibling
+roadmap proposed, because nothing in it depends on the registry — it was the work available while
+the one-way-door decisions were still open, and it is the point at which the whole effort could
+have stopped with nothing wasted.
+
+A `detect` kind the plan did not anticipate, **`unwritten`**, was added so the registry can tell
+"no script will ever find this" apart from "a script could, nobody wrote it". That makes the
+remaining work a query rather than a guess: 10 live detectors, 39 unwritten, 40 permanently manual.
+
+**Considered and rejected:** *Inline machine fields* — one file that cannot be half-updated, but it
+puts regexes on the path into every generated brief. *A Python generator, or any dependency for the
+contrast math* — the largest portability regression available to this repo; jq's `cbrt`/`cos`/`sin`
+do the OKLab matrix exactly (white/black returns 21.00, pure red 4.00 on white and 5.25 on black),
+so the question closed on evidence rather than taste. *CI* — every check added here runs locally in
+seconds on `bash`/`grep`/`sed`/`jq`, so `.github/workflows/` would add re-execution, not coverage;
+`check-guardrail-fixtures.sh` runs from `./test.sh` instead, keeping one gate. *Splitting the
+guardrail prose into tables* — parseable, but it would have destroyed writing that is the product.
+
+**Two bugs that only behavioural testing found**, both of which would have passed any string-level
+check of the registry, the sidecars, and the hooks:
+
+- `BASH_SOURCE` inside a function resolves to the file that *defines* the function, so
+  `hook_registry()` in `hooks/lib/` pointed one level short. It **failed open** — no registry,
+  every detector skipped, `exit 0`, silent. A hook enforcing nothing is indistinguishable from a
+  hook with nothing to report, so a missing registry now says so on stderr.
+- jq's `@tsv` escapes backslashes, so every `\b`-anchored pattern reached the hook as a
+  literal-backslash match that could never fire. Two of ten detectors were dead while everything
+  read correctly.
+
+This is `memory/knowledge.md`'s existing lesson, earned again in a new place: a check that a file
+is *present* is not a check that it *works*. It also cost a self-inflicted scare — the first
+version of the new `test.sh` probes mutated the live `guardrails/` tree and restored it afterwards,
+and an interrupted run left a half-applied mutation in a tracked file. Probes now run against
+copies via `PSP_GUARDRAILS_DIR` / `PSP_REGISTRY` / `PSP_FIXTURES`, with a final assertion that the
+live tree was never touched. A suite that edits what it checks can corrupt what it checks.
+
 ## 2026-08-17 — Claude Opus 5 (Antigravity plugin path, and the YAML bug it exposed)
 
 **Ask:** Joe asked for the Antigravity plugin path — the gap flagged at the end of the previous

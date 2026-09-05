@@ -44,7 +44,7 @@ Also sanity-check the stack for internal consistency (e.g. Cloudflare Pages + No
 
 ## Defaults pass
 
-Apply the defaults table from `../../questionnaires/code.questions.md`. Mark defaulted lines with ` [default — confirm]`. Always pull the anti-pattern list from `../../guardrails/code-anti-patterns.md` into `{{CODE_ANTI_PATTERNS}}` — embedded inline, not just linked.
+Apply the defaults table from `../../questionnaires/code.questions.md`. Mark defaulted lines with ` [default — confirm]`. Always pull the anti-pattern list from `../../guardrails/code-anti-patterns.md` into `{{CODE_ANTI_PATTERNS}}` — embedded inline, not just linked. **Keep each ban's ID** (`CODE-12`) in the rendered line: it is what lets a later review cite the ban by name. Render the prose only — the `.detect.md` sidecar is machine state and never goes into a brief.
 
 ## Preview & write
 

@@ -43,17 +43,17 @@ Secrets via environment (Fly secrets), never committed. Magic-link tokens are si
 
 ## Code anti-patterns to avoid
 
-- **Premature abstraction** — three similar lines aren't a pattern; wait for the third or fourth real use.
-- **Half-finished implementations** — no stubs, no "we'll add it later" branches; ship the feature or don't add the surface.
-- **Defensive over trust** — validate at the boundary (imported files, API input), trust internal code; no try/catch "just in case."
-- **Comment-as-rename** — if a comment explains *what*, rename the code; comments earn their place explaining *why*.
-- **Dead code kept "in case"** — delete unreached branches; version control remembers.
-- **Backward-compat shims for code we own** — change the callers instead.
-- **Over-eager error handling** — no catch-to-rethrow-vaguer, no `null` where an exception was right, no empty catch.
-- **State machines disguised as booleans** — reading/sync state is a machine; model it as one, not five booleans with illegal combos.
-- **Test-by-implementation** — test behavior, not the wiring.
-- **Snapshot tests as a primary signal** — they detect regressions, they don't define behavior.
-- **"Utility files" that grow forever** — group by feature, not part-of-speech.
-- **Silent type widening** — no `as any`, no bare `@ts-expect-error`, no coerced `unknown`.
-- **Magic timing** — no `setTimeout` to paper over a race; make the dependency explicit.
-- **Bypassing safety as a shortcut** — no `--no-verify`, no `--force`, no disabled lint/type checks.
+- **CODE-01 Premature abstraction** — three similar lines aren't a pattern; wait for the third or fourth real use.
+- **CODE-02 Half-finished implementations** — no stubs, no "we'll add it later" branches; ship the feature or don't add the surface.
+- **CODE-03 Defensive over trust** — validate at the boundary (imported files, API input), trust internal code; no try/catch "just in case."
+- **CODE-04 Comment-as-rename** — if a comment explains *what*, rename the code; comments earn their place explaining *why*.
+- **CODE-05 Dead code kept "in case"** — delete unreached branches; version control remembers.
+- **CODE-06 Backward-compat shims for code we own** — change the callers instead.
+- **CODE-07 Over-eager error handling** — no catch-to-rethrow-vaguer, no `null` where an exception was right, no empty catch.
+- **CODE-08 State machines disguised as booleans** — reading/sync state is a machine; model it as one, not five booleans with illegal combos.
+- **CODE-09 Test-by-implementation** — test behavior, not the wiring.
+- **CODE-10 Snapshot tests as a primary signal** — they detect regressions, they don't define behavior.
+- **CODE-11 "Utility files" that grow forever** — group by feature, not part-of-speech.
+- **CODE-12 Silent type widening** — no `as any`, no bare `@ts-expect-error`, no coerced `unknown`.
+- **CODE-13 Magic timing** — no `setTimeout` to paper over a race; make the dependency explicit.
+- **CODE-14 Bypassing safety as a shortcut** — no `--no-verify`, no `--force`, no disabled lint/type checks.

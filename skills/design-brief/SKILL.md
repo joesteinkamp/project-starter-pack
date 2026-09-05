@@ -59,7 +59,7 @@ Be direct. Don't soften.
 
 ## Defaults pass
 
-Apply the defaults table from `../../questionnaires/design.questions.md`. Mark defaulted lines with ` [default — confirm]`. Always pull the anti-pattern lists from `../../guardrails/design-anti-patterns.md` and `../../guardrails/ux-anti-patterns.md` into the relevant sections of the output — embedded inline, not just linked.
+Apply the defaults table from `../../questionnaires/design.questions.md`. Mark defaulted lines with ` [default — confirm]`. Always pull the anti-pattern lists from `../../guardrails/design-anti-patterns.md` and `../../guardrails/ux-anti-patterns.md` into the relevant sections of the output — embedded inline, not just linked. **Keep each ban's ID** (`DES-18`, `UX-07`) in the rendered line: it is what lets a later review cite the ban by name. Render the prose only — the `.detect.md` sidecars are machine state and never go into a brief.
 
 ## Lock levels rendering
 
@@ -103,7 +103,7 @@ Populate `../../templates/WRITING.template.md`:
 - `{{WRITING_TERMINOLOGY}}` — the product's nouns and their exact casing (from `PRODUCT.md`'s one-liner and this brief's components and flows), plus words the product never uses.
 - `{{WRITING_MICROCOPY}}` — rules for labels, buttons, empty/error/loading states, confirmations — grounded in this brief's component primitives and user flows. Include the casing convention and the button verb rule.
 - `{{WRITING_LONGFORM}}` — structure and evidence rules for docs, onboarding, and marketing copy, consistent with the register.
-- `{{WRITING_ANTI_PATTERNS}}` — embed `../../guardrails/writing-anti-patterns.md` headlines (1 line per pattern) — embedded inline, not just linked.
+- `{{WRITING_ANTI_PATTERNS}}` — embed `../../guardrails/writing-anti-patterns.md` headlines (1 line per pattern, each keeping its `WRT-nn` ID) — embedded inline, not just linked.
 
 If `PRODUCT.md` is missing, fill the voice section from the register the user gave this flow and
 mark it `[TODO — confirm after the product-brief flow]`.

@@ -55,6 +55,16 @@ question `setup` asks.
 | `validate` | `/starter:validate` | `$validate` | `/starter-validate` | `validate` |
 | `extract` | `/starter:extract` | `$extract` | `/starter-extract` | `extract` |
 
+`validate` measures rather than estimates where it can: when the project has a `DESIGN.json`, it runs `scripts/validate-tokens.sh`, which computes the WCAG contrast of every meaningful token pair in every theme block the file ships and exits non-zero on a pair below its floor. The script needs only `jq` and can be run on its own:
+`scripts/validate-tokens.sh path/to/DESIGN.json`.
+
+The five anti-pattern registries in `guardrails/` are the project's rules, and they are
+machine-readable: every ban carries a stable ID (`DES-18`), and `build-guardrails.sh` compiles the
+prose plus its detector sidecars into `guardrails/registry.json`. The advisory hooks execute that
+registry rather than hardcoding bans, so **adding a ban to the prose arms its detector in the same
+edit**. `check-guardrail-fixtures.sh` holds each detector to a file that must trip it and a file
+that must not. See `guardrails/_format.md`.
+
 `setup` takes a scope word — `product`, `design`, `code`, or `all`. Give it one and it runs only
 that brief; give it nothing and it asks which briefs to run, annotated with which already exist in
 the repo. Either way it ends with the `AGENTS.md` wire-up, so a single-brief run still leaves the

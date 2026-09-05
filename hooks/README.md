@@ -16,14 +16,33 @@ in; otherwise the guardrails embedded in the briefs are the enforcement.
 
 ## What they check
 
-| Hook | Fires on | Nudge |
+The bans are **not written in these scripts.** They live as prose in
+`guardrails/*-anti-patterns.md`, with their detectors in the matching `.detect.md` sidecars;
+`build-guardrails.sh` compiles both into `guardrails/registry.json`, and the hooks execute that.
+Adding a ban to the prose arms its detector in the same edit — no hook is touched. See
+`guardrails/_format.md`.
+
+Each hook runs the detectors of one **scope**:
+
+| Hook | Scope it runs | Fires on |
 |---|---|---|
-| `guard-design.sh` | an edit to a style/component file **when `DESIGN.json` exists** | raw hex colors where the OKLCH token system applies |
-| `check-anti-patterns.sh` | an edit to a style/component file | a few high-signal `design-anti-patterns.md` bans: animating layout properties, `backdrop-filter: blur` (glassmorphism), gradient/clipped text |
-| `check-writing-slop.sh` | an edit to a prose file (`.md`, `.mdx`, `.txt`) | a few high-signal `writing-anti-patterns.md` bans: AI-flagship vocabulary ("delve", "tapestry", "paradigm shift"), empty framing phrases ("it's worth noting", "in conclusion"), em-dash clusters |
+| `check-anti-patterns.sh` | `style` | an edit to a style/component file |
+| `guard-design.sh` | `tokens` | the same, but only when the project has a `DESIGN.json` — the bans that apply once a project has committed to the OKLCH token system |
+| `check-writing-slop.sh` | `prose` | an edit to a `.md`, `.mdx`, or `.txt` file |
 
 All three read the tool-call JSON on stdin, inspect every file the call edited, print to stderr,
-and **exit 0**.
+and **exit 0**. A warning names the ban by ID (`DES-18`), so it can be looked up in the registry
+or in the brief that embeds it.
+
+Which bans are safe to grep for is recorded in the registry as a `confidence` field rather than
+argued in a comment here. `certain` warns wherever its scope applies; `scoped` needs a scope or a
+threshold to stay useful — `robust` and `leverage` stay out of `WRT-01` because tech docs use them
+honestly, and that judgment is now data. Of 89 bans, 10 have a live detector today; 39 more are
+marked `unwritten` (detectable, not yet written) and the rest need a rendered page, a token file,
+or a human.
+
+If `registry.json` is missing or `jq` is absent, the hooks say so on stderr and check nothing —
+they still exit 0, but they never enforce nothing *silently*.
 
 ## One set of scripts, four tools
 
