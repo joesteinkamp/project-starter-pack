@@ -2,6 +2,10 @@
 
 The prose tells that an AI wrote it (or that nobody read it back). The starter-pack treats these as banned by default in every word the product ships — UI labels, error messages, empty states, docs, marketing pages, release notes. Adapted from [petergyang/no-ai-slop](https://github.com/petergyang/no-ai-slop) (MIT).
 
+**Scope, stated in both directions.** These bans are the authority on **words the product ships**, and that is the writing that matters — it is what a user reads. They do **not** govern the words an *agent* says while building the product: its chat replies, PR bodies, commit messages, or changelog entries. Those are governed by the agent's own instruction set (`~/AGENTS.md`'s "How you write"), which is deliberately narrow — it covers whether a claim is true and evidenced, not whether a sentence reads well. This file should not grow to cover them; a second writing apparatus aimed at the agent's own output would compete with this one for no gain.
+
+**Where the two look like they disagree, they don't.** `WRT-27` bans hedging where the UI must commit — a button that says "You might want to consider saving" is a label failing its job. The agent's instructions say the opposite about *its own* claims: keep a hedge that carries real uncertainty, because deleting it manufactures confidence. Both are right on their own surface. Product copy commits because the user needs to act; an agent's diagnosis hedges because the reader needs to know how much to trust it. If you find yourself applying one of these rules to the other's surface, you have crossed the boundary.
+
 ## Vocabulary
 
 - **(WRT-01) No AI-flagship words.** delve, foster, leverage, utilize, facilitate, empower, streamline, robust, seamless, cutting-edge, transformative, elevate, embark, supercharge, harness, tapestry, realm, beacon, multifaceted, meticulous, paramount, ever-evolving, game changer, paradigm shift. Each has a plainer word; use it.
