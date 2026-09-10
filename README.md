@@ -19,7 +19,7 @@ After running the `setup` flow (or each flow individually), your project root wi
 | `PRODUCT.md` | Product Brief | Who, what, why, brand personality, anti-references, principles |
 | `DESIGN.md` | Design Brief | UX foundation (user knowledge, IA, flows, success metrics) **and** UI system (color, type, spacing, motion, components) |
 | `DESIGN.json` | Design Brief (optional) | Machine-readable token companion (filename matches Impeccable's convention for interop) |
-| `WRITING.md` | Design Brief | Voice, terminology, microcopy, and long-form rules — the anti-slop writing layer (always written) |
+| `WRITING.md` | Design Brief | Voice, terminology, microcopy, and long-form rules — the anti-slop writing layer (always written). Owns **the words the product ships**; the words an *agent* says while building it belong to the agent's own instruction set, and `guardrails/writing-anti-patterns.md` states the boundary in both directions |
 | `CODE.md` | Technical Brief | Stack, architecture, conventions, testing, performance, security |
 | `AGENTS.md` | Setup wire-up | The [agents.md](https://agents.md) spec file — a **router** that points agents at the brief owning each kind of work (always written) |
 | `CLAUDE.md` | Setup wire-up | Thin pointer: imports `@AGENTS.md` + Claude-Code-specific notes (always written) |
