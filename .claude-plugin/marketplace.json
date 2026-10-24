@@ -1,0 +1,16 @@
+{
+  "name": "project-starter-pack",
+  "metadata": {
+    "description": "Designer-first AI project starter: three opinionated briefs (Product, Design, Technical) plus the AGENTS.md router that points every AI coding agent at the brief owning each kind of work."
+  },
+  "owner": {
+    "name": "joesteinkamp",
+    "url": "https://github.com/joesteinkamp"
+  },
+  "plugins": [
+    {
+      "name": "project-starter-pack",
+      "source": "."
+    }
+  ]
+}

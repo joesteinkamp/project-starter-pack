@@ -1,0 +1,81 @@
+name: Bug report
+description: A flow produced the wrong output, or the install did not work
+title: "bug: "
+labels: ["bug"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        The pack runs in four tools, and most bugs are specific to one of them. Naming the tool
+        and the install path narrows it faster than anything else you can tell us.
+
+  - type: textarea
+    id: what-happened
+    attributes:
+      label: What happened?
+      description: What you ran, what you expected, and what you got.
+      placeholder: |
+        1. Ran the `design-brief` flow in Codex
+        2. Expected: DESIGN.md with the color section filled
+        3. Got: DESIGN.md with {{COLOR_STRATEGY}} still in the file
+    validations:
+      required: true
+
+  - type: dropdown
+    id: tool
+    attributes:
+      label: Which tool?
+      multiple: true
+      options:
+        - Claude Code
+        - Codex
+        - Cursor
+        - Antigravity
+    validations:
+      required: true
+
+  - type: dropdown
+    id: install-path
+    attributes:
+      label: How is the pack installed?
+      options:
+        - "install.sh (symlinks)"
+        - "Claude Code plugin (cloned into ~/.claude/plugins/)"
+        - "Claude Code plugin marketplace (/plugin install)"
+        - "Antigravity plugin (agy plugin install)"
+        - "Cloned the repo and ran a flow from inside it"
+        - "Other / not sure"
+    validations:
+      required: true
+
+  - type: dropdown
+    id: flow
+    attributes:
+      label: Which flow?
+      multiple: true
+      options:
+        - setup
+        - product-brief
+        - design-brief
+        - code-brief
+        - extract
+        - validate
+        - "The optional hooks"
+        - "Not flow-specific"
+    validations:
+      required: true
+
+  - type: textarea
+    id: test-output
+    attributes:
+      label: "Output of ./test.sh"
+      description: >
+        Run it from a clone of this repo. If it is green, say so — that tells us the bug is in a
+        flow's behavior rather than the wiring, which is a different hunt.
+      render: shell
+
+  - type: input
+    id: os
+    attributes:
+      label: OS and bash version
+      placeholder: "e.g. macOS 15.1 (arm64), bash 5.2"

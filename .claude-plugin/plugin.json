@@ -2,7 +2,10 @@
   "name": "project-starter-pack",
   "version": "0.2.0",
   "description": "Designer-first AI project starter. Walks you through a Product, Design, and Technical brief, then synthesizes AGENTS.md and WRITING.md — read natively by Codex, Cursor, and Antigravity — plus the optional harness files you select (CLAUDE.md, Cursor scoped rules), so any AI coding agent designs and codes with the same rigor as a senior team.",
-  "author": "joesteinkamp",
+  "author": {
+    "name": "joesteinkamp",
+    "url": "https://github.com/joesteinkamp"
+  },
   "license": "MIT",
   "keywords": [
     "design",
@@ -15,6 +18,8 @@
     "antigravity",
     "starter"
   ],
+  "homepage": "https://github.com/joesteinkamp/project-starter-pack",
+  "repository": "https://github.com/joesteinkamp/project-starter-pack",
   "commands": "./commands",
   "skills": "./skills"
 }
