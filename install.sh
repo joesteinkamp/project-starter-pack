@@ -1,67 +1,106 @@
 #!/usr/bin/env bash
 # install.sh — install project-starter-pack into every AI tool you use.
 #
-#   ./install.sh                     # all four targets (asks once; --yes skips)
+#   ./install.sh                     # every target (asks once; --yes skips)
 #   ./install.sh codex cursor        # just those
 #   ./install.sh --uninstall         # remove exactly what this script installed
 #   ./install.sh --uninstall cursor  # ...for one target
+#   ./install.sh --list              # print the target table (machine-readable)
 #
-# Targets:
-#   claude       ~/.claude/skills/<name>            (symlink per skill)
-#              + ~/.claude/commands/starter/<name>.md  (symlink per command)
-#   codex        ~/.codex/skills/<name>             (symlink per skill; invoke $<name>)
-#   cursor       ~/.cursor/skills/<name>            (symlink per skill)
-#              + ~/.cursor/commands/starter-<name>.md  (rendered ports, symlinked)
-#   antigravity  ~/.gemini/config/skills/<name>     (symlink per skill)
+# The targets live in ONE place: targets_table() below. Argument parsing, the
+# default target set, the presence check, and both install and uninstall all
+# read it, and test.sh reads it too (through --list) to check the README and
+# INSTALL.md tables against it. Adding a tool is one row, not a hunt through
+# case branches — and a row the docs don't mention fails the linter.
 #
-# Antigravity's customization root is ~/.gemini/config (the machine-global one of
-# its three discovery locations; the others are per-workspace). Skills live at
-# <root>/skills/<name>/SKILL.md in the same format every other tool uses, with
-# the same progressive disclosure — so the pack's six skills install verbatim.
-# It has no command surface, so there is nothing else to install for it.
-#
-# Everything is SYMLINKED, never copied: `git pull` in this checkout updates all
-# four tools at once. Re-running is idempotent. A target whose config directory
+# Everything is SYMLINKED, never copied: `git pull` in this checkout updates
+# every tool at once. Re-running is idempotent. A target whose config directory
 # does not exist is skipped cleanly — installing a tool you don't have is not an
 # error.
+#
+# Antigravity's skills root is ~/.gemini/config (the machine-global one of its
+# three discovery locations; the others are per-workspace). That root is created
+# lazily, so a real install that has never written a global customization has
+# only ~/.gemini/antigravity-cli. Either directory means "installed", which is
+# why the presence column takes more than one marker.
 #
 # Why Claude commands go in a `starter/` SUBDIRECTORY and Cursor's are prefixed
 # files: Claude Code derives the command name from the path, joining a
 # subdirectory to the file as `/<dir>:<name>`. So commands/setup.md installed at
 # ~/.claude/commands/starter/setup.md is invoked `/starter:setup` — identical to
-# the plugin path below, which is the point. One tool must not have two
-# invocations for the same flow depending on how it was installed. Cursor has no
-# such namespacing, so its ports keep the flat `starter-` prefix.
+# the plugin path, which is the point. One tool must not have two invocations
+# for the same flow depending on how it was installed. Cursor has no such
+# namespacing, so its ports keep the flat `starter-` prefix.
 #
-# The commands are symlinked straight from commands/*.md with no rendering: they
-# are written in Claude's own dialect, and render-ports.sh exists only because
-# Cursor cannot read that dialect.
-#
-# Claude Code users who prefer the zero-script path can instead clone this repo
-# into ~/.claude/plugins/ and get the /starter:* commands plus the skills; see
-# INSTALL.md. The two paths coexist, but there is no reason to run both.
+# Claude Code users who prefer the zero-script path can instead install the
+# plugin; see INSTALL.md. The two paths coexist, but there is no reason to run
+# both.
 set -euo pipefail
 
 DIR="$(cd "$(dirname "$0")" && pwd)"
 SKILLS="$DIR/skills"
 CMDS="$DIR/commands"
 PORTS="$DIR/commands/cursor"
-PREFIX="starter-"
-NS="starter"      # Claude command namespace dir -> /starter:<name>
+PREFIX="starter-"   # render-ports.sh names every Cursor port with this prefix
+
+# The target table. One row per tool; every path is relative to $HOME.
+#
+#   id | display name | presence markers | skills dir | commands | commands dir
+#
+#   presence markers  comma-separated dirs; ANY of them existing means the tool
+#                     is installed here
+#   commands          canonical  link commands/*.md as-is (Claude's dialect)
+#                     rendered   run render-ports.sh, link the generated ports
+#                     -          no command surface (skills only)
+#   commands dir      where commands land, or - when there are none. For
+#                     `canonical`, the last path segment is the namespace: it
+#                     becomes the `/<ns>:` in `/<ns>:setup`.
+#
+# The display name is what the README and INSTALL.md tables call the tool;
+# test.sh holds them to it.
+targets_table() {
+  cat <<'EOF'
+claude|Claude Code|.claude|.claude/skills|canonical|.claude/commands/starter
+codex|Codex|.codex|.codex/skills|-|-
+cursor|Cursor|.cursor|.cursor/skills|rendered|.cursor/commands
+antigravity|Antigravity|.gemini/config,.gemini/antigravity-cli|.gemini/config/skills|-|-
+EOF
+}
+
+target_ids() { targets_table | cut -d'|' -f1; }
+target_row() { targets_table | awk -F'|' -v id="$1" '$1 == id { print; exit }'; }
+
+usage() {
+  # The header comment, then the live table — so --help can never list a
+  # target the script does not have.
+  awk 'NR == 1 { next } /^#/ { sub(/^# ?/, ""); print; next } { exit }' "$0"
+  echo
+  echo "Targets:"
+  targets_table | awk -F'|' '{ printf "  %-12s %-12s ~/%s\n", $1, $2, $4 }'
+}
 
 mode="install"
 assume_yes=0
 targets=()
 for a in "$@"; do
   case "$a" in
-    --uninstall)          mode="uninstall" ;;
-    --yes|-y)             assume_yes=1 ;;
-    claude|codex|cursor|antigravity) targets+=("$a") ;;
-    -h|--help)            sed -n '2,30p' "$0"; exit 0 ;;
-    *) echo "install: unknown arg '$a' (use: --yes | --uninstall | claude | codex | cursor | antigravity)" >&2; exit 2 ;;
+    --uninstall) mode="uninstall" ;;
+    --yes|-y)    assume_yes=1 ;;
+    --list)      targets_table; exit 0 ;;
+    -h|--help)   usage; exit 0 ;;
+    *)
+      if [ -n "$(target_row "$a")" ]; then
+        targets+=("$a")
+      else
+        echo "install: unknown arg '$a' (use: --yes | --uninstall | --list | $(target_ids | paste -sd' ' - | sed 's/ / | /g'))" >&2
+        exit 2
+      fi
+      ;;
   esac
 done
-[ ${#targets[@]} -eq 0 ] && targets=(claude codex cursor antigravity)
+if [ ${#targets[@]} -eq 0 ]; then
+  while IFS= read -r t; do targets+=("$t"); done < <(target_ids)
+fi
 
 skill_names() { local d; for d in "$SKILLS"/*/; do [ -f "$d/SKILL.md" ] && basename "$d"; done; }
 
@@ -101,34 +140,37 @@ unlink_one() {  # $1 = destination path
 
 # --- per-target -------------------------------------------------------------
 
-install_skills() {  # $1 = tool label, $2 = tool config dir, $3 = skills dir
-  local label="$1" base="$2" dest="$3" n
-  if [ ! -d "$base" ]; then
-    echo "  $label: $base not found — tool not installed here (skipped)"
-    return 0
-  fi
+tool_present() {  # $1 = comma-separated presence markers
+  local m ms
+  IFS=',' read -ra ms <<<"$1"
+  for m in "${ms[@]}"; do [ -d "$HOME/$m" ] && return 0; done
+  return 1
+}
+
+install_skills() {  # $1 = target id, $2 = skills dir
+  local id="$1" dest="$2" n=0 s
   if [ "$mode" = uninstall ]; then
-    n=0
-    while IFS= read -r s; do unlink_one "$dest/$s" && n=$((n+1)); done < <(skill_names)
+    while IFS= read -r s; do unlink_one "$dest/$s"; done < <(skill_names)
     rmdir "$dest" 2>/dev/null || true
-    echo "  $label: removed skills from $dest"
+    echo "  $id: removed skills from $dest"
     return 0
   fi
   mkdir -p "$dest"
-  n=0
   while IFS= read -r s; do link_one "$SKILLS/$s" "$dest/$s"; n=$((n+1)); done < <(skill_names)
-  echo "  $label: linked $n skill(s) -> $dest"
+  echo "  $id: linked $n skill(s) -> $dest"
 }
 
-install_claude_commands() {
-  local base="$HOME/.claude" dest="$HOME/.claude/commands/$NS" n=0 c p
-  [ -d "$base" ] || return 0
+# Claude's dialect, linked unchanged. The last segment of the dir is the
+# namespace Claude Code turns into `/<ns>:<verb>`.
+install_canonical_commands() {  # $1 = target id, $2 = commands dir
+  local id="$1" dest="$2" ns n=0 c p
+  ns="$(basename "$dest")"
   if [ "$mode" = uninstall ]; then
     for p in "$dest"/*.md; do [ -e "$p" ] || continue; unlink_one "$p" && n=$((n+1)); done
     # Only ever removes the namespace dir, and only when empty — anything the
     # user put in there keeps the dir alive.
     rmdir "$dest" 2>/dev/null || true
-    echo "  claude: removed $n command(s) from $dest"
+    echo "  $id: removed $n command(s) from $dest"
     return 0
   fi
   mkdir -p "$dest"
@@ -140,16 +182,18 @@ install_claude_commands() {
   while IFS= read -r c; do
     link_one "$CMDS/$c.md" "$dest/$c.md"; n=$((n+1))
   done < <(command_names)
-  echo "  claude: linked $n command(s) -> $dest  (invoke /$NS:setup)"
+  echo "  $id: linked $n command(s) -> $dest  (invoke /$ns:setup)"
 }
 
-install_cursor_commands() {
-  local base="$HOME/.cursor" dest="$HOME/.cursor/commands" n=0 p
-  [ -d "$base" ] || return 0
+# Generated ports, for a tool that cannot read Claude's dialect. The ports
+# share one directory with the user's own commands, so everything here is
+# scoped to the PREFIX render-ports.sh gives them.
+install_rendered_commands() {  # $1 = target id, $2 = commands dir
+  local id="$1" dest="$2" n=0 p
   if [ "$mode" = uninstall ]; then
     for p in "$dest/$PREFIX"*.md; do [ -e "$p" ] || continue; unlink_one "$p" && n=$((n+1)); done
     rmdir "$dest" 2>/dev/null || true
-    echo "  cursor: removed $n command port(s) from $dest"
+    echo "  $id: removed $n command port(s) from $dest"
     return 0
   fi
   # Re-render every run so a port can never drift from its canonical command.
@@ -164,25 +208,23 @@ install_cursor_commands() {
     [ -e "$p" ] || continue
     link_one "$p" "$dest/$(basename "$p")"; n=$((n+1))
   done
-  echo "  cursor: linked $n command port(s) -> $dest  (invoke /${PREFIX}setup)"
+  echo "  $id: linked $n command port(s) -> $dest  (invoke /${PREFIX}setup)"
 }
 
-install_antigravity() {
-  # Antigravity is present if EITHER its CLI state dir or its customization root
-  # exists — the root is created lazily, so keying only on it would skip a real
-  # install on a machine that has never written a global customization.
-  local root="$HOME/.gemini/config"
-  if [ ! -d "$root" ] && [ ! -d "$HOME/.gemini/antigravity-cli" ]; then
-    echo "  antigravity: ~/.gemini not found — tool not installed here (skipped)"
+install_target() {  # $1 = target id
+  local id name markers sdir cstyle cdir
+  IFS='|' read -r id name markers sdir cstyle cdir <<<"$(target_row "$1")"
+  if ! tool_present "$markers"; then
+    echo "  $id: ~/${markers//,/ or ~/} not found — tool not installed here (skipped)"
     return 0
   fi
-  [ "$mode" = install ] && mkdir -p "$root"
-  install_skills antigravity "$root" "$root/skills"
-  [ "$mode" = install ] && cat <<EOF
-    It also reads the generated AGENTS.md in your projects natively, so plain
-    language reaches the same flows without naming a skill.
-EOF
-  return 0
+  install_skills "$id" "$HOME/$sdir"
+  case "$cstyle" in
+    canonical) install_canonical_commands "$id" "$HOME/$cdir" ;;
+    rendered)  install_rendered_commands  "$id" "$HOME/$cdir" ;;
+    -)         ;;
+    *) echo "install: target '$id' has unknown commands style '$cstyle'" >&2; return 1 ;;
+  esac
 }
 
 # --- run --------------------------------------------------------------------
@@ -195,14 +237,7 @@ if [ "$mode" = install ] && [ "$assume_yes" -eq 0 ] && [ -t 0 ]; then
 fi
 
 echo "== project-starter-pack: $mode =="
-for t in "${targets[@]}"; do
-  case "$t" in
-    claude)      install_skills claude "$HOME/.claude" "$HOME/.claude/skills"; install_claude_commands ;;
-    codex)       install_skills codex  "$HOME/.codex"  "$HOME/.codex/skills" ;;
-    cursor)      install_skills cursor "$HOME/.cursor" "$HOME/.cursor/skills"; install_cursor_commands ;;
-    antigravity) install_antigravity ;;
-  esac
-done
+for t in "${targets[@]}"; do install_target "$t"; done
 
 if [ "$mode" = install ]; then
   echo "Done. Everything is symlinked — 'git pull' in $DIR updates every tool."

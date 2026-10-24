@@ -154,11 +154,17 @@ running the flow to see the depth and voice each brief expects.
 ./install.sh              # all four tools (symlinks; --yes skips the prompt)
 ./install.sh codex cursor # a subset
 ./install.sh --uninstall  # remove exactly what was installed
+./install.sh --list       # the targets, one row each, as the installer sees them
 ```
 
-Or install it as a plugin instead, if you use only one tool — Claude Code (`git clone` into
-`~/.claude/plugins/`) or Antigravity (`agy plugin install <repo-url>`). See
-[INSTALL.md](./INSTALL.md) for per-tool detail and both plugin paths.
+Or install it as a plugin instead, if you use only one tool. In Claude Code:
+
+```
+/plugin install project-starter-pack --marketplace joesteinkamp/project-starter-pack
+```
+
+In Antigravity, `agy plugin install <repo-url>`. See [INSTALL.md](./INSTALL.md) for per-tool
+detail and every plugin path.
 
 ## Development
 
@@ -174,8 +180,11 @@ It verifies the **slot ↔ question ↔ skill ↔ template** contract — every 
 brief that owns it, the router names every brief file, and the shipped example is a complete,
 placeholder-free render whose structure matches the templates. It also enforces the **portability contract**: every flow exists as a skill, every
 command is a thin wrapper naming a real skill, no harness-specific tool names leak into skills or
-questionnaires, and the port renderer is idempotent. It needs only `bash`, `grep`, `sed`, and
-(for the behavioral fixtures) `jq`.
+questionnaires, and the port renderer is idempotent. The installer is checked against a throwaway
+`HOME` for every target, and the tool tables in this README and `INSTALL.md` are checked against
+the installer's own target table, so the docs cannot name a different set of tools than the
+script installs. It needs only `bash`, `grep`, `sed`, and (for the behavioral fixtures) `jq`.
+CI runs it on every pull request, on Linux and macOS.
 
 ### Optional design hooks
 
@@ -190,11 +199,15 @@ wiring and why enforcement stays advisory.
 
 ```
 .
-├── install.sh                    # Multi-tool installer (symlinks; --uninstall reverses)
+├── install.sh                    # Multi-tool installer (symlinks; --uninstall reverses).
+│                                 #   Its targets_table() is the one list of supported tools
 ├── render-ports.sh               # Generates the Cursor command ports from commands/
 ├── .claude-plugin/plugin.json    # Claude Code plugin manifest (its zero-script path)
+├── .claude-plugin/marketplace.json  # Lets `/plugin install --marketplace` find the plugin
 ├── plugin.json                   # Antigravity plugin manifest (name only; its skills/ layout
 │                                 #   already matches, so the repo IS the plugin dir)
+├── .cursor-plugin/, .copilot-plugin/  # Editor auto-discovery manifests (unprobed; see INSTALL.md)
+├── .github/                      # CI (runs test.sh), issue forms, PR template
 ├── commands/                     # Slash command entry points — thin wrappers over skills
 ├── skills/                       # The flows themselves: one SKILL.md each, the source of truth
 ├── conventions/                  # Shared skill mechanics (how questions get asked per tool)

@@ -15,7 +15,13 @@ cd ~/code/project-starter-pack
 ./install.sh --yes          # skip the confirmation prompt
 ./install.sh codex cursor   # only those tools
 ./install.sh --uninstall    # remove exactly what was installed
+./install.sh --list         # print the target table
 ```
+
+Every target is one row in `targets_table()` at the top of `install.sh`: its id, the name the
+docs use, the directories whose presence means the tool is installed, where its skills go, and
+how its commands install, if it has any. Argument parsing, the default target set, `--help`, and
+both install and uninstall read that table, and `test.sh` holds the table below to it.
 
 A tool whose config directory doesn't exist is skipped cleanly — installing for a tool you don't
 have is not an error. Re-running is idempotent, and a real file or directory already sitting at a
@@ -54,9 +60,21 @@ dialect. The Cursor ones are **generated** from those same files by `render-port
 
 ## Option 2 — Claude Code plugin (zero scripts)
 
-Claude-Code-only users can skip `install.sh` entirely and clone the repo as a plugin. It delivers
-the same `/starter:*` commands and skills, with no script run and no symlinks — and it can be
-scoped to a single project, which `install.sh` cannot:
+Claude-Code-only users can skip `install.sh` entirely and install the repo as a plugin. It delivers
+the same `/starter:*` commands and skills, with no script run and no symlinks.
+
+The shortest path is the marketplace, which this repo declares in `.claude-plugin/marketplace.json`:
+
+```
+/plugin install project-starter-pack --marketplace joesteinkamp/project-starter-pack
+/plugin uninstall project-starter-pack
+```
+
+That one-step form needs Claude Code 2.1.275 or later — the version `claude plugin validate`
+names when it checks this repo. Claude Code's plugin manager then owns updates.
+
+Or clone it as a plugin by hand, which can also be scoped to a single project, something
+`install.sh` cannot do:
 
 ```bash
 # this project only
@@ -110,6 +128,19 @@ version-managed by its plugin manager. `install.sh` still wins if you use more t
 want a `git pull` in one checkout to update them all. As with Claude, running both installs the
 same skills twice; there is no reason to.
 
+## Cursor and VS Code Copilot auto-discovery
+
+`.cursor-plugin/plugin.json` and `.copilot-plugin/plugin.json` are discovery manifests in the
+format [Understand-Anything](https://github.com/Egonex-AI/Understand-Anything) ships for those two
+editors, which document picking a plugin up from a cloned repo with no install step. Both point at
+`skills/` only: Cursor's commands are generated into `commands/cursor/`, which is gitignored, so a
+fresh clone has nothing there to discover.
+
+Neither discovery path has been probed against the editors themselves, so treat them as a
+convenience, not a supported install. `install.sh` remains the supported path for Cursor, and
+Copilot is not an `install.sh` target until its skills directory has been confirmed. Copilot does
+read the generated `AGENTS.md` in your projects natively, like Codex and Antigravity.
+
 ## Optional — advisory hooks
 
 Warn-only nudges when an edit drifts from the design system or the writing rules. Opt-in, never
@@ -158,7 +189,8 @@ hooks/install-hooks.sh --uninstall     # if you enabled the hooks
 ```
 
 Only symlinks pointing into the checkout are removed; anything you put there yourself is left
-alone. For a plugin install, `rm -rf ~/.claude/plugins/project-starter-pack`.
+alone. For a hand-cloned plugin, `rm -rf ~/.claude/plugins/project-starter-pack`; for a
+marketplace install, `/plugin uninstall project-starter-pack`.
 
 ## Requirements
 

@@ -44,11 +44,10 @@ jobs:
       - name: Run the integrity linter
         run: ./test.sh
 
-  # The installer is the one thing test.sh cannot fully cover from inside the
-  # repo: it links into $HOME for four tools, and a target whose config dir is
-  # absent must be skipped cleanly rather than failing. test.sh covers the
-  # present-tool case against a throwaway HOME; this covers the bare-HOME case
-  # and the full round trip.
+  # test.sh installs one target at a time against a throwaway HOME. This runs
+  # the default, all-targets install end to end: a bare HOME must come out
+  # untouched, a second run must change nothing, and uninstall must leave no
+  # symlink behind.
   install-roundtrip:
     runs-on: ubuntu-latest
     steps:
@@ -61,10 +60,14 @@ jobs:
           echo "--- nothing should have been created ---"
           find "$H" -mindepth 1 | sed 's/^/  /' || true
 
-      - name: Install, re-install, and uninstall with all four tools present
+      - name: Install, re-install, and uninstall with every tool present
         run: |
           H="$(mktemp -d)"
-          mkdir -p "$H/.claude" "$H/.codex" "$H/.cursor" "$H/.gemini/antigravity-cli"
+          # One presence marker per target, read from the installer's own
+          # table, so a new target is exercised here without editing this file.
+          ./install.sh --list | while IFS='|' read -r _ _ markers _ _ _; do
+            mkdir -p "$H/${markers%%,*}"
+          done
           HOME="$H" ./install.sh --yes
           before="$(find "$H" | sort | cksum)"
           HOME="$H" ./install.sh --yes

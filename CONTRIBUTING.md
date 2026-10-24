@@ -62,6 +62,17 @@ Open an issue before a PR when the change would:
 The command surface is three verbs — `setup`, `extract`, `validate`: generate, seed, check. A
 new command needs a reason that survives "is this a verb, or a namespace?".
 
+## Adding a tool target
+
+Add one row to `targets_table()` in `install.sh`, then run `./test.sh`. It installs the new
+target into a throwaway `HOME`, once per presence marker, and names every doc that doesn't
+mention the tool yet: the two README tables, the `INSTALL.md` table and its paths, and the hook
+installer. Each needs a hand-written cell, since what a tool *reads* and how it *invokes* a flow
+differ per tool.
+
+Before the row, probe the tool. A skills directory you have not watched a tool load from is a
+guess, and the next section is about what a guess costs.
+
 ## Claims about other tools
 
 A claim about what Claude Code, Codex, Cursor, or Antigravity can do is not verifiable by
