@@ -2,6 +2,80 @@
 
 AI-made changes to this repository: what changed and why.
 
+## 2026-10-25 — Claude (what transfers from Understand-Anything; CI finds the hooks dead on macOS)
+
+**Ask:** Joe asked to incorporate "all the good stuff" from
+[Egonex-AI/Understand-Anything](https://github.com/Egonex-AI/Understand-Anything), then, given four
+candidate groups, left the scope open. Two were taken: repo hygiene with CI, and plugin
+distribution. After a walk-through of what that repo contains, Joe asked for the table-driven
+installer refactor, and then for this entry.
+
+**What changed:**
+
+- **`.claude-plugin/plugin.json` was invalid, and nothing noticed.** `author` was a string where
+  the schema requires an object. Every `test.sh` check passed throughout, because none of them
+  parse the manifest. Upstream gets the field right, which is how it surfaced, and
+  `claude plugin validate` confirmed it.
+- **Distribution.** `.claude-plugin/marketplace.json` makes the pack installable with
+  `/plugin install project-starter-pack --marketplace joesteinkamp/project-starter-pack`. That path
+  was probed end to end in an isolated `CLAUDE_CONFIG_DIR` (marketplace add, install, enabled,
+  uninstall), not only validated. `.cursor-plugin/` and `.copilot-plugin/` discovery manifests ship
+  as inert data, documented in `INSTALL.md` as unprobed.
+- **Community files that never existed:** `LICENSE` (the README has said MIT since the first
+  commit), `CONTRIBUTING.md`, `SECURITY.md` scoped to the surface this pack actually has,
+  `CODE_OF_CONDUCT.md`, issue forms that ask which tool and which install path, and a PR template.
+- **`install.sh` reads one `targets_table()`.** The four targets had been hardcoded in five
+  places: the argument parser, the default set, and the per-target branches in the script, plus
+  three separate lists in `test.sh`. Argument parsing, defaults, `--help`, presence detection,
+  install, and uninstall now read the table, and `--list` prints it. Old and new scripts produced
+  byte-identical filesystems in six scenarios, for install and uninstall alike.
+- **`test.sh` keeps no target list of its own.** It reads `./install.sh --list`, installs every
+  target once per presence marker, and the new 10g-docs check holds both README tool tables, the
+  `INSTALL.md` table and its paths, and `hooks/install-hooks.sh` to the table. All twelve
+  mutations tried against the new checks were caught.
+- **CI on Linux and macOS**, running `./test.sh` plus an all-targets installer round trip.
+- **The advisory hooks enforced nothing on macOS, and had not since 2026-08-27.** The first macOS
+  run failed 24 checks, none in code this work had touched. The hooks and the fixture checker
+  split registry records with `IFS=$'\x01' read`. bash 3.2, which is what `#!/usr/bin/env bash`
+  finds on a stock Mac, uses `\001` as its internal quoting byte and never splits on it. Each
+  record arrived as one field, `kind` came out empty, every detector was skipped, and every hook
+  exited 0. The separator is now `\x1f`. Separately, the generator probes used sed's in-place
+  flag, which BSD sed reads as a backup suffix, so ten "generator rejects" probes never mutated
+  anything. New check 10i bans both constructs at the source, because a Linux run cannot see
+  either one fail.
+- **336 → 347 checks**, none deleted or relaxed. Section 10g's grep for `case` branches was
+  retargeted onto the table once the branches it looked for no longer existed.
+
+**Supersedes the 2026-08-27 entry's rejection of CI.** That entry reasoned that every check runs
+locally in seconds, so `.github/workflows/` "would add re-execution, not coverage." That holds for
+a single platform. Re-execution on a second OS is coverage, and the first macOS run proved it by
+finding that entry's own `@tsv` fix had made every hook fail open on every Mac. The single-gate
+principle survives: CI runs `./test.sh` and nothing else, so there is still one definition of
+green.
+
+**Why this approach:** Upstream's engine, a tree-sitter and LLM pipeline feeding a React
+dashboard, would need a pnpm toolchain, and having no build step is what makes this pack portable
+across four tools. What transfers is the machinery around the engine. Its best idea was a test
+that parses both installers and the README and fails when they disagree; here that became
+`--list`, so `test.sh` asks the installer what it supports instead of regex-parsing its source.
+
+**Considered and rejected:** *A Copilot `install.sh` target* — consistent with `AGENTS.md`
+already naming Copilot, but `~/.copilot/skills` could not be probed here, and an unprobed target
+is how Antigravity spent two releases documented wrongly. *`install.ps1`* — Windows reach, but it
+is a second implementation of the table for `test.sh` to keep in sync. *The `docs/superpowers/`
+spec-and-plan pairs* — upstream's strongest habit, but they overlap this file's
+decisions-not-diffs rule. *Translated READMEs.* *Dropping macOS from the matrix once it went red*
+— that would have hidden the one thing CI found. *Emoji headings, as upstream's docs use* —
+banned here by WRT-19.
+
+**The lesson, a third time:** `memory/knowledge.md` already records that the strictest parser in
+the target set decides what is portable, and that a check that a file is present is not a check
+that it works. This adds the interpreter to that list. A shell construct that works under bash 5
+is not portable until bash 3.2 has run it, and a suite that has only run on one OS has only
+proven that OS. bash 3.2 could not be built in this environment, because GNU's and GitHub's
+source archives are both blocked, so the macOS runner is the only probe there is. After the fix, it
+reports 347 passed, 0 failed under bash 3.2.57, the same count as Linux.
+
 ## 2026-08-27 — Claude Opus 5 (guardrails become a registry; contrast becomes arithmetic)
 
 **Ask:** Joe asked for a plan to make the anti-pattern rules enforceable, written to `ROADMAP.md`
