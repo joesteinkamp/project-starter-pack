@@ -117,4 +117,5 @@ config:
 - `details` lists what Claude Code actually loaded. That is how we learned the plugin path
   surfaces each of `commands/setup.md`, `extract.md`, and `validate.md` as a skill with the same
   name as the real skill, so nine are listed for six flows. Tracked in #21, which also asks
-  whether the plugin path's invocation is really `/starter:` as `INSTALL.md` claims.
+  whether the plugin path's command invocation really matches the `install.sh` path's, as
+  `INSTALL.md` claims.
