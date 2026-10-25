@@ -11,6 +11,19 @@ tracks edits to the governing docs listed in `AGENTS.md`.
 
 <!-- Entries appear below as the agent edits governing docs. -->
 
+## 2026-10-25 — `memory/knowledge.md`: bash 3.2 on macOS, and Claude plugin probes
+
+Added "Stock macOS runs bash 3.2, and only a Mac can test for it". The first macOS CI run found
+that every advisory hook had enforced nothing on a Mac since 2026-08-27 (`IFS=$'\x01' read`
+never splits in bash 3.2), and that ten `test.sh` probes had mutated nothing (BSD `sed -i`). The
+suite was green on Linux throughout. Recorded because it extends the existing "strictest parser
+decides" lesson to the interpreter, and because bash 3.2 cannot be built in these cloud sessions,
+so the macOS CI job is the only probe there is.
+
+Added "Probing Claude Code plugin questions": `claude plugin validate` and an install into a
+scratch `CLAUDE_CONFIG_DIR`. The validator caught an invalid `plugin.json` that every string-level
+check passed. Approved by the maintainer in the session that wrote both entries.
+
 ## 2026-08-17 — `memory/knowledge.md`: YAML frontmatter validity
 
 Added "Frontmatter must be valid YAML, not YAML-ish". A `": "` in an unquoted description is a
