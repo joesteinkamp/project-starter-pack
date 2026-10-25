@@ -1116,6 +1116,33 @@ else
   ok "no GEMINI template or example render (retired tool)"
 fi
 
+# 10i. macOS portability: bash 3.2 and BSD userland. A stock Mac runs every
+#      script here under /bin/bash 3.2 with BSD sed, and this suite only ever
+#      ran on Linux until CI added a macOS job. That job found two constructs
+#      that work on GNU and fail open on a Mac, both silently:
+#
+#      - `read` splitting on \001 or \177. bash 3.2 uses those bytes
+#        internally (CTLESC/CTLNUL) and never splits on them, so the hooks
+#        received every registry record as one field and skipped every
+#        detector.
+#      - sed's in-place flag with no suffix. BSD sed takes the next argument
+#        as the backup suffix, so the expression is swallowed and nothing is
+#        edited.
+#
+#      A Linux run cannot observe either one fail, so this bans the source
+#      forms. The macOS CI job is the behavioral check; this is the one that
+#      runs on every machine. Comment lines are skipped so the scripts can
+#      explain why.
+mac_bad=""
+while IFS= read -r -d '' f; do
+  hits="$(grep -nE "IFS=[\$]'\\\\(x01|001|x7[fF]|177)'" "$f" | grep -vE '^[0-9]+:[[:space:]]*#' || true)"
+  [ -n "$hits" ] && mac_bad="$mac_bad [${f#./}: a read splits on a byte bash 3.2 reserves — use \\x1f]"
+  hits="$(grep -nE '(^|[^[:alnum:]_])sed[[:space:]]+(-[a-zA-Z]*[[:space:]]+)*-[a-zA-Z]*i([[:space:]]|$)' "$f" | grep -vE '^[0-9]+:[[:space:]]*#' || true)"
+  [ -n "$hits" ] && mac_bad="$mac_bad [${f#./}:$(cut -d: -f1 <<<"$hits" | paste -sd, -): in-place sed — redirect to a file instead]"
+done < <(find . -name '*.sh' ! -path './.git/*' ! -path './commands/cursor/*' -print0)
+[ -z "$mac_bad" ] && ok "no shell script uses a construct that fails open on bash 3.2 / BSD sed" \
+                  || bad "macOS-unsafe shell:$mac_bad"
+
 # ---------------------------------------------------------------------------
 section "11. Token contrast validator (measured, not estimated)"
 # skills/validate Mode A used to hand a language model an OKLCH-to-luminance
@@ -1290,7 +1317,11 @@ if [ -f "$BG" ] && command -v jq >/dev/null 2>&1; then
 
   # --- the generator must refuse, loudly, on each malformed input ------------
   probe_reject() {  # $1 = label, $2 = sed expr, $3 = basename under $GW
-    cp "$GW/$3" "$gr_tmp/one.bak"; sed -i "$2" "$GW/$3"
+    # Not `sed -i`: BSD sed (macOS) reads the next argument as a backup
+    # suffix, so the expression became the suffix, the file became the script,
+    # and no probe ever mutated anything. A redirect means the same on both.
+    cp "$GW/$3" "$gr_tmp/one.bak"
+    sed "$2" "$gr_tmp/one.bak" > "$GW/$3"
     if PSP_GUARDRAILS_DIR="$GW" "$BG" >/dev/null 2>&1; then
       bad "generator accepted: $1"
     else

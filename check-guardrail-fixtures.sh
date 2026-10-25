@@ -49,18 +49,21 @@ detector_fires() {  # file kind pattern threshold
   esac
 }
 
-# \x01 as the field separator, not @tsv: @tsv escapes backslashes and would
-# hand us a pattern that no longer means what the registry says.
+# A control character as the field separator, not @tsv: @tsv escapes
+# backslashes and would hand us a pattern that no longer means what the
+# registry says. \x1f, not \x01: bash 3.2 (stock macOS) uses \001 as its
+# internal quoting byte and never splits on it, so every record would arrive
+# as one field. See hooks/lib/hook-input.sh.
 live_detectors() {
   jq -r '
     to_entries
     | map(select(.value.kind == "regex" or .value.kind == "regexi" or .value.kind == "count"))
     | sort_by(.key)[]
     | [ .key, .value.kind, .value.pattern, (.value.threshold // 0 | tostring), (.value.scope // "") ]
-    | join("\u0001")' "$REG"
+    | join("\u001f")' "$REG"
 }
 
-while IFS=$'\x01' read -r id kind pattern threshold scope; do
+while IFS=$'\x1f' read -r id kind pattern threshold scope; do
   [ -n "$id" ] || continue
   checked=$((checked + 1))
   ext="$(ext_for "$scope")"
@@ -82,7 +85,7 @@ done < <(live_detectors)
 
 # Cross-check: no clean fixture may trip ANY live detector of its scope, not
 # only its own. This is what catches a neighbouring regex growing greedy.
-while IFS=$'\x01' read -r id kind pattern threshold scope; do
+while IFS=$'\x1f' read -r id kind pattern threshold scope; do
   [ -n "$id" ] || continue
   ext="$(ext_for "$scope")"
   for other in "$DIR"/*/"clean.$ext"; do
