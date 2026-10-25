@@ -823,32 +823,82 @@ else
   bad "render-ports.sh is missing or not executable"
 fi
 
-# 10g. install.sh must exist, parse, and know every tool.
+# 10g. The target table in install.sh is the single source of truth for which
+#      tools exist. Every check below reads it through `./install.sh --list`
+#      instead of keeping its own list: before the table, the four targets were
+#      hardcoded in three places in this file and two in the script, so a fifth
+#      tool needed five edits and any one forgotten edit failed open.
+TARGET_ROWS=""
 if [ -x ./install.sh ]; then
   ok "install.sh is executable"
-  for t in claude codex cursor antigravity; do
-    grep -qE "^ *$t\)" install.sh && ok "install.sh handles target: $t" \
-                                  || bad "install.sh has no branch for target: $t"
-  done
+  if TARGET_ROWS="$(./install.sh --list 2>/dev/null)"; then
+    n_rows="$(printf '%s\n' "$TARGET_ROWS" | grep -c . || true)"
+    # Guard against a vacuous pass. If --list ever prints nothing (a heredoc
+    # typo, a renamed function), every loop below iterates zero times and the
+    # section reports green while checking nothing.
+    if [ "$n_rows" -ge 4 ]; then
+      ok "install.sh --list prints $n_rows target(s)"
+    else
+      bad "install.sh --list printed $n_rows target(s) — expected at least 4"
+      TARGET_ROWS=""
+    fi
+  else
+    bad "install.sh --list failed"
+  fi
 else
   bad "install.sh is missing or not executable"
 fi
 
-# 10g-bis. Claude's command install, checked BEHAVIORALLY against a throwaway
+# Paths in the table are relative to HOME. An absolute path, a ~, a variable,
+# or a .. would let one row write outside the tool's own config dir.
+rel_path_ok() { [ -n "$1" ] && [[ "$1" != /* && "$1" != "~"* && "$1" != *'$'* && "$1" != *..* ]]; }
+
+if [ -n "$TARGET_ROWS" ]; then
+  malformed=""
+  while IFS= read -r row; do
+    IFS='|' read -r tid tname tmark tsdir tcs tcdir <<<"$row"
+    [ "$(awk -F'|' '{ print NF }' <<<"$row")" = 6 ] || { malformed="$malformed [$row: needs 6 fields]"; continue; }
+    [[ "$tid" =~ ^[a-z][a-z0-9-]*$ ]] || malformed="$malformed [$tid: id must be lowercase-kebab]"
+    [ -n "$tname" ]                   || malformed="$malformed [$tid: no display name]"
+    rel_path_ok "$tsdir"              || malformed="$malformed [$tid: skills dir '$tsdir' is not HOME-relative]"
+    IFS=',' read -ra tmarks <<<"$tmark"
+    [ "${#tmarks[@]}" -ge 1 ]         || malformed="$malformed [$tid: no presence marker]"
+    for m in "${tmarks[@]}"; do
+      rel_path_ok "$m" || malformed="$malformed [$tid: marker '$m' is not HOME-relative]"
+    done
+    case "$tcs" in
+      canonical|rendered) rel_path_ok "$tcdir" || malformed="$malformed [$tid: commands dir '$tcdir' is not HOME-relative]" ;;
+      -)                  [ "$tcdir" = "-" ]   || malformed="$malformed [$tid: has a commands dir but no commands style]" ;;
+      *)                  malformed="$malformed [$tid: unknown commands style '$tcs']" ;;
+    esac
+  done <<<"$TARGET_ROWS"
+  [ -z "$malformed" ] && ok "every target row is well-formed" \
+                      || bad "malformed target row(s):$malformed"
+  dupes="$(cut -d'|' -f1 <<<"$TARGET_ROWS" | sort | uniq -d | paste -sd' ' -)"
+  [ -z "$dupes" ] && ok "target ids are unique" || bad "duplicate target id(s): $dupes"
+  dupes="$(cut -d'|' -f2 <<<"$TARGET_ROWS" | sort | uniq -d | paste -sd',' -)"
+  [ -z "$dupes" ] && ok "target display names are unique" || bad "duplicate display name(s): $dupes"
+fi
+
+# 10g-bis. Canonical command installs, checked BEHAVIORALLY against a throwaway
 #      HOME. install.sh is a blast-radius file: a wrong edit here fails open —
 #      it reports "linked N command(s)" while linking the wrong paths, or churns
-#      a real user's ~/.claude on every run. Asserting on the filesystem is the
+#      a real user's config dir on every run. Asserting on the filesystem is the
 #      only way to catch that; grepping the script would just re-state it.
 #
-#      The invocation must come out as /starter:<verb>, matching the plugin
-#      path exactly. Claude Code derives a command's name from its path, so the
+#      The invocation must come out as /<ns>:<verb>, matching the plugin path
+#      exactly. Claude Code derives a command's name from its path, so the
 #      namespace is a DIRECTORY (commands/starter/setup.md -> /starter:setup),
 #      which is why this asserts on the nesting and not just on presence.
-if [ -x ./install.sh ]; then
+#
+#      Every install.sh call in this section reads </dev/null: the loops feed
+#      the table on stdin, and a call that read it would eat the next row.
+while IFS='|' read -r tid _ tmark _ _ tcdir; do
+  [ -n "$tid" ] || continue
   TH="$(mktemp -d)"
-  mkdir -p "$TH/.claude"
-  if HOME="$TH" ./install.sh --yes claude >"$TH/out.log" 2>&1; then
-    nsdir="$TH/.claude/commands/starter"
+  mkdir -p "$TH/${tmark%%,*}"
+  if HOME="$TH" ./install.sh --yes "$tid" >"$TH/out.log" 2>&1 </dev/null; then
+    nsdir="$TH/$tcdir"
     missing=""; foreign=""
     for c in commands/*.md; do
       [ -e "$c" ] || continue
@@ -863,85 +913,174 @@ if [ -x ./install.sh ]; then
         [ "$tgt" = "$ROOT/$c" ] || foreign="$foreign $b->$tgt"
       fi
     done
-    [ -z "$missing" ] && ok "install.sh links every command into ~/.claude/commands/starter/" \
-                      || bad "install.sh (claude) never linked:$missing"
-    [ -z "$foreign" ] && ok "installed Claude commands resolve to the canonical commands/*.md" \
-                      || bad "installed Claude command points somewhere unexpected:$foreign"
+    [ -z "$missing" ] && ok "install.sh ($tid) links every command into ~/$tcdir/" \
+                      || bad "install.sh ($tid) never linked:$missing"
+    [ -z "$foreign" ] && ok "installed $tid commands resolve to the canonical commands/*.md" \
+                      || bad "installed $tid command points somewhere unexpected:$foreign"
 
     # Idempotence: a second run must not churn what the first produced. This is
     # the check that keeps `git pull && ./install.sh` from rewriting a user's
     # config dir every time.
-    before="$(find "$TH/.claude" | sort | cksum)"
-    HOME="$TH" ./install.sh --yes claude >/dev/null 2>&1
-    after="$(find "$TH/.claude" | sort | cksum)"
-    [ "$before" = "$after" ] && ok "install.sh (claude) is idempotent" \
-                             || bad "install.sh (claude) changed ~/.claude on a second run"
+    before="$(find "$TH" ! -name out.log | sort | cksum)"
+    HOME="$TH" ./install.sh --yes "$tid" >/dev/null 2>&1 </dev/null
+    after="$(find "$TH" ! -name out.log | sort | cksum)"
+    [ "$before" = "$after" ] && ok "install.sh ($tid) is idempotent" \
+                             || bad "install.sh ($tid) changed ~/ on a second run"
 
     # Uninstall must remove exactly ours and nothing else. (mkdir -p so this
     # stands on its own: if the links above never landed, the foreign-file
     # check should still report on its own terms, not cascade.)
     mkdir -p "$nsdir"
     printf 'mine\n' > "$nsdir/not-ours.md"
-    HOME="$TH" ./install.sh --uninstall claude >/dev/null 2>&1
+    HOME="$TH" ./install.sh --uninstall "$tid" >/dev/null 2>&1 </dev/null
     left="$(find "$nsdir" -name '*.md' 2>/dev/null | grep -v 'not-ours.md' || true)"
-    [ -z "$left" ] && ok "install.sh --uninstall removes the Claude commands" \
-                   || bad "install.sh --uninstall left Claude commands behind: ${left//$'\n'/, }"
-    [ -f "$nsdir/not-ours.md" ] && ok "uninstall leaves a user's own file in the namespace dir" \
-                                || bad "install.sh --uninstall deleted a file it did not install"
+    [ -z "$left" ] && ok "install.sh --uninstall removes the $tid commands" \
+                   || bad "install.sh --uninstall left $tid commands behind: ${left//$'\n'/, }"
+    [ -f "$nsdir/not-ours.md" ] && ok "uninstall leaves a user's own file in the $tid namespace dir" \
+                                || bad "install.sh --uninstall deleted a file it did not install ($tid)"
   else
-    bad "install.sh --yes claude failed against a temp HOME: $(tail -3 "$TH/out.log" 2>/dev/null | tr '\n' ' ')"
+    bad "install.sh --yes $tid failed against a temp HOME: $(tail -3 "$TH/out.log" 2>/dev/null | tr '\n' ' ')"
   fi
   rm -rf "$TH"
-else
-  bad "install.sh is missing or not executable (skipped the Claude command install checks)"
-fi
+done < <(awk -F'|' '$5 == "canonical"' <<<"$TARGET_ROWS")
+
+# 10g-ports. Rendered command installs. The ports land in a directory the user
+#      also keeps their own commands in, so uninstall must be scoped to the
+#      ports and nothing else.
+while IFS='|' read -r tid _ tmark _ _ tcdir; do
+  [ -n "$tid" ] || continue
+  TH="$(mktemp -d)"
+  mkdir -p "$TH/${tmark%%,*}"
+  if HOME="$TH" ./install.sh --yes "$tid" >"$TH/out.log" 2>&1 </dev/null; then
+    missing=""
+    for p in commands/cursor/*.md; do
+      [ -e "$p" ] || { missing=" (no ports were rendered)"; break; }
+      link="$TH/$tcdir/$(basename "$p")"
+      [ -L "$link" ] && [ "$(readlink -f "$link" 2>/dev/null)" = "$ROOT/$p" ] || missing="$missing $(basename "$p")"
+    done
+    [ -z "$missing" ] && ok "install.sh ($tid) links every rendered port into ~/$tcdir/" \
+                      || bad "install.sh ($tid) never linked:$missing"
+    printf 'mine\n' > "$TH/$tcdir/my-own-command.md"
+    HOME="$TH" ./install.sh --uninstall "$tid" >/dev/null 2>&1 </dev/null
+    left="$(find "$TH/$tcdir" -type l 2>/dev/null || true)"
+    [ -z "$left" ] && ok "install.sh --uninstall removes the $tid ports" \
+                   || bad "install.sh --uninstall left $tid ports behind: ${left//$'\n'/, }"
+    [ -f "$TH/$tcdir/my-own-command.md" ] && ok "uninstall leaves a user's own $tid command alone" \
+                                          || bad "install.sh --uninstall deleted a $tid command it did not install"
+  else
+    bad "install.sh --yes $tid failed against a temp HOME: $(tail -3 "$TH/out.log" 2>/dev/null | tr '\n' ' ')"
+  fi
+  rm -rf "$TH"
+done < <(awk -F'|' '$5 == "rendered"' <<<"$TARGET_ROWS")
 
 # 10g-skills. Every target must actually receive the skills, checked against a
-#      throwaway HOME. "Skills are the engine" is the pack's central claim, and
-#      a target that silently installs nothing breaks it while every string-level
-#      check still passes — which is exactly how Antigravity spent releases
-#      documented as having "no skill surface" when it has a full one.
-#
-#      Each entry is: target | marker dir that means "this tool is installed" |
-#      skills dir it must populate, both relative to HOME.
-if [ -x ./install.sh ]; then
-  while IFS='|' read -r tgt marker sdir; do
-    [ -n "$tgt" ] || continue
+#      throwaway HOME — once per presence marker, since each one alone has to
+#      be enough. "Skills are the engine" is the pack's central claim, and a
+#      target that silently installs nothing breaks it while every string-level
+#      check still passes. That is how Antigravity spent releases documented as
+#      having "no skill surface" when it has a full one; and its skills root is
+#      created lazily, so detecting it by that root alone would skip a real
+#      install that has only ever written ~/.gemini/antigravity-cli.
+while IFS='|' read -r tid _ tmark tsdir _ _; do
+  [ -n "$tid" ] || continue
+  IFS=',' read -ra tmarks <<<"$tmark"
+  for marker in "${tmarks[@]}"; do
     TH="$(mktemp -d)"
     mkdir -p "$TH/$marker"
-    if HOME="$TH" ./install.sh --yes "$tgt" >"$TH/out.log" 2>&1; then
+    if HOME="$TH" ./install.sh --yes "$tid" >"$TH/out.log" 2>&1 </dev/null; then
       missing=""
       for d in skills/*/; do
         s="$(basename "$d")"
-        link="$TH/$sdir/$s"
+        link="$TH/$tsdir/$s"
         if [ ! -L "$link" ] || [ "$(readlink -f "$link" 2>/dev/null)" != "$ROOT/skills/$s" ]; then
           missing="$missing $s"
         fi
       done
-      [ -z "$missing" ] && ok "install.sh ($tgt) links every skill into ~/$sdir" \
-                        || bad "install.sh ($tgt) never linked:$missing"
+      [ -z "$missing" ] && ok "install.sh ($tid, found via ~/$marker) links every skill into ~/$tsdir" \
+                        || bad "install.sh ($tid, found via ~/$marker) never linked:$missing"
     else
-      bad "install.sh --yes $tgt failed against a temp HOME: $(tail -3 "$TH/out.log" 2>/dev/null | tr '\n' ' ')"
+      bad "install.sh --yes $tid failed against a temp HOME: $(tail -3 "$TH/out.log" 2>/dev/null | tr '\n' ' ')"
     fi
     rm -rf "$TH"
-  done <<'TARGETS'
-claude|.claude|.claude/skills
-codex|.codex|.codex/skills
-cursor|.cursor|.cursor/skills
-antigravity|.gemini/antigravity-cli|.gemini/config/skills
-TARGETS
+  done
+done <<<"$TARGET_ROWS"
+
+# A HOME with none of the tools must come out of a full install untouched.
+# Installing for a tool you don't have is not an error, and must not leave
+# empty config dirs behind that make the next run think the tool exists.
+if [ -n "$TARGET_ROWS" ]; then
+  TH="$(mktemp -d)"
+  if HOME="$TH" ./install.sh --yes >/dev/null 2>&1 </dev/null; then
+    created="$(find "$TH" -mindepth 1 | sed "s|^$TH/||" | paste -sd' ' -)"
+    [ -z "$created" ] && ok "install.sh with no tools present creates nothing" \
+                      || bad "install.sh created paths in a HOME with no tools: $created"
+  else
+    bad "install.sh --yes failed against a HOME with no tools present"
+  fi
+  rm -rf "$TH"
 fi
 
 # 10g-ter. The namespace install.sh uses and the syntax the CLAUDE template
 #      advertises are one string in two files. If they drift, every generated
-#      project tells the user to type a command that does not resolve.
-NS_IN_INSTALL="$(grep -oE '^NS="[a-z-]+"' install.sh | head -1 | sed 's/^NS="//; s/"$//')"
-if [ -z "$NS_IN_INSTALL" ]; then
-  bad "install.sh declares no NS= command namespace"
-elif grep -qF "/${NS_IN_INSTALL}:setup" templates/CLAUDE.template.md; then
-  ok "install.sh namespace '$NS_IN_INSTALL' matches the /${NS_IN_INSTALL}: syntax the CLAUDE template advertises"
+#      project tells the user to type a command that does not resolve. The
+#      namespace is the last segment of a canonical target's commands dir.
+canon_dirs="$(awk -F'|' '$5 == "canonical" { print $6 }' <<<"$TARGET_ROWS")"
+if [ -z "$TARGET_ROWS" ]; then
+  : # already reported in 10g
+elif [ -z "$canon_dirs" ]; then
+  bad "no target installs canonical commands, but CLAUDE.template.md advertises them"
 else
-  bad "install.sh installs commands as /${NS_IN_INSTALL}:<verb> but CLAUDE.template.md advertises something else"
+  while IFS= read -r cdir; do
+    ns="$(basename "$cdir")"
+    if grep -qF "/${ns}:setup" templates/CLAUDE.template.md; then
+      ok "install.sh namespace '$ns' matches the /${ns}: syntax the CLAUDE template advertises"
+    else
+      bad "install.sh installs commands as /${ns}:<verb> but CLAUDE.template.md advertises something else"
+    fi
+  done <<<"$canon_dirs"
+fi
+
+# 10g-docs. The docs name the same tools as the table, in the same order. These
+#      tables are the first thing a reader sees, and they are prose — nothing
+#      else would notice a target added to the installer but missing from them,
+#      or a skills path that moved in the script and not in INSTALL.md.
+#
+#      Each parser below reads one markdown table. If a parser matches nothing
+#      (a heading renamed, a table reformatted), its list comes out empty and
+#      the equality fails loudly instead of passing vacuously.
+if [ -n "$TARGET_ROWS" ]; then
+  want="$(cut -d'|' -f2 <<<"$TARGET_ROWS" | paste -sd',' -)"
+  # Cells of the first table row under an exact heading, minus the first cell.
+  header_cells() {
+    awk -v h="$2" '$0 == h { f = 1; next } f && /^#/ { exit } f && /^\|/ { print; exit }' "$1" \
+      | sed 's/^|//; s/|$//' | tr '|' '\n' | sed 's/^ *//; s/ *$//' | tail -n +2 | paste -sd',' -
+  }
+  got="$(header_cells README.md '## Tool support')"
+  [ "$got" = "$want" ] && ok "README 'Tool support' columns match the target table" \
+                       || bad "README 'Tool support' columns are [$got], target table says [$want]"
+  got="$(header_cells README.md '### Invoking a flow')"
+  [ "$got" = "$want" ] && ok "README 'Invoking a flow' columns match the target table" \
+                       || bad "README 'Invoking a flow' columns are [$got], target table says [$want]"
+  # INSTALL.md's table has one ROW per tool, its name in bold in the first cell.
+  got="$(awk '$0 == "### What lands where" { f = 1; next } f && /^#/ { exit } f && /^\| \*\*/' INSTALL.md \
+         | sed -E 's/^\| \*\*([^*]+)\*\*.*/\1/' | paste -sd',' -)"
+  [ "$got" = "$want" ] && ok "INSTALL.md 'What lands where' rows match the target table" \
+                       || bad "INSTALL.md 'What lands where' rows are [$got], target table says [$want]"
+  # And the paths it documents are the paths the script uses.
+  drift=""
+  while IFS='|' read -r tid _ _ tsdir tcs tcdir; do
+    grep -qF "~/$tsdir/" INSTALL.md || drift="$drift [$tid: ~/$tsdir/]"
+    [ "$tcs" = "-" ] || grep -qF "~/$tcdir/" INSTALL.md || drift="$drift [$tid: ~/$tcdir/]"
+  done <<<"$TARGET_ROWS"
+  [ -z "$drift" ] && ok "INSTALL.md documents every install path the table uses" \
+                  || bad "INSTALL.md never mentions:$drift"
+  # The hook installer is a separate script with its own per-tool wiring, but
+  # it must accept the same set of tools — one install.sh target without a
+  # hooks counterpart is a tool whose advisory hooks quietly don't exist.
+  hook_ids="$(grep -E 'targets\+=\("\$arg"\)' hooks/install-hooks.sh | sed -E 's/^ *([a-z|-]+)\).*/\1/' | tr '|' '\n' | sort | paste -sd',' -)"
+  want_ids="$(cut -d'|' -f1 <<<"$TARGET_ROWS" | sort | paste -sd',' -)"
+  [ "$hook_ids" = "$want_ids" ] && ok "hooks/install-hooks.sh accepts the same targets as install.sh" \
+                                || bad "hooks/install-hooks.sh accepts [$hook_ids], install.sh's table has [$want_ids]"
 fi
 
 # 10g-quater. Two plugin manifests, one identity. Claude reads
@@ -976,6 +1115,33 @@ if [ -e templates/GEMINI.template.md ] || [ -e examples/saga-reader/GEMINI.md ];
 else
   ok "no GEMINI template or example render (retired tool)"
 fi
+
+# 10i. macOS portability: bash 3.2 and BSD userland. A stock Mac runs every
+#      script here under /bin/bash 3.2 with BSD sed, and this suite only ever
+#      ran on Linux until CI added a macOS job. That job found two constructs
+#      that work on GNU and fail open on a Mac, both silently:
+#
+#      - `read` splitting on \001 or \177. bash 3.2 uses those bytes
+#        internally (CTLESC/CTLNUL) and never splits on them, so the hooks
+#        received every registry record as one field and skipped every
+#        detector.
+#      - sed's in-place flag with no suffix. BSD sed takes the next argument
+#        as the backup suffix, so the expression is swallowed and nothing is
+#        edited.
+#
+#      A Linux run cannot observe either one fail, so this bans the source
+#      forms. The macOS CI job is the behavioral check; this is the one that
+#      runs on every machine. Comment lines are skipped so the scripts can
+#      explain why.
+mac_bad=""
+while IFS= read -r -d '' f; do
+  hits="$(grep -nE "IFS=[\$]'\\\\(x01|001|x7[fF]|177)'" "$f" | grep -vE '^[0-9]+:[[:space:]]*#' || true)"
+  [ -n "$hits" ] && mac_bad="$mac_bad [${f#./}: a read splits on a byte bash 3.2 reserves — use \\x1f]"
+  hits="$(grep -nE '(^|[^[:alnum:]_])sed[[:space:]]+(-[a-zA-Z]*[[:space:]]+)*-[a-zA-Z]*i([[:space:]]|$)' "$f" | grep -vE '^[0-9]+:[[:space:]]*#' || true)"
+  [ -n "$hits" ] && mac_bad="$mac_bad [${f#./}:$(cut -d: -f1 <<<"$hits" | paste -sd, -): in-place sed — redirect to a file instead]"
+done < <(find . -name '*.sh' ! -path './.git/*' ! -path './commands/cursor/*' -print0)
+[ -z "$mac_bad" ] && ok "no shell script uses a construct that fails open on bash 3.2 / BSD sed" \
+                  || bad "macOS-unsafe shell:$mac_bad"
 
 # ---------------------------------------------------------------------------
 section "11. Token contrast validator (measured, not estimated)"
@@ -1151,7 +1317,11 @@ if [ -f "$BG" ] && command -v jq >/dev/null 2>&1; then
 
   # --- the generator must refuse, loudly, on each malformed input ------------
   probe_reject() {  # $1 = label, $2 = sed expr, $3 = basename under $GW
-    cp "$GW/$3" "$gr_tmp/one.bak"; sed -i "$2" "$GW/$3"
+    # Not `sed -i`: BSD sed (macOS) reads the next argument as a backup
+    # suffix, so the expression became the suffix, the file became the script,
+    # and no probe ever mutated anything. A redirect means the same on both.
+    cp "$GW/$3" "$gr_tmp/one.bak"
+    sed "$2" "$gr_tmp/one.bak" > "$GW/$3"
     if PSP_GUARDRAILS_DIR="$GW" "$BG" >/dev/null 2>&1; then
       bad "generator accepted: $1"
     else

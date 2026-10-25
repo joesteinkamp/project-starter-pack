@@ -123,11 +123,18 @@ hook_check_scope() {
   }
   hook_in_scope "$file" "$scope" || return 0
 
-  # \x01 as the field separator, not @tsv: @tsv escapes backslashes, which
-  # silently turns a pattern like \b(delve|...)\b into a literal-backslash
-  # match that never fires. `join` under -r emits the pattern verbatim.
+  # A control character as the field separator, not @tsv: @tsv escapes
+  # backslashes, which silently turns a pattern like \b(delve|...)\b into a
+  # literal-backslash match that never fires. `join` under -r emits the
+  # pattern verbatim.
+  #
+  # \x1f, not \x01. On a stock Mac, `#!/usr/bin/env bash` finds bash 3.2,
+  # which uses \001 internally as its quoting byte (CTLESC), so `read` never
+  # splits on it. Every record arrived whole, kind came out empty, and every
+  # detector was skipped: the hooks failed open on macOS until CI first ran
+  # there. \x1f is ASCII's unit separator, and bash gives it no meaning.
   local id kind pattern threshold fix name src hits
-  while IFS=$'\x01' read -r id kind pattern threshold fix name src; do
+  while IFS=$'\x1f' read -r id kind pattern threshold fix name src; do
     [ -n "$id" ] || continue
     case "$kind" in
       regex)  grep -qE  -- "$pattern" "$file" 2>/dev/null || continue ;;
@@ -147,6 +154,6 @@ hook_check_scope() {
     | sort_by(.key)[]
     | [ .key, .value.kind, .value.pattern, (.value.threshold // 0 | tostring),
         (.value.fix // ""), .value.name, .value.file ]
-    | join("\u0001")' "$reg" 2>/dev/null)
+    | join("\u001f")' "$reg" 2>/dev/null)
   return 0
 }

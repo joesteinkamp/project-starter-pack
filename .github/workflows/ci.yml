@@ -1,0 +1,78 @@
+name: CI
+
+on:
+  # Every PR, so a contributor's first push gets feedback.
+  pull_request:
+  # And direct pushes to main, so "main is green" is a real signal rather than
+  # an assumption that nobody bypassed review.
+  push:
+    branches: [main]
+
+# Supersede in-flight runs for the same ref: the latest commit's status is the
+# only one anyone reads. `github.ref` is a controlled value (refs/heads/* or
+# refs/pull/*/merge), not user input, so interpolating it is safe.
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  # test.sh is the whole build. It needs bash, grep, sed, and jq, and runs in
+  # seconds — so run it on both OSes the pack is actually installed on. The
+  # installer and hook checks write into a throwaway HOME and are the ones most
+  # likely to behave differently on macOS (BSD userland, different bash).
+  test:
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, macos-latest]
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@v5
+
+      - name: Install jq (macOS)
+        if: runner.os == 'macOS'
+        run: brew install jq
+
+      - name: Versions
+        run: |
+          bash --version | head -1
+          jq --version
+
+      - name: Run the integrity linter
+        run: ./test.sh
+
+  # test.sh installs one target at a time against a throwaway HOME. This runs
+  # the default, all-targets install end to end: a bare HOME must come out
+  # untouched, a second run must change nothing, and uninstall must leave no
+  # symlink behind.
+  install-roundtrip:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+
+      - name: Install into a HOME with no tools present
+        run: |
+          H="$(mktemp -d)"
+          HOME="$H" ./install.sh --yes
+          echo "--- nothing should have been created ---"
+          find "$H" -mindepth 1 | sed 's/^/  /' || true
+
+      - name: Install, re-install, and uninstall with every tool present
+        run: |
+          H="$(mktemp -d)"
+          # One presence marker per target, read from the installer's own
+          # table, so a new target is exercised here without editing this file.
+          ./install.sh --list | while IFS='|' read -r _ _ markers _ _ _; do
+            mkdir -p "$H/${markers%%,*}"
+          done
+          HOME="$H" ./install.sh --yes
+          before="$(find "$H" | sort | cksum)"
+          HOME="$H" ./install.sh --yes
+          after="$(find "$H" | sort | cksum)"
+          [ "$before" = "$after" ] || { echo "install.sh is not idempotent"; exit 1; }
+          HOME="$H" ./install.sh --uninstall
+          left="$(find "$H" -type l | wc -l | tr -d ' ')"
+          [ "$left" = "0" ] || { echo "uninstall left $left symlink(s) behind"; find "$H" -type l; exit 1; }

@@ -1,0 +1,58 @@
+name: Feature request
+description: Propose a change to a flow, a template, a guardrail, or a tool target
+title: "feat: "
+labels: ["enhancement"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Four kinds of change need a conversation before code, because they move a contract the
+        linter enforces: growing the command surface, adding a slot, adding a question, and
+        adding a guardrail. This form is that conversation.
+
+  - type: textarea
+    id: problem
+    attributes:
+      label: What's missing, and what does it cost you today?
+      description: The problem, not the solution. What do you do now instead?
+    validations:
+      required: true
+
+  - type: dropdown
+    id: area
+    attributes:
+      label: What would change?
+      multiple: true
+      options:
+        - "A skill (flow behavior)"
+        - "A template (the output's shape)"
+        - "A questionnaire (what gets asked)"
+        - "A guardrail (an anti-pattern ban)"
+        - "The command surface (a new verb)"
+        - "A tool target (support another AI tool)"
+        - "The installer or the plugin manifests"
+        - "The optional hooks"
+        - "Docs or the worked example"
+    validations:
+      required: true
+
+  - type: textarea
+    id: proposal
+    attributes:
+      label: What would you have it do?
+      description: If you have a shape in mind, sketch it. A rough sketch is useful.
+
+  - type: dropdown
+    id: portability
+    attributes:
+      label: Does this work in all four tools?
+      description: >
+        Skills are the engine because Codex has no command surface and no structured-question
+        tool. A change that only works in Claude Code is a portability regression, and it needs a
+        reason that survives that.
+      options:
+        - "Yes, it is tool-agnostic"
+        - "No, it needs something only some tools have"
+        - "Not sure"
+    validations:
+      required: true

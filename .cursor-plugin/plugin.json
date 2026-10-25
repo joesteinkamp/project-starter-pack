@@ -1,0 +1,22 @@
+{
+  "name": "project-starter-pack",
+  "displayName": "Project Starter Pack",
+  "description": "Designer-first AI project starter. Walks you through a Product, Design, and Technical brief, then wires up the AGENTS.md router that points every AI coding agent at the brief owning each kind of work.",
+  "version": "0.2.0",
+  "author": {
+    "name": "joesteinkamp",
+    "url": "https://github.com/joesteinkamp"
+  },
+  "license": "MIT",
+  "homepage": "https://github.com/joesteinkamp/project-starter-pack",
+  "repository": "https://github.com/joesteinkamp/project-starter-pack",
+  "keywords": [
+    "design",
+    "product",
+    "agents",
+    "agents-md",
+    "cursor",
+    "starter"
+  ],
+  "skills": "./skills/"
+}

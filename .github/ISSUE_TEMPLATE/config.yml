@@ -1,0 +1,11 @@
+blank_issues_enabled: false
+contact_links:
+  - name: README
+    url: https://github.com/joesteinkamp/project-starter-pack#readme
+    about: What the pack produces, which tool runs which flow, and how to install it.
+  - name: INSTALL.md
+    url: https://github.com/joesteinkamp/project-starter-pack/blob/main/INSTALL.md
+    about: Per-tool install detail, including both plugin paths.
+  - name: Worked example
+    url: https://github.com/joesteinkamp/project-starter-pack/tree/main/examples/saga-reader
+    about: A complete render of every file the pack writes. Read this to see the expected depth and voice.
