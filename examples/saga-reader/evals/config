@@ -1,0 +1,6 @@
+# Live-run settings for ./evals/run.sh --live. `key: value`, one per line.
+agent: claude
+# agent: the CLI under test (claude, codex, agy, agent); defaults to the first usable one in ~/.ai/clis
+# agent_model: optional model slug for that CLI
+# judge: optional; by default a CLI from another model family is chosen from ~/.ai
+# judge_model: optional

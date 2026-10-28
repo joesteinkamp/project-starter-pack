@@ -1,6 +1,6 @@
 # PLAN — per-project evals, scaffolded by `setup`
 
-Status: draft for Joe's approval (2026-10-28, Claude). Not built. A rival draft
+Status: approved and built (2026-10-28, Claude). Joe's answers to the open questions and the rival-diff conflicts are under *Decisions, round 2*. A rival draft
 from Gemini 4 Argon is at `~/.ai-context/project-starter-pack-evals/agents/gemini.md`;
 the diff between the two is at the end of this file.
 
@@ -230,7 +230,23 @@ correction-born goldens in the same turn.
    I found none of those names documented in `~/.ai/`, `lib/` or `hooks/`, so I
    haven't adopted it.
 
-## Open questions
+## Decisions, round 2 (Joe, 2026-10-28)
+
+- `setup` asks one confirmation round (not zero).
+- Seeding is capped at about 12, ranked by damage.
+- The judge is picked from `~/.ai/pools` and `~/.ai/model-routing.md` when they exist,
+  falling back to `~/.ai/clis` family defaults. Verified with stub CLIs against this
+  machine's real routing table: a `claude` agent got `agy gemini-4-argon-high`.
+- `--confirm`, the `validate` nudge, the summary line and the mutation tests are adopted.
+- `agent-global-instructions/evals/` moves to the new schema later, after one real project
+  has used it.
+
+**Changed while building:** a case's `check:` now grades before its judge is calibrated.
+The first build calibrated first, so a judge that couldn't separate the goldens also
+blocked a free, already-proven check. Goldens take the real surface's extension
+(`pass.css`, `fail.tsx`) instead of always `.md`.
+
+## Open questions (as drafted, now answered above)
 
 1. **Which agent runs under test by default?** Recommended: the CLI named in a
    `evals/config` line, falling back to the first non-judge entry in `~/.ai/clis`.

@@ -1468,5 +1468,108 @@ else
 fi
 
 # ---------------------------------------------------------------------------
+section "14. Per-project evals (setup seeds them; the runner must bite)"
+# setup copies templates/evals/ into every project it sets up, and the example
+# carries the worked render. A runner that passes everything is decoration, so
+# the mutations below prove each guarantee from the plan: a removed rule fails,
+# a swapped golden fails, a draft never gates, a judge is calibrated before it
+# grades, and a machine with no CLI roster still gets static mode.
+ER=templates/evals/run.sh
+EX=examples/saga-reader/evals
+if [ -f "$ER" ]; then
+  [ -x "$ER" ] && ok "$ER is executable" || bad "$ER is not executable"
+  bash -n "$ER" 2>/dev/null && ok "$ER parses" || bad "$ER has a syntax error"
+  if command -v shellcheck >/dev/null 2>&1; then
+    shellcheck --shell=bash "$ER" >/dev/null 2>&1 && ok "$ER passes shellcheck" || bad "$ER fails shellcheck"
+  fi
+  for f in run.sh README.md .gitignore; do
+    cmp -s "templates/evals/$f" "$EX/$f" && ok "example evals/$f matches its template" \
+      || bad "example evals/$f drifted from templates/evals/$f — copy the template over it"
+  done
+  for f in cases.md config; do
+    [ -f "templates/evals/$f" ] && ok "templates/evals/$f exists" || bad "templates/evals/$f is missing"
+  done
+
+  out="$("$EX/run.sh" 2>&1)"; rc=$?
+  [ "$rc" -eq 0 ] && ok "the example's evals pass in static mode" \
+    || { bad "the example's evals fail in static mode"; printf '%s\n' "$out" | sed 's/^/      /' >&2; }
+  printf '%s\n' "$out" | tail -n1 | grep -qE '^EVALS mode=static .* verdict=pass$' \
+    && ok "static mode ends on one machine-checkable summary line" \
+    || bad "static mode's last line is not the EVALS summary"
+
+  ev_tmp="$(mktemp -d)"
+  fresh() { rm -rf "$ev_tmp/p"; cp -R examples/saga-reader "$ev_tmp/p"; }
+  run_ev() { "$ev_tmp/p/evals/run.sh" "$@" >"$ev_tmp/out" 2>&1; }
+
+  fresh; sed -i.bak 's/No raw hex in style files/Prefer tokens/' "$ev_tmp/p/DESIGN.md"
+  run_ev; [ $? -eq 1 ] && ok "runner rejects: a confirmed rule reworded out of its brief" \
+                       || bad "runner passed after a confirmed case's anchor left DESIGN.md"
+
+  fresh; sed -i.bak 's/\*\*Calm over engagement\.\*\*/**Engagement.**/' "$ev_tmp/p/PRODUCT.md"
+  run_ev; rc=$?
+  { [ $rc -eq 0 ] && grep -q 'WARN  EV-05 (unconfirmed)' "$ev_tmp/out"; } \
+    && ok "an unconfirmed case warns and never gates" \
+    || bad "an unconfirmed case's failure gated the run (or did not warn)"
+
+  fresh; g="$ev_tmp/p/evals/goldens/EV-01"
+  mv "$g/pass.css" "$g/x.css"; mv "$g/fail.css" "$g/pass.css"; mv "$g/x.css" "$g/fail.css"
+  run_ev; [ $? -eq 1 ] && ok "runner rejects: a check: whose goldens are swapped" \
+                       || bad "runner passed with EV-01's pass and fail goldens swapped"
+
+  fresh; printf '\n## EV-01 — duplicate\n\nfile: DESIGN.md\nanchor: Undo\nkind: agent\nstatus: unconfirmed\norigin: test\nprompt: x\njudge: y\n' >> "$ev_tmp/p/evals/cases.md"
+  run_ev; [ $? -eq 1 ] && ok "runner rejects: a duplicate case ID, even on a draft" \
+                       || bad "runner passed with a duplicated case ID"
+
+  fresh; run_ev --confirm EV-05
+  { [ $? -eq 0 ] && awk '/^## EV-05/{f=1} f&&/^status:/{print;exit}' "$ev_tmp/p/evals/cases.md" | grep -qx 'status: confirmed'; } \
+    && ok "--confirm flips a draft to confirmed" || bad "--confirm did not flip EV-05"
+  rm "$ev_tmp/p/evals/goldens/EV-06/pass.ts"; run_ev --confirm EV-06
+  [ $? -ne 0 ] && ok "--confirm refuses a case missing a golden" || bad "--confirm accepted EV-06 with no pass golden"
+
+  # Live mode against stub CLIs: an agent that writes raw hex, and a judge that
+  # fails anything mentioning a modal. Proves calibration runs, the check grades
+  # first, the judge comes from another family, and no scratch tree is left.
+  if command -v git >/dev/null 2>&1 && command -v jq >/dev/null 2>&1; then
+    fresh; mkdir -p "$ev_tmp/bin" "$ev_tmp/ai"
+    printf 'claude\nagy\n' > "$ev_tmp/ai/clis"
+    printf '#!/usr/bin/env bash\necho "Deleted, with Undo in a toast."\nprintf ".b{color:#ff0000}\\n" > stub.css\n' > "$ev_tmp/bin/claude"
+    cat > "$ev_tmp/bin/agy" <<'STUB'
+#!/usr/bin/env bash
+p="${*: -1}"; w="${p#*--- WORK START ---}"
+if grep -qiE 'are you sure|confirm\(' <<<"$w"; then v=FAIL; else v=PASS; fi
+printf '{"response":"VERDICT: %s"}\n' "$v"
+STUB
+    chmod +x "$ev_tmp/bin/"*
+    ( cd "$ev_tmp/p" && git init -q && git add -A && git -c user.email=t@t -c user.name=t commit -qm init )
+    PATH="$ev_tmp/bin:$PATH" EVALS_AI_DIR="$ev_tmp/ai" run_ev --live EV-01 EV-02; rc=$?
+    last="$(tail -n1 "$ev_tmp/out")"
+    { [ $rc -eq 1 ] && grep -q 'FAIL  EV-01 (check)' "$ev_tmp/out" && grep -q 'PASS  EV-02 (judge)' "$ev_tmp/out"; } \
+      && ok "live: the check grades first and the judge grades the rest" \
+      || { bad "live run graded wrongly"; sed 's/^/      /' "$ev_tmp/out" >&2; }
+    case "$last" in *"judge=agy:"*"family-independent=yes calibrated=1/1"*) ok "live: a cross-family judge is calibrated on the goldens first" ;;
+                    *) bad "live summary missing cross-family calibration: $last" ;; esac
+    [ "$(git -C "$ev_tmp/p" worktree list | wc -l)" -eq 1 ] && ok "live: no scratch worktree is left behind" \
+      || bad "live run left a worktree registered"
+    printf 'claude\n' > "$ev_tmp/ai/clis"
+    PATH="$ev_tmp/bin:$PATH" EVALS_AI_DIR="$ev_tmp/ai" run_ev --live EV-02; rc=$?
+    { [ $rc -eq 3 ] && grep -q 'same-family judge' "$ev_tmp/out" && tail -n1 "$ev_tmp/out" | grep -q 'family-independent=no'; } \
+      && ok "live: a one-family machine runs, says so, and an uncalibrated judge is inconclusive" \
+      || { bad "live single-family path misbehaved"; sed 's/^/      /' "$ev_tmp/out" >&2; }
+  fi
+  EVALS_AI_DIR="$ev_tmp/none" run_ev --live; [ $? -eq 2 ] \
+    && ok "live: no CLI roster is a setup error (exit 2), not a crash" || bad "live without a roster did not exit 2"
+  rm -rf "$ev_tmp"
+
+  grep -qF '`evals`' skills/setup/SKILL.md && grep -qF '../../templates/evals/' skills/setup/SKILL.md \
+    && ok "setup names the evals scope and copies templates/evals/" || bad "setup lost its evals step"
+  for f in templates/AGENTS.template.md examples/saga-reader/AGENTS.md; do
+    grep -qF 'evals/cases.md' "$f" && ok "$f points agents at evals/cases.md" || bad "$f lost its evals pointer"
+  done
+  grep -qF './evals/run.sh' skills/validate/SKILL.md && ok "validate runs the static evals" || bad "validate no longer runs evals"
+else
+  bad "templates/evals/run.sh is missing — setup has no evals to seed"
+fi
+
+# ---------------------------------------------------------------------------
 printf '\n%d passed, %d failed\n' "$pass" "$fail"
 [ "$fail" -eq 0 ]

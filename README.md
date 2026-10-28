@@ -23,6 +23,7 @@ After running the `setup` flow (or each flow individually), your project root wi
 | `CODE.md` | Technical Brief | Stack, architecture, conventions, testing, performance, security |
 | `AGENTS.md` | Setup wire-up | The [agents.md](https://agents.md) spec file — a **router** that points agents at the brief owning each kind of work (always written) |
 | `CLAUDE.md` | Setup wire-up | Thin pointer: imports `@AGENTS.md` + Claude-Code-specific notes (always written) |
+| `evals/` | Setup evals step | Up to 12 cases drawn from the briefs, each with a pass/fail golden pair, and a runner: `./evals/run.sh` checks for free in CI, `--live` grades a real agent with a judge from another model family (always written; `setup evals` adds it to a project set up earlier) |
 
 There is no separate orchestration step and no harness picker. `AGENTS.md` carries no brief
 content — it routes to the briefs (UI/UX → `DESIGN.md`, user-facing words → `WRITING.md`,

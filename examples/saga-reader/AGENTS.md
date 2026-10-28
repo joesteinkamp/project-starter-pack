@@ -41,6 +41,9 @@ focus, reduced-motion, and target-size rules live in `DESIGN.md`. Read both befo
 - If a request is ambiguous or contradicts a brief, ask the user before assuming.
 - The briefs are the source of truth. If reality has outgrown one, update the brief — don't
   quietly diverge from it.
+- `evals/cases.md` lists the brief rules this repo grades agents on. When the user corrects
+  you on one, propose it as a new case there, with what you did as its `fail` golden and
+  the approved fix as its `pass` golden. Don't add it unasked.
 
 ## AI Slop self-check
 

@@ -1,0 +1,9 @@
+.button--danger {
+  color: #c0392b;
+  background: transparent;
+  border: 1px solid #c0392b;
+  border-radius: 2px;
+}
+.button--danger:hover {
+  background: #fdecea;
+}

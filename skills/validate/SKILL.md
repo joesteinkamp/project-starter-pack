@@ -30,7 +30,12 @@ resource paths below.
    below its floor, exit 2 means a token could not be read. **Never compute a contrast ratio
    yourself and never estimate one** — report the numbers the script printed, and quote the
    failing rows verbatim in your findings. A ratio you did not measure is not evidence.
-5. Run `git diff --stat HEAD` first and use its output as the review scope. If the repo has no
+5. If the project has `evals/run.sh`, run `./evals/run.sh` (static only, never `--live`:
+   that spends tokens and is the user's call). Report each `FAIL` line as a finding. A
+   failed anchor usually means a brief was edited and the case needs its `anchor:` updated,
+   or the rule was dropped on purpose and the case should go. When every case is still
+   `unconfirmed`, say so in one line: drafts never gate, so the suite checks nothing yet.
+6. Run `git diff --stat HEAD` first and use its output as the review scope. If the repo has no
    git history or the command fails, review the whole tree instead.
 
 ## Inputs
@@ -85,6 +90,8 @@ Code vs briefs (Mode B): {{M}} findings  ·  {{H}} high · {{Me}} medium · {{L}
   HIGH
     - path:line — finding — fix
   …
+
+Evals (evals/run.sh): {{K}} failing  ·  {{U}} cases still unconfirmed
 
 Nothing was changed. Tell me which findings to fix and I'll apply them.
 ```
