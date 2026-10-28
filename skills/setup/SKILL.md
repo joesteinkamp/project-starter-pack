@@ -49,8 +49,9 @@ Multi-select where the harness supports it, so "product + technical" is one run;
 single-select where it doesn't — "Everything" covers the common multi case. When some
 briefs exist and others don't, recommend the missing ones rather than Everything.
 
-- **Evals only** — offer this when every brief exists but `evals/cases.md` does not:
-  it is how a project set up before evals existed gets them.
+- **Evals only** — seeds or refreshes `evals/` from whichever briefs exist, without
+  re-running any questionnaire. Recommend it when at least one brief exists but
+  `evals/cases.md` does not: it is how a project set up before evals existed gets them.
 
 The evals and wire-up steps are not options: they run at the end of every scope.
 
@@ -107,11 +108,15 @@ Seed **up to 12 cases**, ranked by how much damage breaking the rule would do. M
 that never gets reviewed. Draw them only from briefs that exist on disk, and only from
 confirmed text: never from a `[TODO — confirm]` line an `extract` draft left behind.
 
-1. **Bans with a detector.** For each ban the briefs embed whose entry in
-   `../../guardrails/registry.json` has `kind` `regex` or `regexi` and `confidence`
-   `certain`, a case can grade itself for free. Copy the detector **inline** as
-   `check: regex:<pattern>` or `check: regexi:<pattern>`. The registry does not ship into
-   the project, so a bare ban ID would not resolve in its CI.
+1. **Bans with a detector.** A ban the briefs embed whose entry in
+   `../../guardrails/registry.json` has `kind` `regex`, `regexi` or `count` and
+   `confidence` `certain` can grade itself for free, so it is a strong candidate. It still
+   competes with the rules below for the 12 places, by damage. Copy the detector
+   **inline**: `check: regex:<pattern>`, `check: regexi:<pattern>`, or
+   `check: count:<threshold>:<pattern>`. Read the pattern decoded (`jq -r
+   '."DES-03".pattern'`), never from the raw JSON text: JSON escapes `\b` as `\\b`, and
+   a doubled backslash silently breaks the detector. The registry does not ship into the
+   project, so a bare ban ID would not resolve in its CI.
 2. **Rules that say what an agent must do,** such as DESIGN.md's interaction principles
    and component primitives, WRITING.md's terminology, PRODUCT.md's principles and
    anti-references, and CODE.md's conventions and lines it must not cross. These become
@@ -177,7 +182,8 @@ Populate `../../templates/AGENTS.template.md`:
   in any tool — reach one by name, or through `setup` with its scope word (Claude Code:
   `/starter:setup design`, plus `/starter:extract` and `/starter:validate`; Codex:
   `$<flow>`, which runs any skill directly; Cursor: `/starter-setup design`, or the skill
-  by name; Antigravity: the skill by name; anything else: plain language). Keep it under a
+  by name; Antigravity: the skill by name; anything else: plain language). List the scope
+  words, `evals` included. Keep it under a
   dozen lines — it is a pointer, not documentation.
 
 Populate `../../templates/CLAUDE.template.md`:

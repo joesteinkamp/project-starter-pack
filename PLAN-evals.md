@@ -241,9 +241,32 @@ correction-born goldens in the same turn.
 - `agent-global-instructions/evals/` moves to the new schema later, after one real project
   has used it.
 
-**Changed while building:** a case's `check:` now grades before its judge is calibrated.
-The first build calibrated first, so a judge that couldn't separate the goldens also
-blocked a free, already-proven check. Goldens take the real surface's extension
+**Changed while building:**
+- **A `check:` can only fail work.** A hit fails the case without calling the judge. A
+  clean check still goes to the judge when the case has one, because a regex never
+  proves a whole rule (`rgb()` or a named color passes DES-03's hex check). Calibration
+  runs before the agent when the judge is the only grader, and after a clean check
+  otherwise, so neither burns a run it doesn't need. The first build calibrated first,
+  so an uncalibrated judge also blocked a check that had already caught the violation.
+- **The confirmation round is written in `skills/setup/SKILL.md`, not `questionnaires/`.**
+  It confirms generated cases instead of filling a template slot, and `questionnaires/` is
+  the slot-parity contract `test.sh` enforces.
+- **Live runs use a scratch copy, not a git worktree.** A worktree of HEAD dropped briefs
+  setup had just written and nobody had committed. The copy takes the working tree
+  (tracked and untracked, honoring `.gitignore`), gets its own baseline commit so every
+  edit diffs, and registers nothing in the project's `.git`.
+- **Hardening from the refuter round (Gemini 4 Argon, 2026-10-28):** a mistyped or
+  missing `status:` gates instead of downgrading to a draft · `count:` checks · `--confirm`
+  requires the case to pass static first and fails loudly if nothing flipped · the judge
+  runs in an empty directory, behind nonce delimiters, and only its first line counts ·
+  the check reads only the agent's reply and added lines · an agent that produces nothing
+  is UNRUN, not a pass · only gating cases make a run inconclusive · the routing parse
+  resolves every effort placeholder, keeps the row's family, and ranks flagship, then
+  tier, then pool plan · `agent` gets `--trust` · `--live` works without the harness
+  roster when `evals/config` names both CLIs · the trap removes scratch copies on Ctrl-C.
+- **Goldens are near misses.** Each fail golden breaks exactly one rule in an otherwise
+  passing piece of work. Calibrating on a caricature only proves the judge noticed the
+  loudest violation. Goldens take the real surface's extension
 (`pass.css`, `fail.tsx`) instead of always `.md`.
 
 ## Open questions (as drafted, now answered above)

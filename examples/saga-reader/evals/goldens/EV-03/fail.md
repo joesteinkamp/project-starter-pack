@@ -1,5 +1,5 @@
-## No Annotations Found
+## No highlights yet
 
-You haven't created any annotation items in this session. Upload content to get started!
+Select any passage in a book and tap Highlight. Your annotations show up here with their page and chapter.
 
-[Upload Content]
+[Open your library]

@@ -70,7 +70,7 @@ truth — edit them directly, or re-run the flow that owns one: `setup`, `produc
 `design-brief` (also regenerates `WRITING.md`), `code-brief`, `validate`, `extract`.
 
 The three brief flows have no command of their own — reach one by name, or through `setup`
-with its scope word (`product`, `design`, `code`, `all`).
+with its scope word (`product`, `design`, `code`, `evals`, `all`).
 
 - **Claude Code** — `/starter:setup design`, plus `/starter:extract` and `/starter:validate`.
 - **Codex** — `$<flow>`, e.g. `$design-brief`; it runs any skill directly.

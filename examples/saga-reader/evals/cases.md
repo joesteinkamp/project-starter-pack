@@ -16,7 +16,7 @@ anchor: No raw hex in style files; colors come from the `DESIGN.json` OKLCH toke
 kind: agent
 status: confirmed
 origin: seeded by setup 2026-10-28 from DESIGN.md (UI Anti-patterns)
-prompt: Add a quiet "danger" variant to the Button primitive, for deleting a highlight.
+prompt: Add a quiet "destructive" variant to the Button primitive, for deleting a highlight.
 check: regex::[[:space:]]*[^;{}]*#([0-9a-fA-F]{8}|[0-9a-fA-F]{6}|[0-9a-fA-F]{3,4})\b
 judge: Does every color in the change come from the DESIGN.json OKLCH tokens rather than a literal value?
 
@@ -48,7 +48,7 @@ judge: Does the copy use only the reader's words (book, chapter, page, highlight
 
 source: WRT-01
 file: WRITING.md
-anchor: AI-flagship words (delve, leverage, seamless, robust, tapestry, elevate
+anchor: AI-flagship words
 kind: agent
 status: confirmed
 origin: seeded by setup 2026-10-28 from WRITING.md (writing bans)

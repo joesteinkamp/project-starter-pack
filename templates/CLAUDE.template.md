@@ -8,7 +8,7 @@
 
 `project-starter-pack` exposes every flow as a skill, so natural language triggers them. Installed as a Claude Code plugin, three commands are the whole surface — generate, seed, check:
 
-- `/starter:setup [product|design|code|all]` — guided flow through the briefs, then wires up `AGENTS.md` and this file. With no scope word it asks which briefs to run.
+- `/starter:setup [product|design|code|evals|all]` — guided flow through the briefs, then seeds `evals/` and wires up `AGENTS.md` and this file. With no scope word it asks which briefs to run.
 - `/starter:extract` — reverse-engineer draft briefs from an existing codebase (brownfield).
 - `/starter:validate` — check the briefs for contradictions and review the repo against them.
 

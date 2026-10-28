@@ -1526,38 +1526,76 @@ if [ -f "$ER" ]; then
   rm "$ev_tmp/p/evals/goldens/EV-06/pass.ts"; run_ev --confirm EV-06
   [ $? -ne 0 ] && ok "--confirm refuses a case missing a golden" || bad "--confirm accepted EV-06 with no pass golden"
 
-  # Live mode against stub CLIs: an agent that writes raw hex, and a judge that
-  # fails anything mentioning a modal. Proves calibration runs, the check grades
-  # first, the judge comes from another family, and no scratch tree is left.
+  fresh; awk '!d && /^status: confirmed$/ {print "status: confirmd"; d=1; next} {print}' \
+    "$ev_tmp/p/evals/cases.md" > "$ev_tmp/c" && mv "$ev_tmp/c" "$ev_tmp/p/evals/cases.md"
+  run_ev; [ $? -eq 1 ] && ok "runner rejects: a mistyped status gates instead of becoming a draft" \
+                       || bad "a mistyped status: downgraded a confirmed case to a draft"
+
+  # Live mode, against stubs ONLY. Every CLI name the runner knows is shadowed by
+  # a stub, and the example's config is replaced, so no test can ever reach a
+  # real model: a stray real run spends the operator's tokens.
   if command -v git >/dev/null 2>&1 && command -v jq >/dev/null 2>&1; then
-    fresh; mkdir -p "$ev_tmp/bin" "$ev_tmp/ai"
-    printf 'claude\nagy\n' > "$ev_tmp/ai/clis"
-    printf '#!/usr/bin/env bash\necho "Deleted, with Undo in a toast."\nprintf ".b{color:#ff0000}\\n" > stub.css\n' > "$ev_tmp/bin/claude"
-    cat > "$ev_tmp/bin/agy" <<'STUB'
+    live_env() {  # fresh project + stub bin + roster; $1 = roster lines
+      fresh; rm -rf "$ev_tmp/bin" "$ev_tmp/ai" "$ev_tmp/t"; mkdir -p "$ev_tmp/bin" "$ev_tmp/ai" "$ev_tmp/t"
+      printf '%b' "$1" > "$ev_tmp/ai/clis"
+      printf '# stubs only\n' > "$ev_tmp/p/evals/config"
+      for c in claude codex agy agent; do
+        printf '#!/usr/bin/env bash\necho "stub %s must not be reached" >&2; exit 97\n' "$c" > "$ev_tmp/bin/$c"
+      done
+      # agent under test: replies, and writes raw hex into the scratch copy
+      printf '#!/usr/bin/env bash\necho "Deleted, with Undo in a toast."\nprintf ".b{color:#ff0000}\\n" > stub.css\n' > "$ev_tmp/bin/claude"
+      cat > "$ev_tmp/bin/agy" <<'STUB'
 #!/usr/bin/env bash
-p="${*: -1}"; w="${p#*--- WORK START ---}"
+p="${*: -1}"; w="${p#*START ---}"
 if grep -qiE 'are you sure|confirm\(' <<<"$w"; then v=FAIL; else v=PASS; fi
 printf '{"response":"VERDICT: %s"}\n' "$v"
 STUB
-    chmod +x "$ev_tmp/bin/"*
-    ( cd "$ev_tmp/p" && git init -q && git add -A && git -c user.email=t@t -c user.name=t commit -qm init )
-    PATH="$ev_tmp/bin:$PATH" EVALS_AI_DIR="$ev_tmp/ai" run_ev --live EV-01 EV-02; rc=$?
+      chmod +x "$ev_tmp/bin/"*
+    }
+    live() { PATH="$ev_tmp/bin:$PATH" TMPDIR="$ev_tmp/t" EVALS_AI_DIR="$ev_tmp/ai" run_ev --live "$@"; }
+
+    live_env 'claude\nagy\n'; live EV-01 EV-02; rc=$?
     last="$(tail -n1 "$ev_tmp/out")"
     { [ $rc -eq 1 ] && grep -q 'FAIL  EV-01 (check)' "$ev_tmp/out" && grep -q 'PASS  EV-02 (judge)' "$ev_tmp/out"; } \
-      && ok "live: the check grades first and the judge grades the rest" \
+      && ok "live: a check hit fails without the judge; the judge grades the rest" \
       || { bad "live run graded wrongly"; sed 's/^/      /' "$ev_tmp/out" >&2; }
     case "$last" in *"judge=agy:"*"family-independent=yes calibrated=1/1"*) ok "live: a cross-family judge is calibrated on the goldens first" ;;
                     *) bad "live summary missing cross-family calibration: $last" ;; esac
-    [ "$(git -C "$ev_tmp/p" worktree list | wc -l)" -eq 1 ] && ok "live: no scratch worktree is left behind" \
-      || bad "live run left a worktree registered"
-    printf 'claude\n' > "$ev_tmp/ai/clis"
-    PATH="$ev_tmp/bin:$PATH" EVALS_AI_DIR="$ev_tmp/ai" run_ev --live EV-02; rc=$?
+    [ -z "$(ls -A "$ev_tmp/t")" ] && ok "live: no scratch copy is left behind" || bad "live run left scratch copies in TMPDIR"
+    [ ! -e "$ev_tmp/p/.git/worktrees" ] && ok "live: nothing is registered in the project's .git" || bad "live run registered a worktree"
+
+    printf 'export const MARK = 1;\n' > "$ev_tmp/p/uncommitted-brief.md"
+    printf '#!/usr/bin/env bash\n[ -f uncommitted-brief.md ] && echo "saw the uncommitted file"\n' > "$ev_tmp/bin/claude"
+    live EV-02; grep -q 'saw the uncommitted file' "$ev_tmp/p/evals/results/"*.md 2>/dev/null \
+      && ok "live: the scratch copy carries uncommitted work (briefs setup just wrote)" \
+      || bad "live: the agent did not see an uncommitted file"
+
+    live_env 'claude\nagy\n'; printf '#!/usr/bin/env bash\nexit 0\n' > "$ev_tmp/bin/claude"
+    live EV-02; rc=$?
+    { [ $rc -eq 3 ] && grep -q 'UNRUN EV-02' "$ev_tmp/out"; } \
+      && ok "live: an agent that produces nothing is ungraded, never a pass" \
+      || { bad "live: an empty agent run was graded"; sed 's/^/      /' "$ev_tmp/out" >&2; }
+
+    live_env 'claude\n'; live EV-02; rc=$?
     { [ $rc -eq 3 ] && grep -q 'same-family judge' "$ev_tmp/out" && tail -n1 "$ev_tmp/out" | grep -q 'family-independent=no'; } \
       && ok "live: a one-family machine runs, says so, and an uncalibrated judge is inconclusive" \
       || { bad "live single-family path misbehaved"; sed 's/^/      /' "$ev_tmp/out" >&2; }
+
+    live_env 'claude\nagy\n'; sed -i.bak 's/^status: confirmed$/status: unconfirmed/' "$ev_tmp/p/evals/cases.md"
+    printf '#!/usr/bin/env bash\necho "{\\"response\\":\\"no verdict here\\"}"\n' > "$ev_tmp/bin/agy"
+    live --include-unconfirmed EV-03; rc=$?
+    [ $rc -eq 0 ] && ok "live: an uncalibrated draft never makes the run inconclusive" \
+                  || bad "live: an unconfirmed case's calibration failure gated the run (exit $rc)"
+
+    live_env ''; rm -f "$ev_tmp/ai/clis"; live; rc=$?
+    [ $rc -eq 2 ] && ok "live: no roster and no configured agent is a setup error (exit 2)" \
+                  || bad "live without a roster or config did not exit 2 (exit $rc)"
+    printf 'agent: claude\njudge: agy\n' > "$ev_tmp/p/evals/config"; live EV-02; rc=$?
+    tail -n1 "$ev_tmp/out" | grep -q 'agent=claude:.* judge=agy:' \
+      && ok "live: config naming both CLIs runs without the harness roster" \
+      || { bad "live: config-only run did not pick the configured CLIs"; sed 's/^/      /' "$ev_tmp/out" >&2; }
+    grep -q 'must not be reached' "$ev_tmp/out" && bad "live: a test reached a guard stub" || true
   fi
-  EVALS_AI_DIR="$ev_tmp/none" run_ev --live; [ $? -eq 2 ] \
-    && ok "live: no CLI roster is a setup error (exit 2), not a crash" || bad "live without a roster did not exit 2"
   rm -rf "$ev_tmp"
 
   grep -qF '`evals`' skills/setup/SKILL.md && grep -qF '../../templates/evals/' skills/setup/SKILL.md \
