@@ -28,6 +28,7 @@ Settle what this run covers before saying anything else.
 | `product` | Product Brief |
 | `design` | Design Brief — UX + UI, the `WRITING.md` companion, optionally `DESIGN.json` |
 | `code` | Technical Brief |
+| `evals` | Evals only — seeds `evals/` from the briefs that already exist |
 | `all` | all three, in brief order |
 
 Anything else — no scope named, or a word not in that table — falls through to the
@@ -48,13 +49,17 @@ Multi-select where the harness supports it, so "product + technical" is one run;
 single-select where it doesn't — "Everything" covers the common multi case. When some
 briefs exist and others don't, recommend the missing ones rather than Everything.
 
-The wire-up is not one of the options: it runs at the end of every scope.
+- **Evals only** — seeds or refreshes `evals/` from whichever briefs exist, without
+  re-running any questionnaire. Recommend it when at least one brief exists but
+  `evals/cases.md` does not: it is how a project set up before evals existed gets them.
+
+The evals and wire-up steps are not options: they run at the end of every scope.
 
 ## Sequence
 
 1. **Intro** — in one short paragraph, tell the user what is about to happen: name only
-   the briefs the chosen scope includes, then the quick wire-up of `AGENTS.md` and
-   `CLAUDE.md`. Ask whether to proceed.
+   the briefs the chosen scope includes, then seeding `evals/` from them and the quick
+   wire-up of `AGENTS.md` and `CLAUDE.md`. Ask whether to proceed.
    - **Brownfield check:** if the repo already contains application code (a
      `package.json`, components, styles) *and* the scope includes a brief that does not
      exist yet, offer to run the `extract` flow first to pre-fill those briefs from the
@@ -67,7 +72,9 @@ The wire-up is not one of the options: it runs at the end of every scope.
    companion) and `WRITING.md` (the writing companion — always).
 4. **Technical Brief** — if in scope, run the `code-brief` flow. Wait for it to complete
    and write `CODE.md`.
-5. **Wire up** — always, whatever the scope. Write `AGENTS.md` and `CLAUDE.md` (see
+5. **Evals** — always, whatever the scope. Seed `evals/` from the briefs that exist (see
+   "The evals step" below).
+6. **Wire up** — always, whatever the scope. Write `AGENTS.md` and `CLAUDE.md` (see
    below). No harness picker: `AGENTS.md` is read natively by Codex, Cursor, Antigravity,
    and Copilot; `CLAUDE.md` is a thin pointer that connects Claude Code. Both are always
    written. The step is idempotent — it fills two slots and writes two derived files —
@@ -78,6 +85,69 @@ the corresponding `../<flow>/SKILL.md` and execute it inline — the flow is the
 either way.
 
 Between steps, give the user a one-line update so they always know where they are.
+
+## The evals step
+
+`evals/` is how this project checks that agents working in it follow its briefs. Each case
+is one brief rule, a prompt that tests it, and a pass/fail pair of examples (goldens). The
+runner is a script that lives in the project, so its CI needs nothing from this pack.
+
+### Pre-flight
+
+- **No `evals/` yet:** copy `../../templates/evals/` (`run.sh`, `cases.md`, `README.md`,
+  `config`, `.gitignore`) into the project's `evals/`, keep `run.sh` executable, and put
+  the project's name in the `cases.md` heading.
+- **`evals/` exists:** ask merge (recommended), keep, or overwrite. Merge refreshes `run.sh`
+  and `README.md` from the templates, keeps every existing case and golden exactly as it is
+  — confirmed ones and ones added from corrections above all — and adds only new seeds, as
+  `unconfirmed`, under the next unused IDs. Never overwrite a case without an explicit yes.
+
+### Seed
+
+Seed **up to 12 cases**, ranked by how much damage breaking the rule would do. More than
+that never gets reviewed. Draw them only from briefs that exist on disk, and only from
+confirmed text: never from a `[TODO — confirm]` line an `extract` draft left behind.
+
+1. **Bans with a detector.** A ban the briefs embed whose entry in
+   `../../guardrails/registry.json` has `kind` `regex`, `regexi` or `count` and
+   `confidence` `certain` can grade itself for free, so it is a strong candidate. It still
+   competes with the rules below for the 12 places, by damage. Copy the detector
+   **inline**: `check: regex:<pattern>`, `check: regexi:<pattern>`, or
+   `check: count:<threshold>:<pattern>`. Read the pattern decoded (`jq -r
+   '."DES-03".pattern'`), never from the raw JSON text: JSON escapes `\b` as `\\b`, and
+   a doubled backslash silently breaks the detector. The registry does not ship into the
+   project, so a bare ban ID would not resolve in its CI.
+2. **Rules that say what an agent must do,** such as DESIGN.md's interaction principles
+   and component primitives, WRITING.md's terminology, PRODUCT.md's principles and
+   anti-references, and CODE.md's conventions and lines it must not cross. These become
+   `check: none` cases graded by their `judge:` question.
+
+Each case follows the schema in `../../examples/saga-reader/evals/cases.md`:
+
+- `anchor:` must be text copied exactly from `file:`, short enough to survive a light edit.
+- `prompt:` is a realistic task in this project's own terms (its components, routes,
+  nouns), not a generic one.
+- `judge:` is one yes/no question about the outcome, never about the steps.
+- `goldens/EV-NN/fail.*` shows what breaking the rule looks like in this project, and
+  `pass.*` a near miss that keeps it. Use the extension of the real surface (`.css`,
+  `.tsx`, `.md`).
+- `status: unconfirmed` and `origin: seeded by setup <today> from <brief> (<section>)`.
+
+**Product AI suite.** When `PRODUCT.md` or `CODE.md` describes AI the product itself
+ships, also seed up to 3 `kind: product` cases for those behaviours (grounding, refusing,
+the output contract the brief states). When neither does, seed none, and don't ask.
+
+Set `agent:` in `evals/config` to the CLI this flow is running in (`claude`, `codex`,
+`agy`, or `agent`), so live runs test the tool the project is actually built with.
+
+### Confirm — one round
+
+Show every seeded case as a numbered list: its headline, the rule it came from, and its
+fail/pass pair in one line each. Ask once, as a single structured question per the
+conventions file: confirm all, or name the numbers to edit or drop. Apply the answers,
+flip the confirmed ones to `status: confirmed`, then run `./evals/run.sh` and fix anything
+it reports before moving on. A case the user cannot judge stays `unconfirmed`: drafts
+never gate.
 
 ## The wire-up step
 
@@ -112,7 +182,8 @@ Populate `../../templates/AGENTS.template.md`:
   in any tool — reach one by name, or through `setup` with its scope word (Claude Code:
   `/starter:setup design`, plus `/starter:extract` and `/starter:validate`; Codex:
   `$<flow>`, which runs any skill directly; Cursor: `/starter-setup design`, or the skill
-  by name; Antigravity: the skill by name; anything else: plain language). Keep it under a
+  by name; Antigravity: the skill by name; anything else: plain language). List the scope
+  words, `evals` included. Keep it under a
   dozen lines — it is a pointer, not documentation.
 
 Populate `../../templates/CLAUDE.template.md`:
@@ -144,6 +215,7 @@ still missing with the way to get it:
 ✓ Wrote WRITING.md (voice, terminology, microcopy, long-form + writing bans)
 ✓ Wrote AGENTS.md — the router; read natively by Codex, Cursor, and Antigravity
 ✓ Wrote CLAUDE.md — thin pointer connecting Claude Code
+✓ Wrote evals/ — N cases (M confirmed); ./evals/run.sh passes
 
 Still missing: CODE.md — run setup again and pick the technical brief (or run the
 code-brief flow by name, in a tool that invokes skills directly).
@@ -152,6 +224,8 @@ Next steps:
 - Test by asking an agent to build something small in this repo. It should read
   AGENTS.md, then the brief that owns the work, before generating.
 - Run the validate flow to check the briefs for contradictions.
+- When an agent gets something wrong here, add it to `evals/cases.md` with its fail/pass
+  pair. `./evals/run.sh --live` runs the suite against a real agent (opt-in, spends tokens).
 - When a rule changes, edit the brief that owns it (or re-run its flow) —
   AGENTS.md needs no regenerating.
 ```
